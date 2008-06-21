@@ -87,7 +87,7 @@ def upload_file(
 
 # -----------------------------------------------------------------------------
 
-def file_exists_in_s3(
+def file_exists(
     s3_bucket,
     path ):
 
@@ -154,7 +154,7 @@ def download_file(
 
 # -----------------------------------------------------------------------------
 
-def delete_file_from_s3(
+def delete_file(
     s3_bucket,
     path ):
 

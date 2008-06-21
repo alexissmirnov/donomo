@@ -11,7 +11,7 @@ logging = getLogger('SQS')
 
 # -----------------------------------------------------------------------------
 
-def new_sqs_connection():
+def get_connection():
     """ Create a new SQS connection.
     """
 
@@ -24,7 +24,7 @@ def new_sqs_connection():
 
 # -----------------------------------------------------------------------------
 
-def get_sqs_queue(
+def get_queue(
     queue_name,
     sqs_connection = None,
     create = False ):
@@ -47,7 +47,7 @@ def get_sqs_queue(
 
 # -----------------------------------------------------------------------------
 
-def create_sqs_queue(
+def create_queue(
     queue_name,
     sqs_connection = None ):
 
@@ -59,7 +59,7 @@ def create_sqs_queue(
 
 # -----------------------------------------------------------------------------
 
-def create_sqs_message(
+def create_message(
     sqs_queue,
     contents = None ):
 
@@ -79,7 +79,7 @@ def create_sqs_message(
 
 # -----------------------------------------------------------------------------
 
-def post_message_to_sqs(sqs_queue, message):
+def post_message(sqs_queue, message):
     """
     Post a message (textual representation) to SQS
     """
@@ -91,7 +91,7 @@ def post_message_to_sqs(sqs_queue, message):
 
 # -----------------------------------------------------------------------------
 
-def get_message_from_sqs(
+def get_message(
     sqs_queue,
     visibility_timeout = None,
     max_wait_time      = None,
@@ -130,9 +130,11 @@ def get_message_from_sqs(
 
 # -----------------------------------------------------------------------------
 
-def delete_message_from_sqs( message ):
+def delete_message( message ):
     """
     Delete a message from SQS
     """
 
     return message.queue.delete_message(message)
+
+# -----------------------------------------------------------------------------
