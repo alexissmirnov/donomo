@@ -5,7 +5,7 @@ from django.conf          import settings
 from boto.s3.connection   import S3Connection, S3ResponseError
 from boto.s3.key          import Key as S3Key
 from logging              import getLogger
-
+from __future__           import with_statement
 logging = getLogger('S3')
 
 # -----------------------------------------------------------------------------
@@ -82,7 +82,7 @@ def upload_file(
         upload_stream(
             s3_bucket,
             dest_path,
-            data_stream
+            data_stream,
             content_type or mimetypes.guess_type(source_path)[0] )
 
 # -----------------------------------------------------------------------------

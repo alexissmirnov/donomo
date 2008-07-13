@@ -7,6 +7,8 @@ from docstore.core.models import ViewType
 from docstore.utils.path import path
 from docstore.utils import run_system_command
 
+from donomo.archive.utils       import image
+
 import PIL.Image as Image
 import os
 import shutil
@@ -85,25 +87,9 @@ def handle_item(processor, item):
                 rgba_page.name))
 
         original = Image.open(rgba_page)
-        thumb_100 = original.copy()
-        thumb_200 = original.copy()
-
-        width, height = original.size
-        if width > height:
-            ratio = float(height) / float(width)
-            scale_100 = (100, int( ratio * 100.0))
-            scale_200 = (200, int( ratio * 200.0))
-        else:
-            ratio = float(width) / float(height)
-            scale_100 = (int( ratio * 100.0), 100)
-            scale_200 = (int( ratio * 200.0), 200)
-
-        thumb_100.thumbnail(scale_100, Image.ANTIALIAS)
-        thumb_200.thumbnail(scale_200, Image.ANTIALIAS)
-
         original.save(jpeg_orig_path, 'JPEG')
-        thumb_100.save(jpeg_100_path, 'JPEG')
-        thumb_200.save(jpeg_200_path, 'JPEG')
+        image.make_thumbnail(original, 100, jpeg_100_path)
+        image.make_thumbnail(original, 200, jpeg_200_path)
 
         #
         # Upload the jpeg verisons of the page

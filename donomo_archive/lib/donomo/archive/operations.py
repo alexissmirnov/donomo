@@ -27,7 +27,7 @@ def create_document( owner, title ):
 
 # ---------------------------------------------------------------------------
 
-def add_page (document, data_stream, view_type)
+def add_page (document, data_stream, view_type):
     """
     Create a new page
     """
