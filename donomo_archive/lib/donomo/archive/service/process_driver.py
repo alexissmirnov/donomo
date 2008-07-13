@@ -28,7 +28,6 @@ def stop_process_driver(*args):
 def must_shut_down():
     """ Check if the process driver is supposed to shut down
     """
-    global MUST_SHUT_DOWN
     return MUST_SHUT_DOWN
 
 # ---------------------------------------------------------------------------
@@ -56,7 +55,7 @@ class ProcessThread(threading.Thread):
         """ Thread main
         """
         while True:
-            for process in process_list:
+            for process in self.process_list:
 
                 if must_shut_down():
                     return
@@ -104,14 +103,13 @@ def main():
     parser.add_option(
         '--sleep-period',
         default = 5,
-        type    'int' )
+        type    = 'int' )
 
-    options, process_names = parser.parse()
+    options, process_names = parser.parse_args()
 
     if len(process_names) == 0:
-        processs_names = [
-            'mail_parser',
-            'attachment_parser',
+        process_names = [
+            'tiff_parser',
             'ocr',
             'indexer',
             ]

@@ -2,16 +2,26 @@
 Full Text Indexer Process Driver
 """
 
+from __future__             import with_statement
 from donomo.archive.service import ProcessDriver
+from donomo.archive.models  import Page, manager
 from django.conf            import settings
 from django.template.loader import render_to_string
+from django.core.validators import ValidationError
 from logging                import getLogger
-from httplib2               import Http
+import httplib2
 import simplejson
+import urllib
+
+#
+# pylint: disable-msg=C0103
+#
+#   C0103 - variables at module scope must be all caps
+#
 
 logging = getLogger('indexer')
 
-# ---------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 def get_driver():
 
@@ -21,7 +31,7 @@ def get_driver():
 
     return IndexDriver()
 
-# ---------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 class IndexDriver(ProcessDriver):
 
@@ -62,11 +72,9 @@ class IndexDriver(ProcessDriver):
     def get_ocr_text( ocr_output_path):
         """ Get a version of the OCR text that the indexer can handle
             Omit all non-ascii characters from the input.
-
-            TODO: Can we do better than this?
         """
 
-        from __future__ import with_statement
+        # TODO: Must we omit non-ascii chars from the index input?
 
         with open(ocr_output_path, 'r') as ocr_output_file:
             text = "".join(
@@ -83,7 +91,7 @@ class IndexDriver(ProcessDriver):
             content of the page is in the file referencec by ocr_output_path
         """
 
-        http_client = Http()
+        http_client = httplib2.Http()
 
         body = render_to_string(
             self.SOLR_UPDATE_TEMPLATE,
@@ -112,7 +120,7 @@ class IndexDriver(ProcessDriver):
 
         if response.status >= 400:
             logging.error(
-                'Failed to commit ==index' % (
+                'Failed to commit (%s, %s)' % (
                     response.status,
                     content ))
             return False
@@ -121,18 +129,46 @@ class IndexDriver(ProcessDriver):
 
         return True
 
-# ---------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
-def query( user, query_string, start_index = 0, num_rows = 10):
+def validate_query_string(query_string):
+    """
+    Make sure parentheses in query string are properly balanced and that they
+    don't try to escape any parentheses we've added around the expression.
+    For example:
 
+       query_string = 'blah) OR (OWNER:foo'
+
+    """
+    nesting_level = 0
+    for char in query_string:
+        if char == '(':
+            nesting_level += 1
+        elif char == ')':
+            nesting_level -= 1
+            if nesting_level < 0:
+                raise ValidationError("Malformed query string")
+    if nesting_level != 0:
+        raise ValidationError("Malformed query string")
+
+# ----------------------------------------------------------------------------
+
+def raw_query( user, query_string, start_index = 0, num_rows = 50):
+    """
+    Query the SOLR index on behalf of the user and return the raw results
+
+    """
+    validate_query_string(query_string)
     solr_query_params = {
-        'q' : 'owner:%d AND %s' % (user.id, query_string),
-        'version' : 2.2,
-        'start'   : start_index,
-        'rows'    : num_rows,
-        'indent'  : 'on',
-        'hl'      : 'true',
-        'wt'      : 'json',
+        'q'            : 'owner:%d AND (%s)' % (user.id, query_string),
+        'version'      : 2.2,
+        'start'        : start_index,
+        'rows'         : num_rows,
+        'indent'       : 'on',
+        'hl'           : 'true',
+        'hl.fl'        : 'tags,text',
+        'hl.snippets'  : 3,
+        'wt'           : 'json',
         }
 
     solr_query_string = urllib.urlencode(solr_query_params)
@@ -141,15 +177,105 @@ def query( user, query_string, start_index = 0, num_rows = 10):
         IndexDriver.SOLR_QUERY_URL,
         solr_query_string)
 
-    log.debug('search query is %s' % solr_query_string)
+    logging.debug(
+        'search query is %s' % solr_query_string)
 
     response, content = httplib2.Http().request( solr_request_url, 'GET' )
 
-    logging.debug('GET to %s returns %s\n%s' % (request_url, res, content))
+    logging.debug(
+        'GET to %s returns %s\n%s' % (
+            solr_request_url,
+            response,
+            content ))
 
-    if ressponse.status != 200:
+    if response.status != 200:
         raise Exception("Search query failed")
 
     return simplejson.load(content)
 
-# ---------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------
+
+def collate_results( query_results ):
+    """
+    Transform a SOLR response (dictionary parsed from JSON) into a dictionary
+    more directly suitable for our purposes.  Pages are indexed individually
+    but we want to collate them into documents and store any highlighting
+    information alongside the document.
+
+    The resulting dictionary has the following structure.
+
+    documents = {
+        document.pk : {
+            solr_label_x     : solr_value_x,
+            'document_model' : document_model,
+            'search_hits'    : {
+                position : {
+                    'page_model'   : page_model,
+                    'highlighting' : {
+                        field : [ snippet1, snippet2 ],
+                    },
+                }
+            }
+        }
+    }
+
+    """
+    documents = {}
+
+    for page_result in query_results['response']['docs']:
+
+        #
+        # Find the page in the database
+        #
+
+        page_id = page_result['id']
+        page_model = manager(Page).get(pk = page_id)
+
+        #
+        # Get or create an entry for this pages document
+        #
+
+        document = documents.setdefault(
+            page_model.document.pk,
+            { 'document_model' : page_model.document,
+              'search_hits'    : {},
+              })
+
+        #
+        # take the SOLR search result and merge in the page model and
+        # highlighting information
+        #
+
+        page_result.update(
+            page_model   = page_model,
+            highlighting = query_results['highlighting'][page_id] )
+
+        #
+        # Save the resulting merged result as a hit or this document
+        #
+
+        document['search_hits'][ page_model.position ] = page_result
+
+
+    return documents
+
+# ----------------------------------------------------------------------------
+
+def query( user, query_string, start_index = 0, num_rows = 50):
+    """
+    Query the SOLR index on behalf of the user and return the collated results
+
+    """
+    return {
+        'query'       : query_string,
+        'start_index' : start_index,
+        'max_rows'    : num_rows,
+        'documents'   : collate_results( user,
+                                         raw_query( user,
+                                                    query_string,
+                                                    start_index,
+                                                    num_rows ) ),
+        }
+
+# ----------------------------------------------------------------------------
