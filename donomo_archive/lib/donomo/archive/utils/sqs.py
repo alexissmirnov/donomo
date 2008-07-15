@@ -7,6 +7,12 @@ from boto.sqs.message     import MHMessage as SQSMessage
 from time                 import time, sleep
 from logging              import getLogger
 
+#
+# pylint: disable-msg=C0103
+#
+#   C0103 - variables at module scope must be all caps
+#
+
 logging = getLogger('SQS')
 
 # -----------------------------------------------------------------------------
@@ -33,7 +39,7 @@ def get_queue(
         one if None
     """
 
-    connection = sqs_connection or new_sqs_connection()
+    connection = sqs_connection or get_connection()
 
     if create:
         queue = connection.create_queue(queue_name)
@@ -55,7 +61,7 @@ def create_queue(
         given connection, creating a new connection if none is given.
     """
 
-    return get_sqs_queue(queue_name, sqs_connection, True)
+    return get_queue(queue_name, sqs_connection, True)
 
 # -----------------------------------------------------------------------------
 
@@ -85,7 +91,7 @@ def post_message(sqs_queue, message):
     """
     logging.debug('posting %s to %s' % (message, sqs_queue.id))
     if not isinstance( message, SQSMessage ):
-        message = create_sqs_message(sqs_queue, message)
+        message = create_message(sqs_queue, message)
 
     sqs_queue.write(message)
 

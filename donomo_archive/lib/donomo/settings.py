@@ -1,84 +1,154 @@
+"""
+Django settings for the Donomo project.
+
+"""
 
 import os
 import os.path
 import platform
-import docstore
 import logging
 import sys
 
-# Django settings for vault project.
+#
+# pylint: disable-msg=W0142
+#   W0142 - Used * or ** magic
+#
 
-AWS_ACCESS_KEY_ID='1GMGNJ65JN96A8BA6602'
-AWS_SECRET_ACCESS_KEY='xdopAFEUuh0AHhOiR8eIP0MWiRiLsL1Svcy+zTjl'
-S3_HOST='s3.amazonaws.com'
-S3_IS_SECURE=False
-S3_BUCKET='vault.%s.smirnov.ca' % os.environ.get('LOGNAME') or os.getlogin()
-SQS_HOST='queue.amazonaws.com'
-SQS_IS_SECURE=False
-SOLR_HOST='127.0.0.1:8983'
+# ---------------------------------------------------------------------------
 
-# Determine if we're running on deployment server
+def get_module_path(module_name):
+    """
+    Helper function to get the path in which a module is defined.  Give the
+    module by fully-qualified name (e.g., 'donomo.archive.urls')
+
+    """
+    module = __import__(module_name)
+
+    for component in module_name.split('.')[1:]:
+        module = getattr(module, component)
+
+    return os.path.dirname( module.__file__ )
+
+# ---------------------------------------------------------------------------
+
+def join_and_normalize( *path_components ):
+    """
+    Helper function to combint os.path.join and os.path.normpath
+
+    """
+    return os.path.normpath(os.path.join(*path_components))
+
+# ---------------------------------------------------------------------------
+#
+# Debugging Status
+#
+
 DEVELOPMENT_MODE = (platform.node() != 'web18.webfaction.com')
+DEBUG            = DEVELOPMENT_MODE or os.environ.get('DEBUG', False)
+TEMPLATE_DEBUG   = DEBUG
+OS_USER_NAME     = os.environ.get('LOGNAME', None) or os.getlogin()
 
+# ---------------------------------------------------------------------------
+#
+# Handy path shortcuts
+#
+# TODO: Figure out a nice strategy for setting paths for logs and caches
+#
+
+DONOMO_PATH = get_module_path('donomo')
+DJANGO_PATH = get_module_path('django')
+LOG_PATH    = os.environ.get('LOG_DIR', '.')
+CACHE_PATH  = os.environ.get('CACHE_DIR', '/home/alexissmirnov/tmp/cache/')
+
+# ---------------------------------------------------------------------------
+#
+# Info and credentials for external services
+#
+# TODO: AWS creds should come from the environment, no?
+# TODO: Fix SOLR host information
+#
+
+AWS_ACCESS_KEY_ID     = '1GMGNJ65JN96A8BA6602'
+AWS_SECRET_ACCESS_KEY = 'xdopAFEUuh0AHhOiR8eIP0MWiRiLsL1Svcy+zTjl'
+S3_HOST               = 's3.amazonaws.com'
+S3_IS_SECURE          = True
+S3_BUCKET_PREFIX      = DEVELOPMENT_MODE and ("dev-%s." % OS_USER_NAME) or ''
+S3_BUCKET             = '%sdata.donomo.com' % S3_BUCKET_PREFIX
+SQS_HOST              = 'queue.amazonaws.com'
+SQS_IS_SECURE         = True
+SOLR_HOST             = '127.0.0.1:8983'
+S3_ACCESS_WINDOW      = 300
+
+# ---------------------------------------------------------------------------
+#
+# Logging setup
+#
+
+LOGGING_PARAMS = {
+    'format'  : '%(asctime)s,%(msecs)d %(name)s %(levelname)s [%(filename)s:%(lineno)d] %(module)s.%(funcName)s : %(message)s',
+    'datefmt' : '%H:%M:%S',
+    }
 
 if DEVELOPMENT_MODE:
-    DEBUG = True
-    DATABASE_ENGINE = 'sqlite3'
-    DATABASE_NAME = os.path.split(docstore.__file__)[0] + '/docstore.db'
-    MEDIA_ROOT = os.path.split(docstore.__file__)[0] + '/media/'
-    S3_BUCKET="dev." + S3_BUCKET
-    TEMPLATE_DIRS = (
-        os.path.split(docstore.__file__)[0] + '/templates',
-    )
-    ADMIN_MEDIA_PREFIX = '/admin_media/'
-    if __name__ == 'docstore.settings':
-        logging.basicConfig(
-            stream=sys.stdout,
-            level=logging.DEBUG,
-            format='%(asctime)s,%(msecs)d %(name)s %(levelname)s [%(filename)s:%(lineno)d] %(module)s.%(funcName)s : %(message)s',
-            datefmt='%H:%M:%S')
+    LOGGING_PARAMS.update( {
+            'stream'   : sys.stderr,
+            'level'    : logging.DEBUG,
+            })
 else:
-    DATABASE_ENGINE = 'mysql'
-    DATABASE_NAME = 'alexissmirnov_dj'
-    DATABASE_USER = 'alexissmirnov_dj'
-    DATABASE_PASSWORD = '99da604e'
+    LOGGING_PARAMS.update( {
+            'filename' : join_and_normalize(LOG_PATH, 'donomo.log'),
+            'level'    : logging.INFO,
+            })
 
-    DEBUG = False
-    MEDIA_ROOT = '~/webapps/static/media/'
-    TEMPLATE_DIRS = (
-        os.path.split(docstore.__file__)[0] + '/templates',
-        '~/lib/python2.5/django/contrib/admin/templates/',
-    )
+if __name__ == 'donomo.settings':
+    logging.basicConfig(**LOGGING_PARAMS)
+
+# ---------------------------------------------------------------------------
+#
+# Storage Settings
+#
+# [ Database, Cache, etc. ]
+#
+
+if DEVELOPMENT_MODE:
+    DATABASE_ENGINE    = 'sqlite3'
+    DATABASE_NAME      = join_and_normalize(DONOMO_PATH, 'donomo.db')
+    DATABASE_USER      = None
+    DATABASE_PASSWORD  = None
+    MEDIA_ROOT         = join_and_normalize(DONOMO_PATH, 'media/')
+    ADMIN_MEDIA_PREFIX = '/admin_media/'
+else:
+    DATABASE_ENGINE    = 'mysql'
+    DATABASE_NAME      = 'donomo'
+    DATABASE_USER      = 'donomo'
+    DATABASE_PASSWORD  = '8d85bcc668074be7ae4be08deae11705'
+    MEDIA_ROOT         = '~/webapps/static/media/'
     ADMIN_MEDIA_PREFIX = 'http://smirnov.ca/media/'
-
-    CACHE_BACKEND = "file:///home/alexissmirnov/tmp/cache/vault/"
-    CACHE_MIDDLEWARE_SECONDS = 60 * 5 # 5 minutes
-    CACHE_MIDDLEWARE_KEY_PREFIX = 'vault'
-    CACHE_MIDDLEWARE_GZIP = True
+    CACHE_BACKEND                   = "file://%s" % CACHE_PATH
+    CACHE_MIDDLEWARE_SECONDS        = 60 * 5 # 5 minutes
+    CACHE_MIDDLEWARE_KEY_PREFIX     = 'donomo'
+    CACHE_MIDDLEWARE_GZIP           = True
     CACHE_MIDDLEWARE_ANONYMOUS_ONLY = True
 
-    if __name__ == 'docstore.settings':
-        logging.basicConfig(filename='/home/alexissmirnov/logs/user/vault.log', level=logging.INFO,
-               format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
-               datefmt='%H:%M:%S')
 
-SOLR_HOST="127.0.0.1:8983"
+# ---------------------------------------------------------------------------
+#
+# Database Settings
+#
 
-
-TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
-    ('Alexis Smirnov', 'alexis@smirnov.ca'),
-    ('Roger McFarlane', 'roger.mcfarlane@gmail.com'),
+    ('Alexis Smirnov', 'alexis@donomo.com'),
+    ('Roger McFarlane', 'roger@donomo.com'),
 )
 
 MANAGERS = ADMINS
 
 # Local time zone for this installation. Choices can be found here:
-# http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
-# although not all choices may be avilable on all operating systems.
-# If running in a Windows environment this must be set to the same as your
-# system time zone.
+# http://en.wikipedia.org/wiki/List_of_tz_zones_by_name although not
+# all choices may be avilable on all operating systems.  If running in
+# a Windows environment this must be set to the same as your system
+# time zone.
 
 TIME_ZONE = 'UTC'
 
@@ -88,14 +158,14 @@ LANGUAGE_CODE = 'en-us'
 
 SITE_ID = 1
 
-# If you set this to False, Django will make some optimizations so as not
-# to load the internationalization machinery.
+# If you set this to False, Django will make some optimizations so as
+# not to load the internationalization machinery.
 USE_I18N = True
 
-
-# URL that handles the media served from MEDIA_ROOT. Make sure to use a
-# trailing slash if there is a path component (optional in other cases).
-# Examples: "http://media.lawrence.com", "http://example.com/media/"
+# URL that handles the media served from MEDIA_ROOT. Make sure to use
+# a trailing slash if there is a path component (optional in other
+# cases).  Examples: "http://media.lawrence.com",
+# "http://example.com/media/"
 MEDIA_URL = '/media/'
 
 
@@ -116,14 +186,19 @@ MIDDLEWARE_CLASSES = (
     'django_openidconsumer.middleware.OpenIDMiddleware',
 )
 
-ROOT_URLCONF = 'docstore.urls'
+ROOT_URLCONF = 'donomo.urls'
 
-TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-    os.path.normpath(os.path.join(os.path.dirname(docstore.__file__), 'templates')).replace('\\', r'/'),
-)
+TEMPLATE_DIRS = [
+    os.path.normpath(path).replace('\\', '/') for path in (
+
+        # This list comprehension will take care or normalizing the
+        # path and replacing backslash characters with forward slash.
+        # You just have to supply the absolute paths.
+
+        os.path.join(DONOMO_PATH, 'templates'),
+        os.path.join(DJANGO_PATH, 'contrib', 'admin', 'templates'),
+        )
+    ]
 
 INSTALLED_APPS = (
     'django.contrib.auth',
@@ -131,15 +206,11 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.admin',
-    'django_openidconsumer',
-    'docstore.core',
-    'docstore.apps.account',
-    'django_openidconsumer',
+    'donomo.archive',
 )
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
-    'docstore.apps.account.OpenIDAuthBackend',
     )
 
 AUTH_PROFILE_MODULE = 'account.userprofile'
@@ -150,6 +221,5 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.i18n",
     "django.core.context_processors.media",
     "django.core.context_processors.request",
-    
     )
 

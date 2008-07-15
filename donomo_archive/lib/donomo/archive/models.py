@@ -2,18 +2,70 @@
 Core Models.
 """
 
-from __future__ import with_statement
-from django.conf import settings
-from django.db import models
-from django.contrib.auth.models import User
+#
+# pylint: disable-msg=C0111,E1101,R0903,R0904,W0612
+#
+#   R0903 - too few public methods
+#   C0111 - missing docstring
+#   E1101 - instance of Foo has no bar member
+#   W0612 - unused variable
+#   R0904 - too many public methods
+#
+
+from __future__                          import with_statement
+from cStringIO                           import StringIO
+from django.conf                         import settings
+from django.contrib.auth.models          import User
+from django.contrib.contenttypes         import generic
 from django.contrib.contenttypes.models  import ContentType
-from django.contrib.contenttypes import generic
-from tempfile import gettempdir
-from StringIO import StringIO
-from django.utils.timesince import timesince
-import docstore.core.utils  as core_utils
-from docstore.core.utils import make_property
-from cStringIO import StringIO
+from django.db                           import models
+from django.db.models                    import permalink
+from django.utils.timesince              import timesince
+from donomo.archive.utils                import s3 as s3_utils
+from tempfile                            import gettempdir
+
+# -----------------------------------------------------------------------------
+
+def manager(model):
+    """
+    Helper function to get the manger for a model, without triggering
+    pylint errors.
+
+    """
+    return model.objects
+
+# -----------------------------------------------------------------------------
+
+class FaxNumber(models.Model):
+
+    """
+    Associates a fax number with a user.  The fax number can be one
+    from which the user sends faxes (i.e., an external number from
+    which the fax will be sent) or a number at which the user's acount
+    receives faxes (i.e., an internal number).
+    """
+
+    USER_SENDS_FROM = 'E' # External
+    USER_RECVS_AT   = 'I' # Internal
+
+    user = models.ForeignKey(
+        User,
+        edit_inline = models.TABULAR,
+        related_name = 'fax_numbers')
+
+    number = models.PhoneNumberField(
+        blank    = False,
+        core     = True,
+        db_index = True,
+        unique   = True )
+
+    type = models.CharField(
+        max_length  = 1,
+        core        = True,
+        default     = USER_SENDS_FROM,
+        radio_admin = True,
+        choices     = [ (USER_SENDS_FROM, 'External Sender #'),
+                        (USER_RECVS_AT,   'Internal Receive #') ])
 
 # -----------------------------------------------------------------------------
 
@@ -47,10 +99,7 @@ class Process(models.Model):
         default   = 180,
         help_text = 'Time after which the process is deemed to have failed' )
 
-    inputs = models.ManyToManyField(
-        'ViewType',
-        related_name = 'consumers',
-        help_text    = 'process outputs in which this process is interested' )
+    is_gateway = property( lambda self: self.inputs.all().count() == 0 )
 
     def __unicode__(self):
         """ The textual representation of this object as a string
@@ -58,19 +107,29 @@ class Process(models.Model):
         return self.name
 
     def inputs_as_text(self):
-        return ', '.join(map(str, self.inputs.all()))
-
-    inputs_as_text.short_description = 'inputs'
+        """
+        Get the list of inputs to this process as a comma seperated list
+        """
+        return ', '.join( [ str(i) for i in self.inputs.all() ] )
 
     def outputs_as_text(self):
-        return ', '.join(map(str, self.outputs.all()))
+        """
+        Get the list of outputs from this process as a comma seperated list
+        """
+        return ', '.join( [ str(o) for o in self.outputs.all() ] )
 
+    inputs_as_text.short_description  = 'inputs'
     outputs_as_text.short_description = 'outputs'
 
-    class Admin:
+    class Admin(object):
         """ Configuration for admin interface
         """
-        list_display = ( 'name', 'queue_name', 'inputs_as_text', 'outputs_as_text' )
+        list_display = (
+            'name',
+            'queue_name',
+            'inputs_as_text',
+            'outputs_as_text',
+            )
 
 # -----------------------------------------------------------------------------
 
@@ -88,7 +147,7 @@ class Node(models.Model):
         return self.address
 
 
-    class Admin:
+    class Admin(object):
         pass
 
 # -----------------------------------------------------------------------------
@@ -107,60 +166,62 @@ class Processor(models.Model):
         Node,
         related_name = 'processors')
 
-    @property
-    def name(self):
-        """ The name of this processor
-        """
-        return '%s@%s' % (self.process, self.node)
+    name = models.CharField(
+        max_length = 64,
+        blank      = False,
+        null       = False )
+    name = property(
+        lambda self: '%s [%s@%s]' % (self.name, self.process, self.node) )
 
-    @property
-    def queue_name(self):
-        """ The name of the message queue from which this process reads its input
-        """
-        return self.process.queue_name
+    queue_name = property(
+        lambda self : self.process.queue_name )
 
-    @property
-    def visibility_timeout(self):
-        """ The duration given to this process to finish handling a message from its
-            input queue.  If the process takes longer than this, the message is to
-            be reinstated in the input queue.
-        """
-        return self.process.visibility_timeout
+    visibility_timeout = property(
+        lambda self: self.process.visibility_timeout )
 
-    @property
-    def inputs(self):
-        """ The set of processes from which this process receives work items.
-        """
-        return self.process.inputs
+    inputs = property(
+        lambda self : self.process.inputs )
 
-    @property
-    def outputs(self):
-        """ The set of processes to which this process sends work items.
-        """
-        return self.process.outputs
+    outputs = property(
+        lambda self : self.process.outputs )
 
-    temp_dir = gettempdir()
+    temp_dir = property(
+        lambda self: gettempdir() )
+
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
     def __unicode__(self):
-        """ The textual representation of this object as a string
+        """
+        The textual representation of this object as a string
+
         """
         return self.name
 
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
     def inputs_as_text(self):
-        """ The list of inputs formatted as a comma seperated textual list
         """
-        return ', '.join(map(str, self.inputs.all()))
+        The list of inputs formatted as a comma seperated textual list
+
+        """
+        return self.process.inputs_as_text
 
     inputs_as_text.short_description = 'inputs'
 
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
     def outputs_as_text(self):
-        """ The list of outputs formatted as a comma seperated textual list
         """
-        return ', '.join(map(str, self.outputs.all()))
+        The list of outputs formatted as a comma seperated textual list
+
+        """
+        return self.process.outputs_as_text
 
     outputs_as_text.short_description = 'outputs'
 
-    class Admin:
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+    class Admin(object):
         """ Configuration for admin interface
         """
         list_display = (
@@ -174,14 +235,16 @@ class Processor(models.Model):
 
 class EventType(models.Model):
 
-    """ A type of event that can occur over the lifetime of a document.
+    """
+    A type of event that can occur over the lifetime of a document.
 
-        For example:
+    For example:
 
-          - Accepted
-          - Started
-          - Failed
-          - Completed
+      - Accepted
+      - Started
+      - Failed
+      - Completed
+
     """
 
     name = models.SlugField(
@@ -192,7 +255,7 @@ class EventType(models.Model):
     def __unicode__(self) :
         return str(self.name)
 
-    class Admin:
+    class Admin(object):
         pass
 
 # -----------------------------------------------------------------------------
@@ -219,24 +282,72 @@ class EventLog(models.Model):
 
     notes = models.TextField(blank=True)
 
-    class Meta:
-        """ Additional settings for this class of objects
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+    class Meta(object):
+
         """
+        Additional settings for this class of objects
+
+        """
+
         verbose_name = 'log entry'
         verbose_name_plural = 'log entries'
         ordering = ('-timestamp',)
 
-    class Admin:
-        """ Setting for the administration interface
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+    class Admin(object):
+
         """
+        Setting for the administration interface
+
+        """
+
         list_display = ( 'timestamp', 'event_type', 'processor', 'notes' )
+
+# -----------------------------------------------------------------------------
+
+class TagManager( models.Manager ):
+
+    """
+    Django model manager class for Tags
+    """
+
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+    def get_or_create_from_label_list( self, owner, label_list ):
+        """
+        Return a list of tags for the given owner, based on the list of
+        provided labels.
+
+        """
+        return [
+            self.get_or_create(
+                owner = owner,
+                label = label.strip().lower() ) [0]
+            for label in label_list ]
+
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+    def delete_unused_tags( self, owner ):
+        """
+        Delete all of owner's tags for which there are no tagged documents
+
+        """
+        self.filter(
+            owner = owner,
+            documents__isnull = True).delete()
 
 # -----------------------------------------------------------------------------
 
 class Tag(models.Model):
 
     """
+    Documents can be tagged
     """
+
+    objects = TagManager()
 
     owner = models.ForeignKey(
         User,
@@ -248,10 +359,14 @@ class Tag(models.Model):
         null = False,
         db_index = True )
 
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
     def __unicode__(self):
         return str(self.label)
 
-    class Meta:
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+    class Meta(object):
         unique_together = (
             ( 'owner', 'label', ),
             )
@@ -265,46 +380,45 @@ class Upload(models.Model):
         for its existence.
     """
 
-    class Admin:
-        """ Setting for the administration interface
-        """
-
-        list_display = ( 'timestamp', 'gateway', 'owner' )
-
-    class Meta:
-        """ Additional settings for this class of objects
-        """
-
-        ordering = ('-timestamp', )
-
     owner = models.ForeignKey(
         User,
         related_name = 'uploads')
 
-    gateway = models.ForeignKey(
-        Processor,
-        related_name = 'uploads')
+    view_type = models.ForeignKey(
+        ViewType,
+        related_name = 'uploads',
+        radio_admin  = True,)
 
     timestamp = models.DateTimeField(
         auto_now_add = True,
         db_index     = True )
 
-    @property
-    def s3_key(self):
-        """ The key (path) used to access this upload in S3
-        """
-        return '%s/uploads/%s' % ( self.owner.username, self.id )
+    s3_key = property(
+        lambda self :  '%s/uploads/%s' % (
+            self.owner.username,
+            self.pk ) )
 
-    @property
-    def description(self):
-        """ A textual representation of this upload
-        """
-        return '%s %s' % (self.gateway, self.timestamp)
+    description = property(
+        lambda self: '%s %s' % (
+            self.view_type.producer,
+            self.timestamp ))
 
     def __unicode__(self):
         """ A textual representation of this upload
         """
         return self.description
+
+    class Admin(object):
+        """ Setting for the administration interface
+        """
+
+        list_display = ( 'timestamp', 'processor', 'owner' )
+
+    class Meta(object):
+        """ Additional settings for this class of objects
+        """
+
+        ordering = ('-timestamp', )
 
 # -----------------------------------------------------------------------------
 
@@ -322,51 +436,64 @@ class Document(models.Model):
         blank      = True,
         default    = '' )
 
-    num_pages = property( lambda self: self.pages.count() )
+    num_pages = property(
+        lambda self: self.pages.count() )
 
     history = generic.GenericRelation(EventLog)
 
-    since_created = property(lambda self : timesince(self.history[0].timestamp))
+    since_created = property(
+        lambda self : timesince(self.history[0].timestamp))
 
-    tag_set = models.ManyToManyField(
+    tags = models.ManyToManyField(
         Tag,
         related_name = 'documents',
         blank = True,
         symmetrical = True )
 
-    @make_property
-    def tags():
-        """ Tags for this document
-        """
-        def fget(self):
-            return ', '.join( [ tag.label for tag in self.tag_set.all() ] )
-        def fset(self, text):
-            phrases = [ part.strip() for part in text.lower().split(',') ]
-            self.tag_set = [
-                Tag.objects.get_or_create(
-                    label = phrase,
-                    owner = self.owner) [0]
-                for phrase in phrases if len(phrase) > 0 ]
-        return locals()
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
+    def get_tags_as_text(self):
+        """
+        The tags associated with this document as a comma seperated list.
+
+        """
+        return ', '.join([ str(tag) for tag in self.tags.all() ])
+
+    get_tags_as_text.short_description = 'tags'
+
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+    @permalink
     def get_absolute_url(self):
-        """ Public URL of this object
         """
-        return Document.get_absolute_url_from_id(self.id)
+        Get the URL corresponding to this document.  This uses the permalink
+        reverse-lookup mechanism of django.  It returns a triple containing:
 
-    @staticmethod
-    def get_absolute_url_from_id(id):
-        return '/store/doc/%s/' % id
+          - the view name
+          - the list of positional arguments
+          - the dictionary of named arguments
 
-    def __unicode__(self) :
+        """
+        return ( 'document_info',
+                 (),
+                 { 'id' : self.pk } )
+
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+    def __unicode__(self):
+        """
+        Textual label for this document
+        """
         return self.title
 
-    class Admin:
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+    class Admin(object):
         list_display = (
             'owner',
             'title',
             'num_pages',
-            'tags'
+            'tags_as_text'
             )
 
 
@@ -374,7 +501,10 @@ class Document(models.Model):
 
 class Page(models.Model):
 
-    """  Object (actually, just the identifier) which represents a page.
+    """
+    Object which represents a page.  There are a number of page views that
+    hang off of the page object.
+
     """
 
     owner = models.ForeignKey(
@@ -385,86 +515,163 @@ class Page(models.Model):
         Document,
         related_name = 'pages')
 
-    binding_date = models.DateTimeField()
-
     position = models.PositiveIntegerField()
 
+    title = property(
+        lambda self: self.document.title )
+
+    description = property(
+        lambda self: '%s (%s / %s)' %  (
+            self.title,
+            self.positoin,
+            self.document.num_pages ))
+
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
     def get_view(self, view_name):
+        """
+        Get an object representing a particular view of this page
+
+        """
         return self.page_views.get(view_type__name = view_name)
 
-    def get_s3_path(self, view_name):
-        return self.get_views(view_name).s3_path
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+    def get_s3_key(self, view_name):
+        """
+        Get the path in S3 for a particular view of this page
+        """
+        return self.get_view(view_name).s3_key
+
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
     def download_to_stream( self, view_name, out_stream ):
-        return s3_utils.download_file_from_s3(
-            core_utils.get_s3_bucket(),
-            self.get_view(view_name).s3_path,
+        """
+        Download (to the given output stream) a particular view of this
+        page from S3.
+
+        """
+        return s3_utils.download_stream(
+            s3_utils.get_bucket(),
+            self.get_s3_key(view_name),
             out_stream )
 
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
     def download_to_file( self, view_name, path ):
-        with open(path, 'wb') as stream:
-            meta_data = self.download_to_stream(view_name, stream)
-            meta_data['Local-Path'] = path
-            return meta_data
+        """
+        Download (to the given output stream) a particular view of this
+        page from S3.
+
+        """
+        return s3_utils.download_file(
+            s3_utils.get_bucket(),
+            self.get_s3_key(view_name),
+            path )
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
     def download_to_memory(self, view_name ):
+        """
+        Download (to a RAM bufferm) a particular view of this
+        page from S3.  The buffer will be in the 'Content' entry
+        of the returned meta data dictionary
+
+        """
         stream = StringIO()
         meta_data = self.download_to_stream(view_name, stream)
         meta_data['Content'] = stream.getvalue()
         return meta_data
 
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
     def __unicode__(self):
-        return "page" + str(self.id)
+        """
+        """
+        return self.description
 
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+    @permalink
     def get_absolute_url(self):
-        return '/page/%s/' % self.id
+        """
+        Get the URL corresponding to this page.  This uses the permalink
+        reverse-lookup mechanism of django.  It returns a triple containing:
 
-    class Admin:
+          - the view name
+          - the list of positional arguments
+          - the dictionary of named arguments
+
+        """
+        return ( 'page_info',
+                 (),
+                 {'id': self.pk })
+
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+    class Admin(object):
         pass
 
 # -----------------------------------------------------------------------------
 
 class ViewType(models.Model):
-    """ A type of view of a document.
-
-        For example:
-
-          - original
-          - normalized
-          - pdf
     """
+    A semantic type of view of a document or page.
 
-    producer = models.ForeignKey(
-        Process,
-        related_name = 'outputs',
-        help_text    = 'The process that creates this representation' )
+    For example:
+
+      - original
+      - normalized
+      - pdf
+
+    """
 
     name = models.SlugField(
         max_length = 64,
-        #core       = True,
-        db_index   = True )
+        unique     = True,
+        core       = True,
+        db_index   = True,
+        help_text  = 'Name or label for this view type' )
 
-    content_type = models.CharField(
-        max_length   = 64,
-        blank        = False,
-        #core         = True,
-        help_text    = 'MIME content type for this representation' )
+    producers = models.ManyToManyField(
+        Process,
+        related_name = 'outputs',
+        help_text    = 'The processes that create this representation' )
+
+    consumers = models.ManyToManyField(
+        Process,
+        related_name = 'inputs',
+        help_text    = 'The processes that act on this representation' )
+
+    def producers_as_text(self):
+        """
+        Get the set of producers as a comma seperated list
+        """
+        return ', '.join( [ str(c) for c in self.producers.all() ] )
 
     def consumers_as_text(self):
-        return ', '.join(map(str, self.outputs.all()))
-
-    consumers_as_text.short_description = 'consumers'
+        """
+        Get the set of consumers as a comma seperated list
+        """
+        return ', '.join( [ str(c) for c in self.consumers.all() ] )
 
     def __unicode__(self):
-        return self.name
+        """
+        Human readable description of this view type
+        """
+        return str(self.name)
 
-    class Meta:
-        unique_together = (
-            ( 'producer', 'name' ),
-            )
+    producers_as_text.short_description = 'producers'
+    consumers_as_text.short_description = 'consumers'
 
-    class Admin:
-        list_display = ( 'name', 'producer', 'content_type', 'consumers_as_text' )
+    class Admin(object):
+        """
+        Admin options for ViewType objects
+
+        """
+        list_display = (
+            'name',
+            'producers_as_text',
+            'consumers_as_text' )
 
 
 # -----------------------------------------------------------------------------
@@ -479,7 +686,9 @@ class PageView(models.Model):
         http(s)://<s3-host>/<bucket>/<owner>/page/<page-id>/<view-type>
     """
 
-    page = models.ForeignKey(Page, related_name='page_views')
+    page = models.ForeignKey(
+        Page,
+        related_name='page_views')
 
     view_type = models.ForeignKey(
         ViewType,
@@ -488,28 +697,59 @@ class PageView(models.Model):
 
     history = generic.GenericRelation(EventLog)
 
-    @property
-    def s3_key(self):
-        """
-        The key (path) used to access this page view in S3
-        """
-        return '%s/pages/%s/%s' % (
-            self.page.owner.username,
-            self.page.id,
-            self.view_type.name ))
+    owner = property(
+        lambda self: self.page.owner)
 
+    document = property(
+        lambda self: self.page.document)
+
+    position = property(
+        lambda self: self.page.position)
+
+    s3_key = property(
+        lambda self:  '%s/pages/%s/%s' % (
+            self.owner.pk,
+            self.page.pk,
+            self.view_type.name ) )
+
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+    @permalink
     def get_absolute_url(self):
-        return self.get_s3_url()
+        """
+        Get the URL corresponding to this document.  This uses the permalink
+        reverse-lookup mechanism of django.  It returns a triple containing:
+
+          - the view name
+          - the list of positional arguments
+          - the dictionary of named arguments
+
+        """
+        return ( 'api_page_info',
+                 (),
+                 { 'id' : self.pk } )
+
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
     def __unicode__(self):
-        return 'Page %s (%s)' % ( self.page, self.view_type)
+        """
+        Human readable representation of this page view
+        """
+        return '[%s] %s' % ( self.view_type, self.page)
 
-    class Admin:
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+    class Admin(object):
+        """
+        Admin options for page view objects
+
+        """
         list_display = (
-            'page__owner',
-            'page__document',
-            'page__position',
-            'view_type')
+            'owner',
+            'document',
+            'position',
+            'view_type',
+            )
 
 # -----------------------------------------------------------------------------
 
@@ -537,5 +777,5 @@ class Query(models.Model):
         max_length = 255,
         db_index   = True)
 
-    class Admin:
+    class Admin(object):
         pass

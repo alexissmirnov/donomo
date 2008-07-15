@@ -4,6 +4,7 @@ Handy middleware (Django compatible) and decorators.
 """
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.validators import ValidationError, CriticalValidationError
 from django.db              import IntegrityError
 from django.http            import HttpResponse, Http404
 import simplejson
@@ -94,13 +95,26 @@ class AjaxErrorHandlingMiddleware(object):
             return None
 
         #
-        # Figure out the error message
+        # Figure out the error messages
         #
 
-        if hasattr(exception, 'message'):
-            message = exception.message
+        if hasattr(exception, 'messages'):
+            #
+            # Django's ValidationError and CriticalValidationError exceptions
+            #
+            messages = exception.message
+
+        elif hasattr(exception, 'message'):
+            #
+            # Most other exception only have a single message
+            #
+            messages = [ exception.message ]
+
         else:
-            message = 'Internal error: %s' % exception
+            #
+            # Otherwise we just turn the exception into a string
+            #
+            messages = [ 'Internal error: %s' % exception ]
 
         #
         # Figure out the status code
@@ -122,12 +136,13 @@ class AjaxErrorHandlingMiddleware(object):
 
             status = httplib.CONFLICT
 
-        elif isinstance(exception, KeyError):
+        elif ( isinstance(exception, KeyError)
+               or isinstance(exception, ValueError)
+               or isinstance(exception, ValidationError)
+               or isinstance(exception, CriticalValidationError) ):
             #
-            # Let's interpret all key error (lookups in dictionaries)
-            # as bad requests.  The usual scenario will be that the
-            # view failed to find an expected parameter in the GET or
-            # POST.
+            # Let's interpret all data errors (invalid key lookups,
+            # value conversion, validation) as bad requests.
             #
 
             status = httplib.BAD_REQUEST
@@ -154,8 +169,8 @@ class AjaxErrorHandlingMiddleware(object):
         #
 
         response_dict = {
-            'status'  : status,
-            'message' : message,
+            'status'   : status,
+            'messages' : messages,
             }
 
         return HttpResponse(

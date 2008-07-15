@@ -1,11 +1,22 @@
 """ Handy API for dealing with AWS
 """
 
+from __future__           import with_statement
 from django.conf          import settings
 from boto.s3.connection   import S3Connection, S3ResponseError
+from boto.s3.connection   import OrdinaryCallingFormat
 from boto.s3.key          import Key as S3Key
+from boto.s3.bucket       import Bucket as S3Bucket
 from logging              import getLogger
-from __future__           import with_statement
+import mimetypes
+
+#
+# pylint: disable-msg=C0103,R0913
+#
+#   C0103 - variables at module scope must be all caps
+#   R0913 - too many parameters to a function
+#
+
 logging = getLogger('S3')
 
 # -----------------------------------------------------------------------------
@@ -18,7 +29,8 @@ def get_connection():
         aws_access_key_id     = settings.AWS_ACCESS_KEY_ID,
         aws_secret_access_key = settings.AWS_SECRET_ACCESS_KEY,
         host                  = settings.S3_HOST,
-        is_secure             = settings.S3_IS_SECURE )
+        is_secure             = settings.S3_IS_SECURE,
+        calling_format        = OrdinaryCallingFormat())
 
 # -----------------------------------------------------------------------------
 
@@ -36,11 +48,13 @@ def get_bucket(
     if create:
         return connection.create_bucket(bucket_name)
 
-    return connection.get_bucket(bucket_name)
+    return S3Bucket(
+        connection = connection,
+        name       = bucket_name)
 
 # -----------------------------------------------------------------------------
 
-def _get_object(
+def get_key(
     s3_bucket,
     path ):
 
@@ -48,6 +62,29 @@ def _get_object(
     """
 
     return S3Key( s3_bucket, name=path )
+
+# -----------------------------------------------------------------------------
+
+def get_url(
+    key,
+    method,
+    expires_in,
+    bucket_name = settings.S3_BUCKET,
+    headers     = None,
+    query_auth  = True ):
+
+    """
+    Generate an S3 URL, with or without query authentication.
+
+    """
+
+    return get_connection().generate_url(
+        expires_in = expires_in,
+        method     = method,
+        bucket     = bucket_name,
+        key        = s3_path,
+        headers    = headers,
+        query_auth = query_auth )
 
 # -----------------------------------------------------------------------------
 
@@ -62,7 +99,7 @@ def upload_stream(
         interface, and the content type will be set.
     """
 
-    _get_s3_object(s3_bucket, dest_path).set_contents_from_file(
+    get_key(s3_bucket, dest_path).set_contents_from_file(
         data_stream,
         { 'Content-Type' : content_type or 'application/octet-stream' })
 
@@ -113,7 +150,7 @@ def download_stream(
         Returns a dictionary containing the files meta-data.
     """
 
-    s3_object = _get_s3_object( s3_bucket, src_path )
+    s3_object = get_key( s3_bucket, src_path )
 
     logging.debug('Downloading %s' % s3_object.name)
 
@@ -138,7 +175,7 @@ def download_file(
         Returns a dictionary containing the files meta-data.
     """
 
-    s3_object = _get_s3_object( s3_bucket, src_path )
+    s3_object = get_key( s3_bucket, src_path )
 
     logging.debug('Downloading %s' % s3_object.name)
 

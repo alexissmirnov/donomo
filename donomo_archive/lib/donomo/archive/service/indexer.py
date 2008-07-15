@@ -46,7 +46,22 @@ class IndexDriver(ProcessDriver):
 
     ACCEPTED_CONTENT_TYPES = [ 'text/plain' ]
 
-    SOLR_UPDATE_TEMPLATE = 'services/solr-document-update.xml'
+    SOLR_UPDATE_TEMPLATE = \
+        """{% spaceless %}
+        {% autoescape on %}
+        <?xml version="1.0" encoding="UTF-8"?>
+        <add>
+          <doc>
+            <field name="id">{{id}}</field>
+            <field name="did">{{did}}</field>
+            <field name="text">{{content}}</field>
+            <field name="owner">{{owner.id}}</field>{% for tag in tags %}
+            <field name="tag">{{tag}}</field>{% endfor %}
+          </doc>
+        </add>
+        <commit/>
+        {% endautoescape %}
+        {% endspaceless %}"""
 
     SOLR_UPDATE_URL = 'http://%s/solr/update/' % settings.SOLR_HOST
 
@@ -69,34 +84,32 @@ class IndexDriver(ProcessDriver):
     #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
     @staticmethod
-    def get_ocr_text( ocr_output_path):
+    def get_ocr_text( original_text ):
         """ Get a version of the OCR text that the indexer can handle
             Omit all non-ascii characters from the input.
         """
 
         # TODO: Must we omit non-ascii chars from the index input?
 
-        with open(ocr_output_path, 'r') as ocr_output_file:
-            text = "".join(
-                [ char for char in ocr_output_file.read()
-                  if ord(char) < 128 ] )
-
-        return text
+        return = "".join(
+            [ char
+              for char in original_text
+              if ord(char) < 128 ] )
 
     #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
-    def index_page(self, page, ocr_output_path):
-
-        """ Update the full-text index for the given page.  The textual
-            content of the page is in the file referencec by ocr_output_path
+    def index_page_from_string( self, page, text )
         """
+        Update the full-text index for the given page.  The textual
+        content of the page the string 'text'.
 
+        """
         http_client = httplib2.Http()
 
         body = render_to_string(
             self.SOLR_UPDATE_TEMPLATE,
             { 'page' : page,
-              'text' : self.get_ocr_text(ocr_output_path),
+              'text' : self.get_ocr_text(text),
               } )
 
         response, content = http_client.request(
@@ -112,22 +125,21 @@ class IndexDriver(ProcessDriver):
                     content ))
             return False
 
-        response, content = http_client.request(
-            uri     = self.SOLR_UPDATE_URL,
-            method  = 'POST',
-            body    = "<commit/>",
-            headers = { "Content-type" : "text/xml; charset=utf-8" })
-
-        if response.status >= 400:
-            logging.error(
-                'Failed to commit (%s, %s)' % (
-                    response.status,
-                    content ))
-            return False
-
         logging.info('Updated full-text index for %s' % page)
 
         return True
+
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+    def index_page_from_file(self, page, file_path):
+        """
+        Update the full-text index for the given page.  The textual
+        content of the page is in the file referencec by file_path.
+
+        """
+        with open(text_file_path, 'r') as text_file:
+            return self.index_page_from_string(self, page, text_file.read())
+
 
 # ----------------------------------------------------------------------------
 
@@ -277,5 +289,27 @@ def query( user, query_string, start_index = 0, num_rows = 50):
                                                     start_index,
                                                     num_rows ) ),
         }
+
+# ----------------------------------------------------------------------------
+
+def reset():
+    """
+    Delete the entire index
+    """
+    logging.critical('Deleting search index')
+
+    http_client = httplib2.Http()
+    response, content = http_client.request(
+        uri     = IndexDriver.SOLR_UPDATE_URL,
+        method  = 'POST',
+        body    = "<delete><query>*:*</query></delete><commit/>",
+        headers = { "Content-Type" : "text/xml; charset=utf-8" } )
+
+    if response.status != 200:
+        message = 'Failed to delete search index:\n%s' % content.read()
+        logging.error(message)
+        raise Exception(message)
+
+    logging.critical('Search index deleted')
 
 # ----------------------------------------------------------------------------

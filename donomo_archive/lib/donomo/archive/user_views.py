@@ -45,19 +45,9 @@ def front_page__GET(request):
             { 'search_query' : request.GET.get('q','') },
             context_instance = RequestContext(request))
 
-# ---------------------------------------------------------------------------
-
-@login_required
-@http_method_dispatcher
-def document_details():
-    return {
-        'GET'  : document_details__GET,
-        'POST' : document_details__POST,
-        }
-
 #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
-def document_details__GET(request, id):
+def get_document_info(request, id):
     format = request.GET.get('format', 'application/json')
     viewtype = request.GET.get('viewtype', None)
 
