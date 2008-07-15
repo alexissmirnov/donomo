@@ -13,8 +13,6 @@ import os
 #   C0103 - variables at module scope must be all caps
 #
 
-__all__ = ( 'get_driver' )
-
 logging = getLogger('OCR')
 
 # ---------------------------------------------------------------------------

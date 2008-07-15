@@ -1,10 +1,32 @@
 #!/usr/bin/env python
 from django.core.management import execute_manager
+import os
+
+# ---------------------------------------------------------------------------
+
+def get_module(module_name):
+    """
+    Import a module by name, returning the module.
+
+    """
+    module = __import__(module_name)
+
+    for component in module_name.split('.')[1:]:
+        module = getattr(module, component)
+
+    return module
+
+# ---------------------------------------------------------------------------
+
+DJANGO_SETTINGS_MODULE = os.environ.get(
+    'DJANGO_SETTINGS_MODULE',
+    'donomo.settings' )
+
 try:
-    import settings # Assumed to be in the same directory.
+    settings = get_module(DJANGO_SETTINGS_MODULE)
 except ImportError:
     import sys
-    sys.stderr.write("Error: Can't find the file 'settings.py' in the directory containing %r. It appears you've customized things.\nYou'll have to run django-admin.py, passing it your settings module.\n(If the file settings.py does indeed exist, it's causing an ImportError somehow.)\n" % __file__)
+    sys.stderr.write("Error: Failed to import %s" % DJANGO_SETTINGS_MODULE)
     sys.exit(1)
 
 if __name__ == "__main__":

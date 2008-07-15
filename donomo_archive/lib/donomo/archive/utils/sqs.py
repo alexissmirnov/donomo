@@ -42,6 +42,7 @@ def get_queue(
     connection = sqs_connection or get_connection()
 
     if create:
+        logging.debug('Creating SQS queue: %s' % queue_name)
         queue = connection.create_queue(queue_name)
     else:
         queue = connection.get_queue(queue_name)

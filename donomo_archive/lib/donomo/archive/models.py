@@ -24,6 +24,8 @@ from django.utils.timesince              import timesince
 from donomo.archive.utils                import s3 as s3_utils
 from tempfile                            import gettempdir
 
+import re
+
 # -----------------------------------------------------------------------------
 
 def manager(model):
@@ -91,12 +93,9 @@ class Process(models.Model):
         db_index   = True,
         help_text  = 'A unique identifier for this process.' )
 
+
     queue_name = property(
-        lambda self : (
-            '%s_%s' % (
-                settings.S3_BUCKET,
-                self.name )
-            ).replace('.','_'))
+        lambda self: self.get_queue_name() )
 
     visibility_timeout = models.IntegerField(
         default   = 180,
@@ -108,6 +107,16 @@ class Process(models.Model):
         """ The textual representation of this object as a string
         """
         return self.name
+
+    def get_queue_name(self):
+        """
+        Calculate and cache the queue name for this process.
+        """
+        if self._queue_name is None:
+            self._queue_name = self.illegal_queue_name_chars.sub(
+                '_',
+                '%s_%s' % (settings.S3_BUCKET, self.name)).strip().lower()
+        return self._queue_name
 
     def inputs_as_text(self):
         """
@@ -123,6 +132,9 @@ class Process(models.Model):
 
     inputs_as_text.short_description  = 'inputs'
     outputs_as_text.short_description = 'outputs'
+
+    illegal_queue_name_chars = re.compile('[^\w\-]')
+    _queue_name = None
 
     class Admin:
         """ Configuration for admin interface
@@ -232,12 +244,8 @@ class Processor(models.Model):
         Node,
         related_name = 'processors')
 
-    name = models.CharField(
-        max_length = 64,
-        blank      = False,
-        null       = False )
     name = property(
-        lambda self: '%s [%s@%s]' % (self.name, self.process, self.node) )
+        lambda self: '%s@%s' % (self.process, self.node) )
 
     queue_name = property(
         lambda self : self.process.queue_name )

@@ -117,7 +117,7 @@ class ProcessDriver:
 
         """
 
-        work_item = operations.get_work_item(self.processor)
+        work_item = operations.get_work_item(self.processor, max_wait_time = 0)
 
         if work_item is None:
             return False

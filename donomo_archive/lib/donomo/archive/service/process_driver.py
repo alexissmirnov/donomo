@@ -20,6 +20,7 @@ logging = logging_module.getLogger('process_driver')
 def stop_process_driver(*args):
     """ Signal handler called when a shutdown must
     """
+    logging.info('Shutting down')
     global MUST_SHUT_DOWN
     MUST_SHUT_DOWN = True
 
@@ -39,15 +40,24 @@ class ProcessThread(threading.Thread):
 
     #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
-    def __init__(self, name, options, process_list):
+    def __init__(self, name, options, driver_list):
         """ Construct a new process thread
         """
         threading.Thread.__init__(self, name = name)
+        logging.debug('Starting thread %s' % self)
         self.options = options
-        self.process_list = process_list
+        self.driver_list = driver_list
         self.setDaemon(True)
         self.start()
         time.sleep(2)
+
+    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+    def __str__(self):
+        """
+        A string representing this thread
+        """
+        return self.getName()
 
     #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
@@ -55,13 +65,14 @@ class ProcessThread(threading.Thread):
         """ Thread main
         """
         while True:
-            for process in self.process_list:
+            for driver in self.driver_list:
 
                 if must_shut_down():
+                    logging.debug('Stopping thread %s' % self)
                     return
 
                 try:
-                    performed_work = process.run_once()
+                    performed_work = driver.run_once()
                 except:
                     logging.error(traceback.print_exc())
                     performed_work = False
@@ -105,20 +116,20 @@ def main():
         default = 5,
         type    = 'int' )
 
-    options, process_names = parser.parse_args()
+    options, driver_names = parser.parse_args()
 
-    if len(process_names) == 0:
-        process_names = [
+    if len(driver_names) == 0:
+        driver_names = [
             'tiff_parser',
             'ocr',
             'indexer',
             ]
 
-    process_list = [ get_process_driver(name) for name in process_names ]
+    driver_list = [ get_process_driver(name) for name in driver_names ]
 
     thread_list = [
-        ProcessThread( 'Worker-%03d' % i, process_list) \
-            for i in xrange(1, 1 + options.num_threads)
+        ProcessThread( 'Worker-%03d' % i, options, driver_list)
+        for i in xrange(1, 1 + options.num_threads)
         ]
 
     for thread in thread_list:

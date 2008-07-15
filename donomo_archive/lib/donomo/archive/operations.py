@@ -28,10 +28,8 @@ from donomo.archive.utils               import sqs as sqs_utils
 from logging                            import getLogger
 from platform                           import node
 from socket                             import gethostbyname, gaierror
+from django.db                          import connection
 
-import django.db.backend
-import django.db.connection
-import django.db.models
 import mimetypes
 import os
 import tempfile
@@ -39,8 +37,8 @@ import tempfile
 logging    = getLogger('donomo-archive')
 page_meta  = manager(Page).model._meta
 get_field  = page_meta.get_field
-quote_name = django.db.backend.quote_name
-get_cursor = django.db.backend.cursor
+quote_name = connection.ops.quote_name
+get_cursor = connection.cursor
 
 # ---------------------------------------------------------------------------
 
@@ -311,14 +309,11 @@ def get_or_create_processor(
     if process.outputs.count() == 0:
         logging.info('Adding default output routing for %s' % process)
         for view_name, consumers in default_outputs:
-            view_type = manager(ViewType).get_or_create(
-                producer = process,
-                name = view_name ) [0]
+            view_type = manager(ViewType).get_or_create(name = view_name)[0]
+            view_type.producers.add(process)
             for consumer in consumers:
-                view_type.consumers.add(
-                    manager(Process).get_or_create(
-                        name = consumer ) [0] )
-            process.outputs.add(view_type)
+                consumer = manager(Process).get_or_create(name = consumer) [0]
+                view_type.consumers.add(consumer)
 
     try:
         address = gethostbyname(node())
@@ -335,6 +330,8 @@ def get_or_create_processor(
 
     if created:
         logging.info('Registered processor: %s' % processor)
+
+    sqs_utils.create_queue(processor.queue_name)
 
     logging.debug('Retrieved processor: %s' % processor)
 

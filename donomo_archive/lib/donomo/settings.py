@@ -85,8 +85,7 @@ S3_ACCESS_WINDOW      = 300
 #
 
 LOGGING_PARAMS = {
-    'format'  : '%(asctime)s,%(msecs)d %(name)s %(levelname)s [%(filename)s:%(lineno)d] %(module)s.%(funcName)s : %(message)s',
-    'datefmt' : '%H:%M:%S',
+    'format'  : '%(asctime)s %(name)s %(levelname)s [%(filename)s:%(lineno)d] %(module)s.%(funcName)s : %(message)s',
     }
 
 if DEVELOPMENT_MODE:
@@ -102,6 +101,8 @@ else:
 
 if __name__ == 'donomo.settings':
     logging.basicConfig(**LOGGING_PARAMS)
+
+logging.getLogger('boto').setLevel(logging.INFO)
 
 # ---------------------------------------------------------------------------
 #

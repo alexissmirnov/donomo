@@ -21,7 +21,6 @@ import os
 #   R0922 - Abstract class is only referenced once
 #
 
-__all__ = ( 'get_driver' )
 logging = getLogger('TIFF Parser')
 
 # ---------------------------------------------------------------------------

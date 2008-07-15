@@ -91,14 +91,14 @@ class IndexDriver(ProcessDriver):
 
         # TODO: Must we omit non-ascii chars from the index input?
 
-        return = "".join(
+        return "".join(
             [ char
               for char in original_text
               if ord(char) < 128 ] )
 
     #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
-    def index_page_from_string( self, page, text )
+    def index_page_from_string( self, page, text ):
         """
         Update the full-text index for the given page.  The textual
         content of the page the string 'text'.
