@@ -1,0 +1,7 @@
+#!/bin/sh -e
+
+export DJANGO_SETTINGS_MODULE=donomo.settings
+
+python -m donomo.manage syncdb
+exec python -m donomo.archive.service.process_driver "$@"
+
