@@ -67,6 +67,9 @@ class FaxNumber(models.Model):
         choices     = [ (USER_SENDS_FROM, 'External Sender #'),
                         (USER_RECVS_AT,   'Internal Receive #') ])
 
+    class Admin:
+        pass
+
 # -----------------------------------------------------------------------------
 
 class Process(models.Model):
@@ -121,7 +124,7 @@ class Process(models.Model):
     inputs_as_text.short_description  = 'inputs'
     outputs_as_text.short_description = 'outputs'
 
-    class Admin(object):
+    class Admin:
         """ Configuration for admin interface
         """
         list_display = (
@@ -130,6 +133,69 @@ class Process(models.Model):
             'inputs_as_text',
             'outputs_as_text',
             )
+
+# -----------------------------------------------------------------------------
+
+class ViewType(models.Model):
+    """
+    A semantic type of view of a document or page.
+
+    For example:
+
+      - original
+      - normalized
+      - pdf
+
+    """
+
+    name = models.SlugField(
+        max_length = 64,
+        unique     = True,
+        core       = True,
+        db_index   = True,
+        help_text  = 'Name or label for this view type' )
+
+    producers = models.ManyToManyField(
+        Process,
+        related_name = 'outputs',
+        help_text    = 'The processes that create this representation' )
+
+    consumers = models.ManyToManyField(
+        Process,
+        related_name = 'inputs',
+        help_text    = 'The processes that act on this representation' )
+
+    def producers_as_text(self):
+        """
+        Get the set of producers as a comma seperated list
+        """
+        return ', '.join( [ str(c) for c in self.producers.all() ] )
+
+    def consumers_as_text(self):
+        """
+        Get the set of consumers as a comma seperated list
+        """
+        return ', '.join( [ str(c) for c in self.consumers.all() ] )
+
+    def __unicode__(self):
+        """
+        Human readable description of this view type
+        """
+        return str(self.name)
+
+    producers_as_text.short_description = 'producers'
+    consumers_as_text.short_description = 'consumers'
+
+    class Admin:
+        """
+        Admin options for ViewType objects
+
+        """
+        list_display = (
+            'name',
+            'producers_as_text',
+            'consumers_as_text' )
+
 
 # -----------------------------------------------------------------------------
 
@@ -147,7 +213,7 @@ class Node(models.Model):
         return self.address
 
 
-    class Admin(object):
+    class Admin:
         pass
 
 # -----------------------------------------------------------------------------
@@ -221,7 +287,7 @@ class Processor(models.Model):
 
     #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
-    class Admin(object):
+    class Admin:
         """ Configuration for admin interface
         """
         list_display = (
@@ -255,7 +321,7 @@ class EventType(models.Model):
     def __unicode__(self) :
         return str(self.name)
 
-    class Admin(object):
+    class Admin:
         pass
 
 # -----------------------------------------------------------------------------
@@ -284,7 +350,7 @@ class EventLog(models.Model):
 
     #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
-    class Meta(object):
+    class Meta:
 
         """
         Additional settings for this class of objects
@@ -297,7 +363,7 @@ class EventLog(models.Model):
 
     #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
-    class Admin(object):
+    class Admin:
 
         """
         Setting for the administration interface
@@ -366,7 +432,7 @@ class Tag(models.Model):
 
     #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
-    class Meta(object):
+    class Meta:
         unique_together = (
             ( 'owner', 'label', ),
             )
@@ -403,18 +469,21 @@ class Upload(models.Model):
             self.view_type.producer,
             self.timestamp ))
 
+    processor = models.ForeignKey(
+        Processor)
+
     def __unicode__(self):
         """ A textual representation of this upload
         """
         return self.description
 
-    class Admin(object):
+    class Admin:
         """ Setting for the administration interface
         """
 
         list_display = ( 'timestamp', 'processor', 'owner' )
 
-    class Meta(object):
+    class Meta:
         """ Additional settings for this class of objects
         """
 
@@ -488,12 +557,12 @@ class Document(models.Model):
 
     #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
-    class Admin(object):
+    class Admin:
         list_display = (
             'owner',
             'title',
             'num_pages',
-            'tags_as_text'
+            'get_tags_as_text'
             )
 
 
@@ -608,71 +677,8 @@ class Page(models.Model):
 
     #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
-    class Admin(object):
+    class Admin:
         pass
-
-# -----------------------------------------------------------------------------
-
-class ViewType(models.Model):
-    """
-    A semantic type of view of a document or page.
-
-    For example:
-
-      - original
-      - normalized
-      - pdf
-
-    """
-
-    name = models.SlugField(
-        max_length = 64,
-        unique     = True,
-        core       = True,
-        db_index   = True,
-        help_text  = 'Name or label for this view type' )
-
-    producers = models.ManyToManyField(
-        Process,
-        related_name = 'outputs',
-        help_text    = 'The processes that create this representation' )
-
-    consumers = models.ManyToManyField(
-        Process,
-        related_name = 'inputs',
-        help_text    = 'The processes that act on this representation' )
-
-    def producers_as_text(self):
-        """
-        Get the set of producers as a comma seperated list
-        """
-        return ', '.join( [ str(c) for c in self.producers.all() ] )
-
-    def consumers_as_text(self):
-        """
-        Get the set of consumers as a comma seperated list
-        """
-        return ', '.join( [ str(c) for c in self.consumers.all() ] )
-
-    def __unicode__(self):
-        """
-        Human readable description of this view type
-        """
-        return str(self.name)
-
-    producers_as_text.short_description = 'producers'
-    consumers_as_text.short_description = 'consumers'
-
-    class Admin(object):
-        """
-        Admin options for ViewType objects
-
-        """
-        list_display = (
-            'name',
-            'producers_as_text',
-            'consumers_as_text' )
-
 
 # -----------------------------------------------------------------------------
 
@@ -739,7 +745,7 @@ class PageView(models.Model):
 
     #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
-    class Admin(object):
+    class Admin:
         """
         Admin options for page view objects
 
@@ -777,5 +783,5 @@ class Query(models.Model):
         max_length = 255,
         db_index   = True)
 
-    class Admin(object):
+    class Admin:
         pass
