@@ -1,7 +1,7 @@
 from __future__ import with_statement
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest
-from docstore.utils.http import HttpResponseCreated
-from docstore.core.models import Document, PageView, Query, Page, Binding
+from donomo.archive.utils.http import HttpResponseCreated
+from donomo.archive.models import Document, PageView, Query, Page, Binding
 import docstore.core.utils  as core_utils
 import docstore.utils.pdf as pdf_utils
 import docstore.core.api  as core_api

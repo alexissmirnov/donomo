@@ -57,24 +57,23 @@ OS_USER_NAME     = os.environ.get('LOGNAME', None) or os.getlogin()
 
 DONOMO_PATH = get_module_path('donomo')
 DJANGO_PATH = get_module_path('django')
-LOG_PATH    = os.environ.get('LOG_DIR', '.')
-CACHE_PATH  = os.environ.get('CACHE_DIR', '/home/alexissmirnov/tmp/cache/')
+LOG_PATH    = os.environ.get('DONOMO_LOG_PATH', '.')
+CACHE_PATH  = os.environ.get('DONOMO_CACHE_PATH', '/home/alexissmirnov/tmp/cache/')
 
 # ---------------------------------------------------------------------------
 #
 # Info and credentials for external services
 #
-# TODO: AWS creds should come from the environment, no?
 # TODO: Fix SOLR host information
 #
 
-AWS_ACCESS_KEY_ID     = '1GMGNJ65JN96A8BA6602'
-AWS_SECRET_ACCESS_KEY = 'xdopAFEUuh0AHhOiR8eIP0MWiRiLsL1Svcy+zTjl'
-S3_HOST               = 's3.amazonaws.com'
+AWS_ACCESS_KEY_ID     = os.environ.get('AWS_ACCESS_KEY_ID', '1GMGNJ65JN96A8BA6602')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', 'xdopAFEUuh0AHhOiR8eIP0MWiRiLsL1Svcy+zTjl')
+S3_HOST               = os.environ.get('S3_HOST', 's3.amazonaws.com')
 S3_IS_SECURE          = True
 S3_BUCKET_PREFIX      = DEVELOPMENT_MODE and ("dev-%s." % OS_USER_NAME) or ''
 S3_BUCKET             = '%sdata.donomo.com' % S3_BUCKET_PREFIX
-SQS_HOST              = 'queue.amazonaws.com'
+SQS_HOST              = os.environ.get('SQS_HOST', 'queue.amazonaws.com')
 SQS_IS_SECURE         = True
 SOLR_HOST             = '127.0.0.1:8983'
 S3_ACCESS_WINDOW      = 300
@@ -171,7 +170,7 @@ MEDIA_URL = '/media/'
 
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = 'gpx4_jy)xmr#z@%zqpnco@34s!#nb82003e2nv^k-kzc0m$x*z'
+SECRET_KEY = os.environ.get('DONOMO_SECRET_KEY', 'gpx4_jy)xmr#z@%zqpnco@34s!#nb82003e2nv^k-kzc0m$x*z')
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
