@@ -1,17 +1,16 @@
 """
-API for dealing with PDF files and in-memory streams
-
+Utilities for dealing with PDF files and in-memory streams
 """
 
-from reportlab.pdfgen.canvas import Canvas
-from reportlab.lib.units import inch
-from reportlab.lib.utils import ImageReader
-from PIL import Image
-from cStringIO import StringIO
-
-from docstore.utils.path import path
-from tempfile import mkdtemp
-from os import system
+from reportlab.pdfgen.canvas    import Canvas
+from reportlab.lib.units        import inch
+from reportlab.lib.utils        import ImageReader
+from PIL                        import Image
+from cStringIO                  import StringIO
+from shutil                     import rmtree
+from tempfile                   import mkdtemp
+import os
+import glob
 
 # ---------------------------------------------------------------------------
 
@@ -77,8 +76,8 @@ def render_page(page, output_buffer = None, view_type = None):
 def split(input_filename):
 
     """
-    Splits up a PDF file into single page PDF files.  Returns the
-    docstore.utils.path object where resulting PDF files are
+    Splits up a PDF file into single page PDF files.  Returns 
+    path string where resulting PDF files are
     located. It is the caller's responsibility to clean the disk when
     the files are no longer necessary. The best way to do it is to
     call result.rmtree()
@@ -87,38 +86,40 @@ def split(input_filename):
     See http://www.accesspdf.com/pdftk/ for more info
 
     """
-    output_dir = path()
+    output_dir = None
     try:
         # create a temporary directory
-        output_dir = path(mkdtemp('donomo'))
+        output_dir = mkdtemp('donomo')
         # run pdftk
-        system('cd %s; pdftk %s burst' % (output_dir, input_filename))
+        os.system('cd %s; pdftk %s burst' % (output_dir, input_filename))
         # return the directory name to the caller
         return output_dir
-    except Exception:
+    except Exception(e):
+        log.error(e)
         # delete a temporary directory along with all its contents
-        output_dir.rmtree()
+        if output_dir:
+            rmtree(output_dir)
         raise
 
 # ----------------------------------------------------------------------------
 
 def convert(input_filename, format = 'png', density = 200, quality = 80):
-
     """
     Converts a PDF file into a file of a given format.  Returns the
     filename of the resulting file
     """
-
-    input_path = path(input_filename)
-    input_dir = input_path.parent
-    output_filename = input_path.namebase + '.' + format
-    system('cd %s; convert -density %d -quality %d %s %s' %
+    input_path = input_filename
+    input_dir = os.path.dirname(input_path)
+    output_filename = os.path.splitext(os.path.basename(input_path))[0] \
+                + '.' \
+                + format
+    os.system('cd %s; convert -density %d -quality %d %s %s' %
            (input_dir,
             density,
             quality,
             input_filename,
             output_filename))
-    return input_dir.joinpath(output_filename)
+    return os.path.join(input_dir, output_filename)
 
 
 # ----------------------------------------------------------------------------
@@ -127,7 +128,6 @@ import unittest
 class TestPdf(unittest.TestCase):
     """
     Unit test for this module
-
     """
     def test_split_pages(self):
         """
@@ -135,11 +135,9 @@ class TestPdf(unittest.TestCase):
 
         """
         output_dir = split('/tmp/2008_06_26_15_42_45.pdf')
-        map(lambda x: convert(x), output_dir.listdir('*.pdf'))
-
-        print output_dir.listdir()
-        output_dir.rmtree()
-
+        map(lambda x: convert(x), glob.glob(os.path.join(output_dir, '*.pdf')))
+        rmtree(output_dir)
+        
 
 # ----------------------------------------------------------------------------
 
