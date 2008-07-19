@@ -1,6 +1,6 @@
 """
 """
-from django.conf.urls.defauls import *
+from django.conf.urls.defaults import patterns, url
 from donomo.archive import admin_views
 
 urlpatterns = patterns(
