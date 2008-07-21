@@ -3,13 +3,14 @@ Core Models.
 """
 
 #
-# pylint: disable-msg=C0111,E1101,R0903,R0904,W0612
+# pylint: disable-msg=C0111,E1101,R0903,R0904,W0232,W0612
 #
-#   R0903 - too few public methods
 #   C0111 - missing docstring
 #   E1101 - instance of Foo has no bar member
-#   W0612 - unused variable
+#   R0903 - too few public methods
 #   R0904 - too many public methods
+#   W0232 = class has not __init__ method
+#   W0612 - unused variable
 #
 
 from __future__                          import with_statement
