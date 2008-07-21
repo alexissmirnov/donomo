@@ -46,8 +46,7 @@ class IndexDriver(ProcessDriver):
 
     ACCEPTED_CONTENT_TYPES = [ 'text/plain' ]
 
-    SOLR_UPDATE_TEMPLATE = \
-        """{% spaceless %}
+    SOLR_UPDATE_TEMPLATE = """{% spaceless %}
         {% autoescape on %}
         <?xml version="1.0" encoding="UTF-8"?>
         <add>
@@ -77,7 +76,7 @@ class IndexDriver(ProcessDriver):
             also be removed from the work queue.
         """
 
-        return self.index_page(
+        return self.index_page_from_file(
             item['Object'].page,
             item['Local-Path'] )
 
@@ -131,7 +130,7 @@ class IndexDriver(ProcessDriver):
 
     #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
-    def index_page_from_file(self, page, file_path):
+    def index_page_from_file(self, page, text_file_path):
         """
         Update the full-text index for the given page.  The textual
         content of the page is in the file referencec by file_path.
@@ -306,7 +305,7 @@ def reset():
         headers = { "Content-Type" : "text/xml; charset=utf-8" } )
 
     if response.status != 200:
-        message = 'Failed to delete search index:\n%s' % content.read()
+        message = 'Failed to delete search index:\n%s' % content
         logging.error(message)
         raise Exception(message)
 

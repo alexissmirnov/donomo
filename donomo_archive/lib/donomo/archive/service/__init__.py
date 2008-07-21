@@ -4,8 +4,8 @@ pipeline.
 
 """
 
-from donomo.archive import operations
-import logging as logging_module
+from donomo.archive.core import operations
+from logging import getLogger
 import os
 
 #
@@ -18,7 +18,7 @@ import os
 #
 
 __all__ = ( 'ProcessDriver' )
-logging = logging_module.getLogger('process_driver')
+logging = getLogger('process_driver')
 
 # ---------------------------------------------------------------------------
 

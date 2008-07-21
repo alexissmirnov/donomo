@@ -1,138 +1,130 @@
 """
-PDF Process Driver. 
-Input:
-One multi-page PDF
+Multi-page PDF parser
 
-Types of PDFs supported:
- - one-image per page, no text -- eg. the kind that comes out from 
-     ScanSnap scanner
-Output:
- - A set of images, one image per page.
- - JPEG thumbnails for each page
- 
- Environement setup:
- The following programs must be in the PATH:
- pdftk (pdf splitter)
- gs (ghostscript)
- convert (imagemagick)
- 
-env vars:
-MAGICK_HOME=/usr/local/ImageMagick-6.4.1
-DYLD_LIBRARY_PATH=$MAGICK_HOME/lib
-
- 
 """
-from __future__                 import with_statement
-from donomo.archive.utils       import pdf
-from logging                    import getLogger
-from donomo.archive.utils       import path, image
 
-from docstore.core import api as core_api
+from donomo.archive.core                   import operations
+from donomo.archive.service.tiff_parser    import TiffParserDriver
+from donomo.archive.models                 import Upload
+from donomo.archive.utils                  import pdf
+from logging                               import getLogger
+from glob                                  import glob
 
-import PIL.Image as Image
-
-log = getLogger('PDF')
-
-DEFAULT_OUTPUTS = (
-    ( 'tiff-original',      'image/tiff', ['docstore.processor.ocr']),
-    ( 'jpeg-original',      'image/jpeg', []),
-    ( 'jpeg-thumbnail-100', 'image/jpeg', []),
-    ( 'jpeg-thumbnail-200', 'image/jpeg', []),
-    )
-
-def get_processor():
-    return core_api.get_or_create_processor(__name__, DEFAULT_OUTPUTS)
-
-def run_once():
-    processor = get_processor()
-
-    #log.debug('getting next work item for processor %s' % processor)
-
-    item = core_api.get_work_item(processor, 0)
-
-    if item is None:
-        return False
+import shutil
+import os
 
 
-    try:
-        handle_work_item(processor, item)
-        core_api.close_work_item(item, True)
-        return True
-    except:
-        log.exception('Failed to handle item')
-        raise
-    
-    return False
+#
+# pylint: disable-msg=C0103,R0922
+#
+#   C0103 - variables at module scope must be all caps
+#   R0922 - Abstract class is only referenced once
+#
 
-def handle_work_item(processor, item):
+logging = getLogger('PDF Parser')
+
+# ---------------------------------------------------------------------------
+
+def get_driver():
+    """
+    Factory function to retrieve the driver object implemented by this
+    this module
+
+    """
+    return PdfParserDriver()
+
+# ---------------------------------------------------------------------------
+
+class PdfParserDriver(TiffParserDriver):
+
+    """
+    PDF Parser Process Driver
+
+    """
+
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    SERVICE_NAME = 'pdf-parser'
+
+    DEFAULT_OUTPUTS = (( 'pdf-original', []),) \
+        + TiffParserDriver.DEFAULT_OUTPUTS
+
+    ACCEPTED_CONTENT_TYPES = [ 'application/pdf' ]
+
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    def process_page_file( self,
+                           document,
+                           pdf_orig_path,
+                           page_number = None ):
         """
-        Process a work item.  The work item will be provided and its
-        local temp file will be cleaned up by the process driver
-        framework.  If this method returns true, the work item will
-        also be removed from the work queue.
+        Convert the given PDF file (representing a s single page) to a
+        JPEG (via TIFF).  We punt by doing the conversion to TIFF then
+        calling the process_page_file function on the TIFF Parser
+        driver (passing this object as fake tiff parser driver
+        instance.
+
+        """
+
+        tiff_orig_path = pdf.convert(pdf_orig_path, 'tiff')
+        page = TiffParserDriver.process_page_file(
+            self,
+            document,
+            tiff_orig_path,
+            page_number)
+
+        operations.create_page_view_from_file(
+            self.processor,
+            'pdf-original',
+            page,
+            pdf_orig_path )
+
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    def handle_work_item(self, item):
+        """
+        Pick up a (possibly) multipage PDF upload and turn it into a document
+        having (possibly) multiple individual pages.
 
         """
         local_path = item['Local-Path']
-        document = item['Object'].document
+        upload     = item['Object']
 
-        # split a PDF into one-page PDF files
-        pages_output_dir = pdf.split(local_path)
-        
-        # iterate over all *.pdf files in the output directory and
-        # convert each page to a image file (change TIFF to 
-        # PNG when OCR is ready)
-        #map(lambda x: pdf.convert(x, 'tiff'), output_dir.listdir('*.pdf'))
+        if not isinstance(upload, Upload):
+            logging.error('%s - Dropped!  Work item is not an upload!' % self)
+            return True
 
-        for page_pdf in pages_output_dir.listdir('*.pdf'):
-            log.debug('processing %s' % page_pdf)
-            
-            # create TIFF page
-            page_tiff = pdf.convert(page_pdf, 'tiff')
-            with open(page_tiff, 'rb') as tiff_page_file:
-                page = core_api.create_page_with_initial_view(
-                    processor,
-                    processor.outputs.get(name = 'tiff-original'),
-                    document.owner,
-                    tiff_page_file)
-    
-            core_api.bind_page( document, page )
-            
-            # create full-size JPEG
-            page_jpg = pdf.convert(page_pdf, 'jpg')
-            with open(page_jpg, 'rb') as jpeg_file:
-                log.info('Uploading %s ...' % page_jpg )
-                core_api.create_page_view(
-                    processor,
-                    processor.outputs.get(name = 'jpeg-original'),
-                    page,
-                    jpeg_file )
-                
-            original = Image.open(page_jpg)  
-            
-            # create 100px thumbnail
-            page_th100_jpg = pages_output_dir.joinpath('%s-thumb-100.jpg' % page_jpg.namebase)
-            image.make_thumbnail(original, 100, page_th100_jpg)
-            with open(page_th100_jpg, 'rb') as jpeg_file:
-                log.info('Uploading %s ...' % page_th100_jpg )
-                core_api.create_page_view(
-                    processor,
-                    processor.outputs.get(name = 'jpeg-thumbnail-100'),
-                    page,
-                    jpeg_file )
+        page_dir = None
 
-            # create 200px thumbnail
-            page_th200_jpg = pages_output_dir.joinpath('%s-thumb-200.jpg' % page_jpg.namebase)
-            image.make_thumbnail(original, 200, page_th200_jpg)
-            with open(page_th200_jpg, 'rb') as jpeg_file:
-                log.info('Uploading %s ...' % page_th200_jpg )
-                core_api.create_page_view(
-                    processor,
-                    processor.outputs.get(name = 'jpeg-thumbnail-200'),
-                    page,
-                    jpeg_file )
-    
-        
-        # delete all temporary files  
-        pages_output_dir.rmtree()
-        return True
-    
+        try:
+            page_dir = pdf.split_pages(local_path)
+
+            logging.debug('Extracted pages to %s' % page_dir)
+
+            title = 'Uploaded on %s (%s)' % (
+                upload.timestamp,
+                upload.gateway )
+
+            logging.info(
+                '%s - Creating new document for %s: %r' % (
+                    upload.owner,
+                    title))
+
+            document = operations.create_document(
+                owner = upload.owner,
+                title = title )
+
+            page_number = 0
+            for pdf_orig_path in glob(os.path.join(page_dir,'*.pdf')).sort():
+                page_number += 1
+                self.process_page_file(document, pdf_orig_path, page_number)
+
+            logging.info(
+                'done. parsed pdfs for document %s by %s' % (
+                    document,
+                    document.owner))
+        finally:
+            if page_dir:
+                shutil.rmtree(page_dir)
+
+# ----------------------------------------------------------------------------

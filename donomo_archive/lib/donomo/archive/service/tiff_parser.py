@@ -3,7 +3,7 @@ Multi-page TIFF parser
 
 """
 
-from donomo.archive            import operations
+from donomo.archive.core       import operations
 from donomo.archive.service    import ProcessDriver
 from donomo.archive.models     import Upload
 from logging                   import getLogger
@@ -21,7 +21,7 @@ import os
 #   R0922 - Abstract class is only referenced once
 #
 
-logging = getLogger('TIFF Parser')
+logging = getLogger('tiff_parser')
 
 # ---------------------------------------------------------------------------
 
@@ -44,7 +44,7 @@ class TiffParserDriver(ProcessDriver):
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    SERVICE_NAME = 'TIFF Parser'
+    SERVICE_NAME = 'tiff-arser'
 
     DEFAULT_OUTPUTS = (
         ( 'tiff-original',      ['donomo.archive.service.ocr']),
@@ -134,17 +134,13 @@ class TiffParserDriver(ProcessDriver):
                             ( jpeg_orig_path, 'jpeg-original'),
                             ( jpeg_t100_path, 'jpeg-thumbnail-100'),
                             ( jpeg_t200_path, 'jpeg_thumbnail-200') ) :
-            logging.info(
-                'Uploading page %s (%s) - %s' % (
-                    page_number,
-                    view,
-                    path ))
-
             operations.create_page_view_from_file(
                 self.processor,
                 view,
                 page,
                 path )
+
+        return page
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
