@@ -10,7 +10,9 @@ from cStringIO                  import StringIO
 from shutil                     import rmtree
 from tempfile                   import mkdtemp
 import os
-import glob
+import logging
+
+logging = logging.getLogger('pdf-utils')
 
 # ---------------------------------------------------------------------------
 
@@ -73,10 +75,10 @@ def render_page(page, output_buffer = None, view_type = None):
 
 # ----------------------------------------------------------------------------
 
-def split(input_filename):
+def split_pages(input_filename):
 
     """
-    Splits up a PDF file into single page PDF files.  Returns 
+    Splits up a PDF file into single page PDF files.  Returns
     path string where resulting PDF files are
     located. It is the caller's responsibility to clean the disk when
     the files are no longer necessary. The best way to do it is to
@@ -91,11 +93,11 @@ def split(input_filename):
         # create a temporary directory
         output_dir = mkdtemp('donomo')
         # run pdftk
-        os.system('cd %s; pdftk %s burst' % (output_dir, input_filename))
+        os.system('cd %r && pdftk %r burst' % (output_dir, input_filename))
         # return the directory name to the caller
         return output_dir
-    except Exception(e):
-        log.error(e)
+    except:
+        logging.exception('Failed to split PDF')
         # delete a temporary directory along with all its contents
         if output_dir:
             rmtree(output_dir)
@@ -103,44 +105,30 @@ def split(input_filename):
 
 # ----------------------------------------------------------------------------
 
-def convert(input_filename, format = 'png', density = 200, quality = 80):
+def convert(input_path, format = 'png', density = 200, quality = 80):
     """
     Converts a PDF file into a file of a given format.  Returns the
     filename of the resulting file
+
     """
-    input_path = input_filename
-    input_dir = os.path.dirname(input_path)
-    output_filename = os.path.splitext(os.path.basename(input_path))[0] \
-                + '.' \
-                + format
-    os.system('cd %s; convert -density %d -quality %d %s %s' %
-           (input_dir,
+    output_path = '%s.%s' % (
+        os.path.splitext(input_path)[0],
+        format )
+
+    if 0 != os.system(
+        'convert -density %d -quality %d %r %r' % (
             density,
             quality,
-            input_filename,
-            output_filename))
-    return os.path.join(input_dir, output_filename)
+            input_path,
+            output_path )):
+        raise Exception(
+            'Failed to convert %r to %s' % (
+                input_path,
+                output_path))
+
+    return output_path
 
 
 # ----------------------------------------------------------------------------
 
-import unittest
-class TestPdf(unittest.TestCase):
-    """
-    Unit test for this module
-    """
-    def test_split_pages(self):
-        """
-        Split pages
-
-        """
-        output_dir = split('/tmp/2008_06_26_15_42_45.pdf')
-        map(lambda x: convert(x), glob.glob(os.path.join(output_dir, '*.pdf')))
-        rmtree(output_dir)
-        
-
-# ----------------------------------------------------------------------------
-
-if __name__ == '__main__':
-    unittest.main()
 

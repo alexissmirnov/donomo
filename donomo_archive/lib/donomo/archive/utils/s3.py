@@ -82,7 +82,7 @@ def get_url(
         expires_in = expires_in,
         method     = method,
         bucket     = bucket_name,
-        key        = s3_path,
+        key        = key,
         headers    = headers,
         query_auth = query_auth )
 

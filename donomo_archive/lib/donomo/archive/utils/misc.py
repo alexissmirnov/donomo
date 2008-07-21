@@ -24,7 +24,7 @@ def guess_mime_type( file_name, default = None ):
     """
     return ( mimetypes.guess_type(file_name) [0]
              or default
-             or 'application/octet_stream' )
+             or 'application/octet-stream' )
 
 # -----------------------------------------------------------------------------
 
