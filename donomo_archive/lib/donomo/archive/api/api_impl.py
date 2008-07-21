@@ -20,7 +20,8 @@ from donomo.archive.core.models      import *
 from donomo.archive.core             import operations
 from django.core.validators          import ValidationError
 from django.db.models                import ObjectDoesNotExist
-import logging as logging_module
+
+import logging
 # TODO: add logging
 
 __all__ = (
@@ -36,13 +37,12 @@ __all__ = (
     'get_page_view',
     'delete_page',
     'get_tag_list',
-    'create_tag',
     'get_tag_info',
     'delete_tag',
     'tag_documents',
     )
 
-logging = logging_module.getLogger('web-api')
+logging = logging.getLogger('web-api')
 
 # ---------------------------------------------------------------------------
 
@@ -398,6 +398,18 @@ def get_page_view(request, pk, view_name):
 # ----------------------------------------------------------------------------
 
 @json_view
+def delete_page(request, pk):
+    """
+    Delete a document.
+
+    """
+    request.user.pages.get(pk = pk).delete()
+    # TODO: delete from index
+    return {}
+
+# ----------------------------------------------------------------------------
+
+@json_view
 def get_tag_list(request):
     """
     Get a list of the user's tags, optionally starting with some
@@ -429,32 +441,6 @@ def get_tag_list(request):
 # ----------------------------------------------------------------------------
 
 @json_view
-def get_tag_info(request, label):
-    """
-    Get the set of documents associated with a tag
-
-    """
-    return tag_as_json_dict(
-        request.user.tags.get(label = label.trim().lower()),
-        show_doc_count = True,
-        show_documents = True,
-        show_url       = param_is_true(request.GET.get('show_url', 'false')))
-
-# ----------------------------------------------------------------------------
-
-@json_view
-def delete_tag(request, label):
-    """
-    Delete a tag.  This untags (but does not delete) any documents
-    currently bearing the tag.
-
-    """
-    request.user.tags.get(label = label.trim().lower()).delete()
-    return {}
-
-# ----------------------------------------------------------------------------
-
-@json_view
 def tag_documents(request, label):
     """
     Bulk add documents to a tag, by document pk specified in a multiple
@@ -480,5 +466,31 @@ def tag_documents(request, label):
     tag.documents.add(documents)
 
     return tag_as_json_dict(tag)
+
+# ----------------------------------------------------------------------------
+
+@json_view
+def get_tag_info(request, label):
+    """
+    Get the set of documents associated with a tag
+
+    """
+    return tag_as_json_dict(
+        request.user.tags.get(label = label.trim().lower()),
+        show_doc_count = True,
+        show_documents = True,
+        show_url       = param_is_true(request.GET.get('show_url', 'false')))
+
+# ----------------------------------------------------------------------------
+
+@json_view
+def delete_tag(request, label):
+    """
+    Delete a tag.  This untags (but does not delete) any documents
+    currently bearing the tag.
+
+    """
+    request.user.tags.get(label = label.trim().lower()).delete()
+    return {}
 
 # ----------------------------------------------------------------------------

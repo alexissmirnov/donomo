@@ -17,7 +17,7 @@ __all__ = ( 'urlpatterns' )
 
 urlpatterns = patterns(
     '',
-    url( r'^documents/$?',
+    url( r'^documents/?$',
          document_list,
          name = 'api_document_list' ),
 
@@ -25,7 +25,7 @@ urlpatterns = patterns(
          document_info,
          name = 'api_document_info' ),
 
-    url( r'^documents/(?P<pk>\d+)/(?<view_name>\w+)/?$',
+    url( r'^documents/(?P<pk>\d+)/(?P<view_name>\w+)/?$',
          document_view,
          name = 'api_document_view' ),
 
