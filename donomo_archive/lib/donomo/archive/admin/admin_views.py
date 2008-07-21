@@ -35,7 +35,7 @@ def uploads(request):
 
 @staff_member_required
 @http_method_dispatcher
-def queue_list(request):
+def queue_list():
     """
     Dispatch map for HTTP operations on the queue list
     """
@@ -48,7 +48,7 @@ def queue_list(request):
 
 @staff_member_required
 @http_method_dispatcher
-def queue_info(request, queue_name):
+def queue_info():
     """
     Dispatch map for HTTP operations on the queue list
     """
@@ -61,7 +61,7 @@ def queue_info(request, queue_name):
 
 @staff_member_required
 @http_method_dispatcher
-def status(request):
+def status():
     """
     Dispatch map for HTTP operations on the status page
     """

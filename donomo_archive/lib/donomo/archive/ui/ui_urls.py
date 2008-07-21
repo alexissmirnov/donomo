@@ -20,7 +20,7 @@ urlpatterns = patterns(
         name   = 'ui_page_view'),
 
     url(
-        regex  = r'^document/(?P<id>\d+)/$?',
+        regex  = r'^document/(?P<id>\d+)/?$',
         view   = document_view,
         name   = 'ui_document_view'),
 
@@ -38,7 +38,7 @@ urlpatterns = patterns(
 
     url(
         regex  = r'^$',
-        vies   = front_page,
+        view   = front_page,
         name   = 'ui_front_page'),
-)
+    )
 

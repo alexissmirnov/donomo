@@ -57,7 +57,7 @@ def delete_all_queues(request):
 # ----------------------------------------------------------------------------
 
 @staff_member_required
-def get_queue_detail(request, queue_name):
+def get_queue_info(request, queue_name):
     """
     Get queue information
     """
