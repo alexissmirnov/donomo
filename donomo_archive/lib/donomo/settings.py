@@ -16,24 +16,21 @@ import sys
 
 # ---------------------------------------------------------------------------
 
-def get_module_path(module_name):
+def get_module_dir(module_name):
     """
-    Helper function to get the path in which a module is defined.  Give the
-    module by fully-qualified name (e.g., 'donomo.archive.urls')
+    Helper function to get the directory in which a module is defined.
+    Give the module by fully-qualified name (e.g., 'foo.bar.baz')
 
     """
-    module = __import__(module_name)
 
-    for component in module_name.split('.')[1:]:
-        module = getattr(module, component)
+    return os.path.dirname(__import__(module_name, {}, {}, ['']).__file__)
 
-    return os.path.dirname( module.__file__ )
 
 # ---------------------------------------------------------------------------
 
 def join_and_normalize( *path_components ):
     """
-    Helper function to combint os.path.join and os.path.normpath
+    Helper function to combine os.path.join and os.path.normpath
 
     """
     return os.path.normpath(os.path.join(*path_components))
@@ -55,8 +52,8 @@ OS_USER_NAME     = os.environ.get('LOGNAME', None) or os.getlogin()
 # TODO: Figure out a nice strategy for setting paths for logs and caches
 #
 
-DONOMO_PATH = get_module_path('donomo')
-DJANGO_PATH = get_module_path('django')
+DONOMO_PATH = get_module_dir('donomo')
+DJANGO_PATH = get_module_dir('django')
 LOG_PATH    = os.environ.get('DONOMO_LOG_PATH', '.')
 CACHE_PATH  = os.environ.get('DONOMO_CACHE_PATH', '/home/alexissmirnov/tmp/cache/')
 
