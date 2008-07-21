@@ -11,10 +11,10 @@ Admin view function entry points
 
 from django.contrib.admin.views.decorators import staff_member_required
 from donomo.archive.utils.http             import http_method_dispatcher
-from donomo.archive.api_views_impl         import *
+from donomo.archive.admin.admin_impl       import *
 
 __all__ = (
-    'upload_index',
+    'uploads',
     'queue_list',
     'queue_info',
     'status',
@@ -23,7 +23,7 @@ __all__ = (
 # ----------------------------------------------------------------------------
 
 @staff_member_required
-def upload_index(request):
+def uploads(request):
     """
     What is this supposed to be?
     """

@@ -1,31 +1,21 @@
-from __future__ import with_statement
-from docstore.utils.http import HttpResponseCreated
-from docstore.core.models import Document, PageView, Query, Page, Binding
-import docstore.core.utils  as core_utils
-import docstore.utils.pdf as pdf_utils
-import docstore.core.api  as core_api
-from django.template import RequestContext
-from django.contrib.auth.models import User
-from django.shortcuts import render_to_response
-from django.conf import settings
-from docstore import log
-
-from xml.sax import saxutils
-import urllib
-import httplib2
-from cStringIO import StringIO
-import os
-
+"""
+Admin function implementations
+"""
 
 from django.http import HttpResponse
+from django.contrib.admin.views.decorators import staff_member_required
 from donomo.archive.utils import sqs as sqs_utils
 from donomo.archive.utils import s3 as s3_utils
+from donomo.archive.models import manager, Document, Page, Upload
+from donomo.archive.service import indexer
+import logging
 
+logging = logging.getLogger('admin')
 
 # ----------------------------------------------------------------------------
 
 @staff_member_required
-def upload_index(request):
+def uploads(request):
     """
     What is this supposed to be?
     """
@@ -40,6 +30,8 @@ def get_queue_list(request):
     Get the list of queues used by the archive
 
     """
+    logging.warn('Retrieving queue list for %s' % request.user)
+
     sqs_conn   = sqs_utils.get_connection()
     all_queues = sqs_conn.get_all_queues()
 
@@ -56,6 +48,7 @@ def delete_all_queues(request):
     Wipe all queues used by the archive.
     """
     # TODO: delete_all_queues really shouldn't be exposed!
+    logging.warn('%s requesting delete of all queues' % request.user)
     for queue in sqs_utils.get_connection().get_all_queues():
         queue.clear()
         queue.delete()
@@ -65,6 +58,13 @@ def delete_all_queues(request):
 
 @staff_member_required
 def get_queue_detail(request, queue_name):
+    """
+    Get queue information
+    """
+    logging.warn(
+        '%s requesting queue details for %s' % (
+            request.user,
+            queue_name ))
     queue = sqs_utils.get_connection().create_queue(queue_name)
     return HttpResponse(
         '%s has %d messages' % (queue.id, queue.count()))
@@ -73,7 +73,14 @@ def get_queue_detail(request, queue_name):
 
 @staff_member_required
 def delete_queue(request, queue_name):
-    queue = sqs_conn.get_queue(queue_name)
+    """
+    Erase a queue.
+    """
+    logging.warn(
+        '%s requesting delete of %s' % (
+            request.user,
+            queue_name))
+    queue = sqs_utils.get_queue(queue_name)
     count = queue.count()
     queue.clear()
     queue.delete()
@@ -103,45 +110,46 @@ def wipe_everything(request):
     manager(Page).all().delete()
     delete_all_queues(None)
     delete_search_index()
-    delete_bucket_contents(bucket)
+    delete_bucket_contents()
     return HttpResponse('everything deleted')
 
 
 # ----------------------------------------------------------------------------
 
 @staff_member_required
-def search_index(request):
-    if request.method == 'DELETE':
-        delete_search_index()
-    elif request.method == 'POST':
-        for doc in Documents.objects.all():
-            key = Key(bucket)
-            key.key = '%s/ocr.txt' % id
-            ocr = key.get_contents_to_string()
-            from docstore.processors.search_index import index_string
-            index_string(id, ocr)
-    else:
-        return HttpResponse('GET does nothing')
+def reset_search_index(request = None):
+    """
+    Reset the search index.
+    """
+    # TODO: implement reset_search_index
+    return HttpResponse('Not implemented', status=500)
+
 
 # ----------------------------------------------------------------------------
 
 @staff_member_required
 def delete_search_index( request = None ):
+    """
+    Documentation goes here
+
+    """
     try:
         indexer.reset()
         return HttpResponse(
             content = 'search index deleted',
-            content_type = 'text/plain'
+            content_type = 'text/plain' )
     except Exception, e:
         return HttpResponse(
             status       = 500,
             content      = str(e),
-            content_type = 'text/plain')
+            content_type = 'text/plain' )
 
 # ----------------------------------------------------------------------------
 
-@staff_member_required
-def delete_bucket_contents(bucket):
-    keys = bucket.get_all_keys()
-    for key in keys:
+def delete_bucket_contents():
+    """
+    Documentation goes here
+
+    """
+    for key in s3_utils.get_bucket().get_all_keys():
         bucket.delete_key(key)
