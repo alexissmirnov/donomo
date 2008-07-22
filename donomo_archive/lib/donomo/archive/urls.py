@@ -7,6 +7,6 @@ urlpatterns = patterns(
     '',
     (r'^admin/', include('donomo.archive.admin.urls')),
     (r'^api/1.0/', include('donomo.archive.api.urls')),
-    (r'', include('donomo.archive.ui.urls')),
+    (r'', include('donomo.archive.ui.ui_urls')),
 )
 
