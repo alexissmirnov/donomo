@@ -16,7 +16,7 @@ from donomo.archive.utils.misc       import get_url, param_is_true
 from donomo.archive.utils.http       import *
 from donomo.archive.utils            import pdf as pdf_utils
 from donomo.archive.service          import ProcessDriver, indexer
-from donomo.archive.core.models      import *
+from donomo.archive.core.data_model  import *
 from donomo.archive.core             import operations
 from django.core.validators          import ValidationError
 from django.db.models                import ObjectDoesNotExist
