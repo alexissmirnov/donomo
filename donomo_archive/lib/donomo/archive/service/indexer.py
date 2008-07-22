@@ -4,11 +4,12 @@ Full Text Indexer Process Driver
 
 from __future__             import with_statement
 from donomo.archive.service import ProcessDriver
-from donomo.archive.models  import Page, manager
+from donomo.archive.models  import Page
 from django.conf            import settings
 from django.template.loader import render_to_string
 from django.core.validators import ValidationError
 from logging                import getLogger
+from StringIO               import StringIO
 import httplib2
 import simplejson
 import urllib
@@ -202,7 +203,7 @@ def raw_query( user, query_string, start_index = 0, num_rows = 50):
     if response.status != 200:
         raise Exception("Search query failed")
 
-    return simplejson.load(content)
+    return simplejson.load(StringIO(content))
 
 
 # ----------------------------------------------------------------------------
