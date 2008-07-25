@@ -3,23 +3,23 @@ AJAX API Views.
 
 """
 #
-# pylint: disable-msg=C0103,W0401,W0614,W0702
+# pylint: disable-msg=C0103,W0702
 #
 #   C0103 - variables at module scope must be all caps
-#   W0401 - wildcard import
-#   W0614 - unused import from wildcard
 #   W0702 - catch exceptions of unspecifed type
 #
 
-from donomo.archive.utils.middleware import json_view
-from donomo.archive.utils.misc       import get_url, param_is_true
-from donomo.archive.utils.http       import *
-from donomo.archive.utils            import pdf as pdf_utils
-from donomo.archive.service          import ProcessDriver, indexer
-from donomo.archive.core.data_model  import *
-from donomo.archive.core             import operations
+from cStringIO                       import StringIO
+from django.conf                     import settings
 from django.core.validators          import ValidationError
 from django.db.models                import ObjectDoesNotExist
+from django.http                     import HttpResponse, HttpResponseRedirect
+from donomo.archive                  import models, operations
+from donomo.archive.service          import ProcessDriver, indexer
+from donomo.archive.utils            import pdf as pdf_utils
+from donomo.archive.utils            import s3 as s3_utils
+from donomo.archive.utils.middleware import json_view
+from donomo.archive.utils.misc       import get_url, param_is_true
 
 import logging
 # TODO: add logging
@@ -185,7 +185,7 @@ def extract_tag_list(request):
         label_list = (label_list or []).extend(request.POST.getlist('tag'))
 
     if label_list is not None:
-        return Tag.objects.get_or_create_from_label_list(
+        return models.Tag.objects.get_or_create_from_label_list(
             request.owner,
             label_list )
 
@@ -459,7 +459,7 @@ def tag_documents(request, label):
         raise ObjectDoesNotExist(
             'One or more of the document pks given is invalid')
 
-    tag = manager(Tag).get_or_create(
+    tag = models.Tag.objects.get_or_create(
         owner = request.user,
         label = label.lower()) [0]
 

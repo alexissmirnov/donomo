@@ -68,22 +68,29 @@ def all_modules_from( root_module ):
 
 # ----------------------------------------------------------------------------
 
+def load_test_suite(module_name):
+    """
+    Helper function to load a, possibly empty, test suite from a
+    module, by fully-qualified module name.  Logs an error and returns
+    an empty suite if the specified module cannot be loaded.
+
+    """
+    try:
+        return unittest.defaultTestLoader.loadTestsFromName(module_name)
+    except:
+        logging.error(
+            'Failed to import %s' % module_name)
+        return unittest.TestSuite()
+
+# ----------------------------------------------------------------------------
 def suite( root_module = 'donomo.archive' ):
     """
-    Return the full test suite
+    Return the full test suite for the module hierarchy rooted at the
+    given fully-qualified module name.
+
     """
-    module_names = all_modules_from(root_module)
-
-    def load_test_suite(module_name):
-        try:
-            return unittest.defaultTestLoader.loadTestsFromName(module_name)
-        except:
-            logging.error(
-                'Failed to import %s' % module_name)
-            return unittest.TestSuite()
-
     return unittest.TestSuite(
-        [ load_test_suite(module_name) for module_name in module_names ])
+        [ load_test_suite(m) for m in all_modules_from(root_module) ] )
 
 
 # ----------------------------------------------------------------------------

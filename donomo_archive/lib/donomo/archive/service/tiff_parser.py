@@ -3,7 +3,7 @@ Multi-page TIFF parser
 
 """
 
-from donomo.archive.core       import operations
+from donomo.archive            import operations
 from donomo.archive.service    import ProcessDriver
 from donomo.archive.models     import Upload
 from logging                   import getLogger

@@ -4,7 +4,7 @@ Full Text Indexer Process Driver
 
 from __future__             import with_statement
 from donomo.archive.service import ProcessDriver
-from donomo.archive.models  import Page
+from donomo.archive.models  import Page, manager
 from django.conf            import settings
 from django.template.loader import render_to_string
 from django.core.validators import ValidationError

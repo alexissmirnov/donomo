@@ -2,7 +2,7 @@
 OCR Process Driver
 """
 
-from donomo.archive.core       import operations
+from donomo.archive            import operations
 from donomo.archive.service    import ProcessDriver
 from logging                   import getLogger
 import os

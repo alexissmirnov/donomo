@@ -22,7 +22,7 @@ out these operations, including:
 from __future__                         import with_statement
 from django.contrib.contenttypes.models import ContentType
 from django.core.validators             import ValidationError
-from donomo.archive.core.data_model     import *
+from donomo.archive.models              import *
 from donomo.archive.utils               import s3 as s3_utils
 from donomo.archive.utils               import sqs as sqs_utils
 from donomo.archive.utils               import misc

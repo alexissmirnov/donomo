@@ -4,7 +4,7 @@ E-Mail Gateway
 
 from cStringIO                import StringIO
 from django.db.models         import ObjectDoesNotExist
-from donomo.archive.core      import operations
+from donomo.archive           import operations
 from donomo.archive.models    import FaxNumber, User, manager
 from donomo.archive.service   import ProcessDriver
 from logging                  import getLogger

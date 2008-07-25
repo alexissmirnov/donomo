@@ -14,22 +14,10 @@ from donomo.archive.utils.http             import http_method_dispatcher
 from donomo.archive.admin.admin_impl       import *
 
 __all__ = (
-    'uploads',
     'queue_list',
     'queue_info',
     'status',
     )
-
-# ----------------------------------------------------------------------------
-
-@staff_member_required
-def uploads(request):
-    """
-    What is this supposed to be?
-    """
-    # TODO: what is this supposed to do?
-    return HttpResponse('admin wants this for some reason...')
-
 
 # ----------------------------------------------------------------------------
 

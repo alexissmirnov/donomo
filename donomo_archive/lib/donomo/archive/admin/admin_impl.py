@@ -15,16 +15,6 @@ logging = logging.getLogger('admin')
 # ----------------------------------------------------------------------------
 
 @staff_member_required
-def uploads(request):
-    """
-    What is this supposed to be?
-    """
-    return HttpResponse('admin wants this for some reason...')
-
-
-# ----------------------------------------------------------------------------
-
-@staff_member_required
 def get_queue_list(request):
     """
     Get the list of queues used by the archive
@@ -152,4 +142,4 @@ def delete_bucket_contents():
 
     """
     for key in s3_utils.get_bucket().get_all_keys():
-        bucket.delete_key(key)
+        key.delete()

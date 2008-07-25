@@ -3,7 +3,7 @@ Multi-page PDF parser
 
 """
 
-from donomo.archive.core                   import operations
+from donomo.archive                        import operations
 from donomo.archive.service.tiff_parser    import TiffParserDriver
 from donomo.archive.models                 import Upload
 from donomo.archive.utils                  import pdf

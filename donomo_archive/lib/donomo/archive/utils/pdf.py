@@ -92,12 +92,15 @@ def split_pages(input_filename):
     try:
         # create a temporary directory
         output_dir = mkdtemp('donomo')
+
         # run pdftk
-        os.system('cd %r && pdftk %r burst' % (output_dir, input_filename))
+        if 0 != os.system('cd %r && pdftk %r burst' % (output_dir, input_filename)):
+            raise Exception('pdftk failed')
+
         # return the directory name to the caller
         return output_dir
-    except:
-        logging.exception('Failed to split PDF')
+    except Exception, e:
+        logging.error(str(e))
         # delete a temporary directory along with all its contents
         if output_dir:
             rmtree(output_dir)
