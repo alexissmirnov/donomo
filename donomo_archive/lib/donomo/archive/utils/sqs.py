@@ -119,14 +119,14 @@ def get_message(
 
     start_time = time()
     while not is_interrupted():
-        logging.info('Retrieving message from %s' % sqs_queue.id)
+        logging.debug('Retrieving message from %s' % sqs_queue.id)
         message = sqs_queue.get_messages(1, visibility_timeout)
 
         if message and message[0]:
             logging.debug('Returning message=%s'  % message[0])
             return message[0]
 
-        logging.info('No messages found in %s' % sqs_queue.id)
+        logging.debug('No messages found in %s' % sqs_queue.id)
         if max_wait_time == 0:
             return None
 
@@ -134,6 +134,32 @@ def get_message(
             return None
 
         sleep(sleep_duration)
+
+# ----------------------------------------------------------------------------
+
+def get_message_iter(
+    sqs_queue,
+    visibility_timeout = None,
+    max_wait_time      = None,
+    interrupt_func     = None,
+    poll_frequency     = None ):
+    """
+    Return an interator/generator over the messages in the given queue.
+
+    """
+    while True:
+
+        message = get_message(
+            sqs_queue,
+            visibility_timeout,
+            max_wait_time,
+            interrupt_func,
+            poll_frequency)
+
+        if message is None:
+            break
+
+        yield message
 
 # -----------------------------------------------------------------------------
 

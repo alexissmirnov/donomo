@@ -21,7 +21,8 @@ import os
 #   R0922 - Abstract class is only referenced once
 #
 
-logging = getLogger('PDF Parser')
+MODULE_NAME = os.path.splitext(os.path.basename(__file__))[0]
+logging = getLogger(MODULE_NAME)
 
 # ---------------------------------------------------------------------------
 
@@ -44,7 +45,7 @@ class PdfParserDriver(TiffParserDriver):
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    SERVICE_NAME = 'pdf-parser'
+    SERVICE_NAME = MODULE_NAME
 
     DEFAULT_OUTPUTS = (( 'pdf-original', []),) \
         + TiffParserDriver.DEFAULT_OUTPUTS

@@ -21,7 +21,8 @@ import os
 #   R0922 - Abstract class is only referenced once
 #
 
-logging = getLogger('tiff_parser')
+MODULE_NAME = os.path.splitext(os.path.basename(__file__))[0]
+logging     = getLogger(MODULE_NAME)
 
 # ---------------------------------------------------------------------------
 
@@ -44,7 +45,7 @@ class TiffParserDriver(ProcessDriver):
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    SERVICE_NAME = 'tiff-arser'
+    SERVICE_NAME = MODULE_NAME
 
     DEFAULT_OUTPUTS = (
         ( 'tiff-original',      ['donomo.archive.service.ocr']),

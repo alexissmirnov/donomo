@@ -12,6 +12,7 @@ from logging                  import getLogger
 import email
 import mimetypes
 import re
+import os
 
 #
 # pylint: disable-msg=C0103
@@ -19,7 +20,9 @@ import re
 #   C0103 - variables at module scope must be all caps
 #
 
-logging = getLogger('mail-parser')
+MODULE_NAME = os.path.splitext(os.path.basename(__file__))[0]
+
+logging = getLogger(MODULE_NAME)
 
 # ---------------------------------------------------------------------------
 
@@ -30,7 +33,7 @@ class MailParserDriver(ProcessDriver):
 
     """
 
-    SERVICE_NAME = 'Mail Gateway'
+    SERVICE_NAME = MODULE_NAME
 
 
     DEFAULT_OUTPUTS = [

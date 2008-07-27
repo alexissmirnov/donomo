@@ -7,13 +7,14 @@ import time
 import threading
 import signal
 import traceback
-import logging as logging_module
+import logging
 import optparse
+import os
 
 MUST_SHUT_DOWN = False
 SERVICE_MODULE = 'donomo.archive.service'
-
-logging = logging_module.getLogger('process_driver')
+MODULE_NAME    = os.path.splitext(os.path.basename(__file__))[0]
+logging        = logging.getLogger(MODULE_NAME)
 
 # ---------------------------------------------------------------------------
 

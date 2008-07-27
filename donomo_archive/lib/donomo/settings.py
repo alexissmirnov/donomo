@@ -99,6 +99,8 @@ if __name__ == 'donomo.settings':
     logging.basicConfig(**LOGGING_PARAMS)
 
 logging.getLogger('boto').setLevel(logging.INFO)
+logging.getLogger('S3').setLevel(logging.INFO)
+logging.getLogger('SQS').setLevel(logging.INFO)
 
 # ---------------------------------------------------------------------------
 #

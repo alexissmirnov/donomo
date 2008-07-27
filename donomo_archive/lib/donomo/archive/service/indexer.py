@@ -6,13 +6,14 @@ from __future__             import with_statement
 from donomo.archive.service import ProcessDriver
 from donomo.archive.models  import Page, manager
 from django.conf            import settings
-from django.template.loader import render_to_string
+from django.template        import Template, Context
 from django.core.validators import ValidationError
 from logging                import getLogger
 from StringIO               import StringIO
 import httplib2
 import simplejson
 import urllib
+import os
 
 #
 # pylint: disable-msg=C0103
@@ -20,7 +21,9 @@ import urllib
 #   C0103 - variables at module scope must be all caps
 #
 
-logging = getLogger('indexer')
+MODULE_NAME = os.path.splitext(os.path.basename(__file__))[0]
+
+logging = getLogger(MODULE_NAME)
 
 # ----------------------------------------------------------------------------
 
@@ -41,13 +44,14 @@ class IndexDriver(ProcessDriver):
 
     #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
-    SERVICE_NAME = 'Index'
+    SERVICE_NAME = MODULE_NAME
 
     DEFAULT_OUTPUTS = []
 
     ACCEPTED_CONTENT_TYPES = [ 'text/plain' ]
 
-    SOLR_UPDATE_TEMPLATE = """{% spaceless %}
+    SOLR_UPDATE_TEMPLATE = Template(
+        """{% spaceless %}
         {% autoescape on %}
         <?xml version="1.0" encoding="UTF-8"?>
         <add>
@@ -61,7 +65,7 @@ class IndexDriver(ProcessDriver):
         </add>
         <commit/>
         {% endautoescape %}
-        {% endspaceless %}"""
+        {% endspaceless %}""")
 
     SOLR_UPDATE_URL = 'http://%s/solr/update/' % settings.SOLR_HOST
 
@@ -106,16 +110,15 @@ class IndexDriver(ProcessDriver):
         """
         http_client = httplib2.Http()
 
-        body = render_to_string(
-            self.SOLR_UPDATE_TEMPLATE,
-            { 'page' : page,
-              'text' : self.get_ocr_text(text),
-              } )
+        data = {
+            'page' : page,
+            'text' : self.get_ocr_text(text),
+            }
 
         response, content = http_client.request(
             uri     = self.SOLR_UPDATE_URL,
             method  = 'POST',
-            body    = body,
+            body    = self.SOLR_UPDATE_TEMPLATE.render(Context(data)),
             headers = { "Content-type" : "text/xml; charset=utf-8" })
 
         if response.status >= 400:

@@ -124,7 +124,7 @@ def upload_file(
 
 # -----------------------------------------------------------------------------
 
-def file_exists(
+def key_exists(
     s3_bucket,
     path ):
 

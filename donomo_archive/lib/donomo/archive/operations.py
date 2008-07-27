@@ -78,6 +78,7 @@ def create_upload_from_stream(
     upload = manager(Upload).create(
         owner     = owner,
         gateway   = processor,
+        view_type = ViewType.objects.get_or_create(name = 'upload')[0],
         file_name = os.path.basename(file_name) )
 
     create_work_item(processor, upload, data_stream, content_type)
@@ -326,10 +327,10 @@ def get_or_create_processor(
         name = name)
 
     if created:
-        logging.info('Registered process: %s' % process)
+        logging.debug('Registered process: %s' % process)
 
     if process.outputs.count() == 0:
-        logging.info('Adding default output routing for %s' % process)
+        logging.debug('Adding default output routing for %s' % process)
         for view_name, consumers in default_outputs:
             view_type = manager(ViewType).get_or_create(name = view_name)[0]
             view_type.producers.add(process)
@@ -351,7 +352,7 @@ def get_or_create_processor(
             address = address )  [ 0 ] )
 
     if created:
-        logging.info('Registered processor: %s' % processor)
+        logging.debug('Registered processor: %s' % processor)
 
     sqs_utils.create_queue(processor.queue_name)
 
@@ -373,7 +374,7 @@ def create_page_view_from_stream(
     name) from the passed data stream.
 
     """
-    logging.info(
+    logging.debug(
         'Streaming page %s (%s) - %s' % (
             page,
             output_channel,
@@ -406,7 +407,7 @@ def create_page_view_from_file(
 
     """
 
-    logging.info(
+    logging.debug(
         'Uploading page %s (%s) - %s' % (
             page,
             output_channel,
@@ -462,7 +463,7 @@ def create_work_item(
             work_item.id ))
 
     s3_utils.upload_stream(
-        s3_utils.get_bucket(),
+        s3_utils.get_bucket(create=True),
         s3_key,
         data_stream,
         content_type )
@@ -477,7 +478,7 @@ def create_work_item(
     sqs_connection = sqs_utils.get_connection()
 
     for next_processor in view_type.consumers.all():
-        logging.info('Notifying %s' % next_processor)
+        logging.debug('Notifying %s' % next_processor)
         sqs_utils.post_message(
             sqs_utils.create_queue(
                 next_processor.queue_name,
@@ -578,7 +579,7 @@ def close_work_item(processor, message, delete_from_queue):
     logging.info("%s : closing work item %s" % (processor, message))
 
     if delete_from_queue:
-        logging.info("Removing %s from message_queue" % message)
+        logging.debug("Removing %s from message_queue" % message)
         sqs_utils.delete_message(message)
 
     local_path = message['Local-Path']

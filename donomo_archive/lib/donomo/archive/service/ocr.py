@@ -13,7 +13,9 @@ import os
 #   C0103 - variables at module scope must be all caps
 #
 
-logging = getLogger('OCR')
+
+MODULE_NAME = os.path.splitext(os.path.basename(__file__))[0]
+logging = getLogger(MODULE_NAME)
 
 # ---------------------------------------------------------------------------
 
@@ -34,7 +36,7 @@ class OcrDriver(ProcessDriver):
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    SERVICE_NAME = 'OCR'
+    SERVICE_NAME = MODULE_NAME
 
     DEFAULT_OUTPUTS = [
         ('ocr_text', ['donomo.archive.index']),

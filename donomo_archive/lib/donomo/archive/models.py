@@ -459,6 +459,10 @@ class Upload(models.Model):
         User,
         related_name = 'uploads')
 
+    file_name = models.CharField(
+        max_length = 255,
+        blank      = False )
+
     view_type = models.ForeignKey(
         ViewType,
         related_name = 'uploads',
@@ -478,7 +482,7 @@ class Upload(models.Model):
             self.view_type.producer,
             self.timestamp ))
 
-    processor = models.ForeignKey(
+    gateway = models.ForeignKey(
         Processor)
 
     def __unicode__(self):
@@ -490,7 +494,7 @@ class Upload(models.Model):
         """ Setting for the administration interface
         """
 
-        list_display = ( 'timestamp', 'processor', 'owner' )
+        list_display = ( 'timestamp', 'owner', 'gateway' )
 
     class Meta:
         """ Additional settings for this class of objects
