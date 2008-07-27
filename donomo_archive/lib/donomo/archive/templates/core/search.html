@@ -1,0 +1,174 @@
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+        <style type="text/css">
+        /*margin and padding on body element
+          can introduce errors in determining
+          element position and are not recommended;
+          we turn them off as a foundation for YUI
+          CSS treatments. */
+        body {
+                margin:0;
+                padding:0;
+        }
+        </style>
+
+<link rel="stylesheet" type="text/css" href="http://developer.yahoo.com/yui/build/fonts/fonts-min.css?_yuiversion=2.4.1" />
+<link rel="stylesheet" type="text/css" href="http://developer.yahoo.com/yui/build/datatable/assets/skins/sam/datatable.css?_yuiversion=2.4.1" />
+<script type="text/javascript" src="http://developer.yahoo.com/yui/build/utilities/utilities.js?_yuiversion=2.4.1"></script>
+<script type="text/javascript" src="http://developer.yahoo.com/yui/build/datasource/datasource-beta.js?_yuiversion=2.4.1"></script>
+<script type="text/javascript" src="http://developer.yahoo.com/yui/build/datatable/datatable-beta.js?_yuiversion=2.4.1"></script>
+
+            <title>Vault</title>
+            <style>body,td,a,p,.h{font-family:arial,sans-serif}.h{font-size:20px}.h{color:#3366cc}.q{color:#00c}.ts td{padding:0}.ts{border-collapse:collapse}</style>
+        
+
+    </head>
+    <body class="yui-skin-sam" bgcolor=#ffffff text=#000000 link=#0000cc vlink=#551a8b alink=#ff0000 topmargin=3 marginheight=3>
+        <div align=right id=guser style="font-size:84%;padding:0 0 4px" width=100%></div>
+        {% if user.is_authenticated %}
+            <center>
+                <br clear=all id=lgpd><br><br>
+                <form action="/store/search/" name=f>
+                    <style>#lgpd{display:none}</style>
+                    <script defer> <!-- //--> </script>
+                    <table border=0 cellspacing=0 cellpadding=4>
+                        <tr>
+                            <td nowrap><font size=-1><b>Vault</b>&nbsp;&nbsp;&nbsp;&nbsp;</b></font></td>
+                        </tr>
+                    </table>
+                    
+                    <table cellpadding=0 cellspacing=0>
+                        <tr valign=top>
+                            <td width=25%>&nbsp;</td>
+                            <td align=center nowrap>
+                                <input maxlength=2048 name=q size=55 title="Vault Search" value=""><br>
+                                <input name=btn_search type=submit value="Search">
+                            </td>
+                            <td nowrap width=25%></td>
+                        </tr>
+                    </table>
+                </form>
+            </center>
+            Welcome {{user.get_profile.nickname}} | <a href="/account/{{user.get_profile.id}}/">Account</a> | <a href="/account/signout/?next=/store/">Sign Out</a>
+    
+            {% for q in queries %}
+                {% if forloop.first %}
+                <div id="searchHistoryContainer">
+                    <table id="searchHistoryTable">
+                        <thead>
+                            <tr>
+                                <th>date</th>
+                                <th>when</th>
+                                <th>query</th>
+                                <th>hits</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                {% endif %}
+                        <tr>
+                            <td>{{q.last_run|date:"F d, Y" }}</td>
+                            <td>{{q.since_last_run}}</td>
+                            <td><a href="http://vault.smirnov.ca/store/search/?q={{q.name}}">{{q.name}}</a></td>
+                            <td>{{q.value}}</td>
+                        </tr>
+                {% if forloop.last %}
+                        </tbody>
+                    </table>
+                </div>
+                <script type="text/javascript" >
+                YAHOO.util.Event.addListener(window, "load", function() {
+                    YAHOO.example.EnhanceFromMarkup = new function() {
+                        var myColumnDefs = [
+                            {key:"date",label:"Date",formatter:YAHOO.widget.DataTable.formatDate,sortable:true},
+                            {key:"when",label:"How Long Ago", sortable:true},
+                            {key:"query",label:"Query", sortable:true},
+                            {key:"hits",label:"Hits",formatter:YAHOO.widget.DataTable.formatNumber,sortable:true}
+                        ];
+                
+                        this.parseNumberFromCurrency = function(sString) {
+                            // Remove dollar sign and make it a float
+                            return parseFloat(sString.substring(1));
+                        };
+                
+                        this.myDataSource = new YAHOO.util.DataSource(YAHOO.util.Dom.get("searchHistoryTable"));
+                        this.myDataSource.responseType = YAHOO.util.DataSource.TYPE_HTMLTABLE;
+                        this.myDataSource.responseSchema = {
+                            fields: [{key:"date", parser:YAHOO.util.DataSource.parseDate},
+                                    {key:"when"},
+                                    {key:"query"},
+                                    {key:"hits", parser:YAHOO.util.DataSource.parseNumber}
+                            ]
+                        };
+                
+                        this.myDataTable = new YAHOO.widget.DataTable("searchHistoryContainer", myColumnDefs, this.myDataSource,
+                                {caption:"Search History",
+                                sortedBy:{key:"when",dir:"desc"}});
+                        };
+                
+                });
+                </script>
+                {% endif %}
+            {% endfor %}
+    
+            {% load get_latest %}
+            {% get_latest core.Document 5 as recent_documents %}
+            {% for d in recent_documents %}
+                {% if forloop.first %} 
+                    <div id="documentsContainer">
+                        <table id="documentsTable">
+                            <thead>
+                                <tr>
+                                    <th>document</th>
+                                    <th>pages</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                {% endif %}
+                            <tr>
+                                <td><a href="/doc/{{d.id}}/">{{d}}</a></td>
+                                <td>{{d.num_pages}}</td>
+                            </tr>
+                {% if forloop.last %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <script type="text/javascript" >
+                    YAHOO.util.Event.addListener(window, "load", function() {
+                        YAHOO.example.EnhanceFromMarkup = new function() {
+                            var myColumnDefs = [
+                                {key:"document",label:"Document", sortable:true},
+                                {key:"pages",label:"Page Count", sortable:true},
+                            ];
+                    
+                            this.myDataSource = new YAHOO.util.DataSource(YAHOO.util.Dom.get("documentsTable"));
+                            this.myDataSource.responseType = YAHOO.util.DataSource.TYPE_HTMLTABLE;
+                            this.myDataSource.responseSchema = {
+                                fields: [
+                                        {key:"document"},
+                                        {key:"pages", parser:YAHOO.util.DataSource.parseNumber}
+                                ]
+                            };
+                    
+                            this.myDataTable = new YAHOO.widget.DataTable("documentsContainer", myColumnDefs, this.myDataSource,
+                                    {caption:"Recent Documents"});
+                            };
+                    
+                    });
+                    </script>
+                {% endif %}
+            {% endfor %}
+
+        {% else %}
+        <a href="/account/signin/?next=/store/">Sign In</a>
+        {% endif %}
+
+<div id="basic"></div>
+    <p>
+        document count: {{document_count}}<br/>
+        incoming queue: {{incoming_queue}}<br/>
+        ocr queue: {{ocr_queue}}<br/>
+    </p>
+
+</body>
+</html>

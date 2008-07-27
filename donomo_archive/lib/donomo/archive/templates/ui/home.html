@@ -1,0 +1,67 @@
+{% extends "ui/base.html" %}
+{% block title %}{{user.username}}{% endblock %}
+
+{% block body %}
+<!-- YUI_include fonts grids dom event -->
+<div id="doc3" class="yui-t1">
+	<div id="hd">
+		<form action="/" name=f>
+            <table cellpadding=0 cellspacing=0>
+                <tr valign=top>
+                    <td align=center nowrap>
+						<a href="/"><b><i>donomo</i></b></a> |
+						<a href="/account/{{user.username}}/">Settings</a> |
+						<a href="/account/signout/?next=/"> Sign Out</a>
+						{% include 'ui/search.panel.html' %}
+                    </td>
+                </tr>
+            </table>
+        </form>
+	</div>
+   <div id="bd">
+        <div id="yui-main">
+	        <div class="yui-b">
+                <div class="yui-g">
+                	{% include 'ui/archive.panel.html' %}
+                </div>
+            </div>
+	    </div>
+	    <div id="nav" class="yui-b">
+	    	{% include 'ui/tags.panel.html' %}
+	    </div>
+	</div>
+   <div id="ft" align="right">
+	{% include 'ui/slider.panel.html' %}
+   </div>
+</div>
+
+<script>
+(function() {
+    var Dom = YAHOO.util.Dom,
+        Event = YAHOO.util.Event;
+
+    Event.onDOMReady(function() {
+        var layout = new YAHOO.widget.Layout('doc3', {
+            height: Dom.getClientHeight(), //Height of the viewport
+            width: Dom.get('doc3').clientWidth, //Width of the outer element
+            units: [
+                { position: 'top', height: 30, body: 'hd' },
+                { position: 'left', width: 160, body: 'nav', grids: true, resize: true },
+                { position: 'bottom', height: 25, id: 'ft' },
+                { position: 'center', body: 'bd', grids: true, scroll: true }
+            ]
+        });
+        layout.on('beforeResize', function() {
+			//TODO: figure out why we need to take 10 pixels off the width to prevent
+			//a resize to overflowing the viewport
+            Dom.setStyle('doc3', 'width', Dom.getClientWidth()-10 + 'px');
+            Dom.setStyle('doc3', 'height', Dom.getClientHeight() + 'px');
+        });
+
+        layout.render();
+    });
+
+})();
+</script>
+
+{% endblock %}

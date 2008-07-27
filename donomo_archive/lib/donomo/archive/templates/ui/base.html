@@ -1,0 +1,28 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+ "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+   <title>donomo {% block title %}{% endblock %}</title>
+   
+<!-- YUI_init -->
+<!-- YUI_version raw -->
+<!-- YUI_version debug -->
+   {% block head %}{% endblock %}
+<style type="text/css">
+/*margin and padding on body element
+  can introduce errors in determining
+  element position and are not recommended;
+  we turn them off as a foundation for YUI
+  CSS treatments. */
+body {
+	margin:0;
+	padding:0;
+}
+</style>
+</head>
+<body class="yui-skin-sam">
+	{% block body %}{% endblock %}
+</body>
+</html>
+
+

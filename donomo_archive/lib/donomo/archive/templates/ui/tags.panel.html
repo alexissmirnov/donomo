@@ -1,0 +1,26 @@
+<script src="{{MEDIA_URL}}ui/tags/tagpanel.js"></script>
+<link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}ui/tags/assets/tagpanel-core.css" >
+
+<script>
+	/*
+	 * Tag Panel initialization
+	 */	
+	(function(){
+		YAHOO.util.Event.onContentReady("tag.panel", function(){
+			YAHOO.donomo.TagPanel.init();
+		});
+	})();
+</script>
+			
+<p>
+	<b>TAGS</b>
+	<div id='tag.panel'></div>
+</p>
+
+<div style='display: none;'>
+	<div class='tag-item' id='tags.template'
+		jsselect='tags' jsdisplay='$this.document_count > 0' 
+		jsvalues='name:$this.name;'>
+			<span jscontent='$this.name + "(" + $this.document_count + ")"'></span></br> 
+	</div>
+</div>

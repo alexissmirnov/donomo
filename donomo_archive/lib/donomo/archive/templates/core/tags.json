@@ -1,0 +1,5 @@
+{
+    "tags" : [{% for tag in tag_set %}
+    	{"name" : "{{tag.label|escapejs}}", "document_count" : "{{tag.documents.all.count}}"}{% if not forloop.last %}, {% endif %}{% endfor %}
+    ]
+}

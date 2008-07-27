@@ -1,0 +1,21 @@
+{% extends "ui/base.html" %}
+{% block title %}archive{% endblock %}
+{% block body %}
+	<!-- YUI_include fonts grids -->
+   <div id="hd"><h1>[logo] this is header [signin]</h1></div>
+   <div id="bd">
+	<div class="yui-g">
+		<div style="background-image: url({{MEDIA_URL}}img/home.gif); height: 352px; width: 750px;">
+			this is a main part of the window, with visual and a pitch. 
+		</div>
+	</div>
+	<div class="yui-g">
+		<p>New user? <a href="myopenid.com" title="Sign_Up.html">Sign Up for an OpenID</a>
+		</p>
+        <p>Already have an OpenID?
+        <form action="/account/signin/?next=/" method="post">
+        	<input class="openid" type="text" name="openid_url"> <input type="submit" value="Sign in">
+        </form>
+	</div>
+	</div>
+{% endblock %}

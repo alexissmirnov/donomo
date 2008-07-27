@@ -1,0 +1,17 @@
+{% extends "ui/base.html" %}
+{% block title %}{{user.username}}{% endblock %}
+{% block body %}
+<!-- YUI_include fonts grids -->
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<p>Settings for {{user.get_profile.nickname}}:</p>
+
+<form action="" method="post">
+<p><label for="fax_number">Fax:</label> </p>
+
+<input type="text" name="fax_number" value="{{ form.fax_number }}">
+<input type="submit" value="Submit">
+
+</form>
+{% endblock %}

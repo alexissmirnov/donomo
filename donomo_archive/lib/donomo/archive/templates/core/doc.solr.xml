@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<add>
+  <doc>
+    <field name="id">{{id}}</field>
+    <field name="did">{{did}}</field>
+    <field name="text">{{content}}</field>
+    <field name="owner">{{owner.id}}</field>{% for tag in tags %}
+    <field name="tag">{{tag}}</field>{% endfor %}
+  </doc>
+</add>
