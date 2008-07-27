@@ -1,0 +1,85 @@
+#panel { 
+	font: 85% Arial, Helvetica, san-serif;
+}
+
+#panel .panel-item {
+	float:left;	
+	padding-bottom: 1em;
+	margin-bottom: 1em;
+}
+#panel .line-item {
+	height: 22em; 
+	width: 11em;
+}
+#panel .page {
+	background-color: #FFeeFF;
+	color: #444;
+	float: left;
+}
+
+#panel .page-cover {
+	padding: 3px;
+}
+
+#panel .page-first {
+	border-left: solid 2px gray;
+	border-top: solid 2px gray;
+	border-bottom: solid 2px gray;
+}
+
+#panel .page-last {
+	border-right: solid 2px gray;
+	border-top: solid 2px gray;
+	border-bottom: solid 2px gray;
+}
+
+#panel .page-middle {
+	border-top: solid 2px gray;
+	border-bottom: solid 2px gray;
+}
+
+#panel .page-selected {
+	background-color: blue;
+}
+
+#panel .page-separator {
+	visibility:inherit;
+	width:20px; 
+	float: inherit;
+	cursor: pointer;
+	background-color: #FFeeFF;
+}
+
+#panel .page-separator-over {
+	background-image: url('/media/ui/docpanel/assets/cut_red.png');
+	background-repeat: no-repeat;	
+	background-position:center;	
+}
+
+#panel .doc-separator {
+	visibility:inherit;
+	width:30px; 
+	float: inherit;
+	cursor: pointer;
+}
+
+#panel .doc-separator-over {
+	background-image: url('/media/ui/docpanel/assets/attach.png');
+	background-repeat: no-repeat;	
+	background-position:center;	
+}
+
+#panel .page-menu li { display: inline;  padding: 0 0.33em}
+
+#panel .hidden-item {
+	visibility: hidden;
+	width: 0px;
+}
+/*.yui-module { padding:5px;margin:10px; display:none;} */
+.yui-module .hd { border:1px solid gray;padding:5px; }
+.yui-module .bd { border: 1px solid #ddd; overflow: hidden; padding:5px; }
+.yui-module .ft { border:1px solid blue;padding:5px; } 
+.yui-module .title-th { border:1px dotted black; margin:5px; padding: 10px; float: left; }
+.yui-module .page-th { border:1px dotted blue; background-color: #e7FFe7; margin:5px; padding: 10px; float: left; }
+.yui-module .thumbnail-image { border:1px dotted green; margin:5px; padding: 3px; float: left;}
+

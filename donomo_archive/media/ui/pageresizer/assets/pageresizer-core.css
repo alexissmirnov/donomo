@@ -1,0 +1,12 @@
+#slider-bg {
+    position: relative;
+    background:url(bg-fader.gif) 5px 0 no-repeat;
+    height:28px;
+    width:228px; 
+}
+
+#slider-thumb {
+    cursor:default;
+    position: absolute;
+    top: 4px;
+}
