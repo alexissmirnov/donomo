@@ -4,7 +4,6 @@
 from __future__           import with_statement
 from django.conf          import settings
 from boto.s3.connection   import S3Connection, S3ResponseError
-from boto.s3.connection   import OrdinaryCallingFormat
 from boto.s3.key          import Key as S3Key
 from boto.s3.bucket       import Bucket as S3Bucket
 from logging              import getLogger
@@ -29,8 +28,7 @@ def get_connection():
         aws_access_key_id     = settings.AWS_ACCESS_KEY_ID,
         aws_secret_access_key = settings.AWS_SECRET_ACCESS_KEY,
         host                  = settings.S3_HOST,
-        is_secure             = settings.S3_IS_SECURE,
-        calling_format        = OrdinaryCallingFormat())
+        is_secure             = settings.S3_IS_SECURE)
 
 # -----------------------------------------------------------------------------
 

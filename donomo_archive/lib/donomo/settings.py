@@ -114,7 +114,7 @@ if DEVELOPMENT_MODE:
     DATABASE_NAME      = join_and_normalize(DONOMO_PATH, 'donomo.db')
     DATABASE_USER      = None
     DATABASE_PASSWORD  = None
-    MEDIA_ROOT         = join_and_normalize(DONOMO_PATH, 'media/')
+    MEDIA_ROOT         = join_and_normalize(DONOMO_PATH, 'archive/media/')
     ADMIN_MEDIA_PREFIX = '/admin_media/'
 else:
     DATABASE_ENGINE    = 'mysql'
@@ -183,6 +183,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
 #    'django.middleware.cache.CacheMiddleware',
     'django_openidconsumer.middleware.OpenIDMiddleware',
+    'donomo.archive.utils.yui.middleware.YUIIncludeMiddleware',
 )
 
 ROOT_URLCONF = 'donomo.urls'
@@ -205,11 +206,13 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.admin',
+    'django_openidconsumer',
     'donomo.archive',
 )
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
+    'donomo.archive.account.OpenIDAuthBackend',
     )
 
 AUTH_PROFILE_MODULE = 'account.userprofile'

@@ -22,7 +22,6 @@ from donomo.archive.utils.middleware import json_view
 from donomo.archive.utils.misc       import get_url, param_is_true
 
 import logging
-# TODO: add logging
 
 __all__ = (
     'upload_document',

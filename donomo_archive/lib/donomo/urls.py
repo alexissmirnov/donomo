@@ -1,7 +1,7 @@
 """ Donomo Archive urls that are user visible.
 """
 
-from django.conf.urls.defaults import patterns
+from django.conf.urls.defaults import patterns, include
 from django.conf               import settings
 
 #

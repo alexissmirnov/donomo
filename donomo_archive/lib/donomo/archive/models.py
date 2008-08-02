@@ -798,3 +798,4 @@ class Query(models.Model):
 
     class Admin:
         pass
+
