@@ -1,0 +1,3 @@
+#!/bin/sh -e
+cd ../solr/
+exec java -jar start.jar "$@"
