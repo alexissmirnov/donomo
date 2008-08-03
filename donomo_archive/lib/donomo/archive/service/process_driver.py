@@ -121,6 +121,7 @@ def main():
 
     if len(driver_names) == 0:
         driver_names = [
+            'pdf_parser',
             'tiff_parser',
             'ocr',
             'indexer',

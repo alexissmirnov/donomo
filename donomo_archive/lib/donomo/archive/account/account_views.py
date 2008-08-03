@@ -1,13 +1,13 @@
 from django.http                            import HttpResponse
 from django.contrib.auth.models             import User
 from django.contrib.auth                    import authenticate, login, logout
+from django.contrib.auth.decorators         import login_required
+from django.shortcuts                       import render_to_response
 
 from django_openidconsumer.views            import signout as openid_signout
 from django_openidconsumer.views            import default_on_success
-from django.contrib.auth.decorators         import login_required
 
-from django.shortcuts                       import render_to_response
-
+import re
 #
 # pylint: disable-msg = E1101
 #
@@ -15,12 +15,17 @@ from django.shortcuts                       import render_to_response
 #
 
 def on_openid_signin(request, identity_url, openid_response):
+    """
+        called upon completion of OpenID signin.
+        If we got here, it means openid provider validated user's password
+        and redirected control here.
+    """
     sreg = openid_response.extensionResponse('sreg')
 
     email = sreg.get('email', 'undisclosed')
     
     identity_url_cleaned = identity_url.strip().replace('http://','').replace('https://','')
-    import re
+
     match_non_alnum = re.compile("[^a-zA-Z0-9]+")
 
     identity_url_cleaned = match_non_alnum.sub(' ', identity_url_cleaned).strip().replace(' ', '_')
@@ -38,6 +43,10 @@ def on_openid_signin(request, identity_url, openid_response):
         return None #todo
     
 def delete(request):
+    """
+    Deletes user's account.
+    """
+    #TODO: delete all user's data on solr, s3, etc.
     if request.user.is_authenticated():
         request.user.delete()
         logout(request)
@@ -46,13 +55,14 @@ def delete(request):
         return HttpResponse('forbidden')
     
 def signout(request):
-    print str(request.user)
     logout(request)
-    print str(request.user)
     return openid_signout(request)    
 
 @login_required()    
 def account_detail(request, username):
+    """
+        Renders account management UI
+    """
     #TODO replace with generic views once
     #http://code.djangoproject.com/ticket/3639 is resolved
     

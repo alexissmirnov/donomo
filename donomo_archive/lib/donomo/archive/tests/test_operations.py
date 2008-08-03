@@ -15,7 +15,7 @@ def function():
     return traceback.extract_stack(limit=1)[0][2]
 
 class DocumentOperations(unittest.TestCase):
-
+# pylint: disable-msg=E1101
     """
     Validate the various doucment related operations.
     """
@@ -37,7 +37,7 @@ class DocumentOperations(unittest.TestCase):
 
         self.processor = operations.get_or_create_processor(
             MODULE_NAME,
-            [])
+            [])[0]
 
     def test_001_user_created(self):
         """

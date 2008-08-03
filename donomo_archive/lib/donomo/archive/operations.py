@@ -63,6 +63,7 @@ __all__ = (
     )
 
 # ---------------------------------------------------------------------------
+# pylint: disable-msg=E1101
 
 def create_upload_from_stream(
     processor,
@@ -70,7 +71,6 @@ def create_upload_from_stream(
     file_name,
     data_stream,
     content_type ):
-
     """
     Upload a new object into the archive.
     """
@@ -84,7 +84,7 @@ def create_upload_from_stream(
     create_work_item(processor, upload, data_stream, content_type)
 
     return upload
-
+# pylint: enable-msg=E1101
 # ---------------------------------------------------------------------------
 
 def create_upload_from_file(
@@ -318,8 +318,11 @@ def get_or_create_processor(
     """
     Obtain a processor object based on its name and the names of its
     outputs.  The processor will be created if it does not already
-    exist.  On creating a processessor, this function assumes it will
+    exist.  On creating a processor, this function assumes it will
     be running on local node.
+    
+    Returns a tuple processor and a boolean indicating if the 
+    processor was created.
 
     """
 
@@ -358,7 +361,7 @@ def get_or_create_processor(
 
     logging.debug('Retrieved processor: %s' % processor)
 
-    return processor
+    return processor, created
 
 #-----------------------------------------------------------------------------
 

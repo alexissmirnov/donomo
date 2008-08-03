@@ -56,7 +56,7 @@ class ProcessDriver:
             assert self.SERVICE_NAME, 'ProcessDriver instances require a name'
             self._processor = operations.get_or_create_processor(
                 self.SERVICE_NAME,
-                self.DEFAULT_OUTPUTS or []  )
+                self.DEFAULT_OUTPUTS or []  )[0]
         return self._processor
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
