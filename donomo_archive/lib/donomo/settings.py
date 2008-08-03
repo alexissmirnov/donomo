@@ -212,7 +212,7 @@ INSTALLED_APPS = (
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
-    'donomo.archive.account.OpenIDAuthBackend',
+    'donomo.archive.account.auth_backend.OpenIDAuthBackend',
     )
 
 AUTH_PROFILE_MODULE = 'account.userprofile'
