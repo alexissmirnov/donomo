@@ -47,9 +47,9 @@ Usage: %prog -e user's mail address [-t <title>][files]
 
                 print "Importing: ", title
 
-                if file_type == 'tiff':
+                if file_type == '.tiff':
                     upload(tiff_parser, owner, title, stream)
-                elif file_type == 'pdf':
+                elif file_type == '.pdf':
                     upload(pdf_parser, owner, title, stream)
     finally:
         shutil.rmtree(directory)

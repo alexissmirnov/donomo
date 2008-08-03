@@ -11,6 +11,8 @@ import logging
 import optparse
 import os
 
+from donomo.archive.service import pdf_parser, tiff_parser, ocr, indexer 
+
 MUST_SHUT_DOWN = False
 SERVICE_MODULE = 'donomo.archive.service'
 MODULE_NAME    = os.path.splitext(os.path.basename(__file__))[0]
@@ -121,11 +123,11 @@ def main():
 
     if len(driver_names) == 0:
         driver_names = [
-            'pdf_parser',
-            'tiff_parser',
-            'ocr',
-            'indexer',
-            ]
+                        pdf_parser.MODULE_NAME,
+                        tiff_parser.MODULE_NAME,
+                        ocr.MODULE_NAME,
+                        indexer.MODULE_NAME
+                        ]
 
     driver_list = [ get_process_driver(name) for name in driver_names ]
 

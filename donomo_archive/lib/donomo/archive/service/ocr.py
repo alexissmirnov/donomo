@@ -3,7 +3,7 @@ OCR Process Driver
 """
 
 from donomo.archive            import operations
-from donomo.archive.service    import ProcessDriver
+from donomo.archive.service    import ProcessDriver, indexer
 from logging                   import getLogger
 import os
 
@@ -39,7 +39,7 @@ class OcrDriver(ProcessDriver):
     SERVICE_NAME = MODULE_NAME
 
     DEFAULT_OUTPUTS = [
-        ('ocr_text', ['donomo.archive.index']),
+        ('ocr_text', [indexer.MODULE_NAME]),
         ]
 
     ACCEPTED_CONTENT_TYPES = [ 'image/tiff' ]
@@ -67,7 +67,7 @@ class OcrDriver(ProcessDriver):
         local_path += '.txt'
 
         operations.create_page_view_from_file(
-            output_channel = 'ocr_text',
+            output_channel = OcrDriver.DEFAULT_OUTPUTS[0][0],
             page           = item['Object'].page,
             path           = local_path,
             content_type   = 'text/plain' )

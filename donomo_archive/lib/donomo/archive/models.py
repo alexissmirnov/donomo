@@ -479,7 +479,7 @@ class Upload(models.Model):
 
     description = property(
         lambda self: '%s %s' % (
-            self.view_type.producer,
+            self.view_type.producers.all(),
             self.timestamp ))
 
     gateway = models.ForeignKey(
