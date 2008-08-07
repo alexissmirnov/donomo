@@ -89,7 +89,7 @@ def get_status(request):
     return HttpResponse('%s documents' % manager(Document).count())
 
 # ----------------------------------------------------------------------------
-
+@staff_member_required
 def wipe_everything(request):
     """
     Delete everything and start over

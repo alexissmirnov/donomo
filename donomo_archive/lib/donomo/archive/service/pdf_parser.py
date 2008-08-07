@@ -15,11 +15,11 @@ import os
 
 
 #
-# pylint: disable-msg=C0103,R0922
+# pylint: disable-msg=C0103,R0922,W0703
 #
 #   C0103 - variables at module scope must be all caps
 #   R0922 - Abstract class is only referenced once
-#
+#   W0703 - Catch "Exception"
 
 MODULE_NAME = os.path.splitext(os.path.basename(__file__))[0]
 logging = getLogger(MODULE_NAME)
@@ -76,7 +76,7 @@ class PdfParserDriver(TiffParserDriver):
 
         operations.create_page_view_from_file(
             self.processor,
-            'pdf-original',
+            PdfParserDriver.DEFAULT_OUTPUTS[0][0],
             page,
             pdf_orig_path )
 
@@ -107,7 +107,7 @@ class PdfParserDriver(TiffParserDriver):
                 upload.gateway )
 
             logging.info(
-                '%s - Creating new document for %s: %r' % (
+                'Creating new document for %s: %s' % (
                     upload.owner,
                     title))
 
@@ -116,7 +116,10 @@ class PdfParserDriver(TiffParserDriver):
                 title = title )
 
             page_number = 0
-            for pdf_orig_path in glob(os.path.join(page_dir,'*.pdf')).sort():
+            pdf_pages = glob(os.path.join(page_dir,'*.pdf'))
+            pdf_pages.sort()
+            
+            for pdf_orig_path in pdf_pages:
                 page_number += 1
                 self.process_page_file(document, pdf_orig_path, page_number)
 
@@ -124,8 +127,12 @@ class PdfParserDriver(TiffParserDriver):
                 'done. parsed pdfs for document %s by %s' % (
                     document,
                     document.owner))
+        except Exception, e:
+            logging.error(e)
+            return False
         finally:
             if page_dir:
                 shutil.rmtree(page_dir)
-
+                
+        return True
 # ----------------------------------------------------------------------------

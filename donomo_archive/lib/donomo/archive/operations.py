@@ -70,15 +70,24 @@ def create_upload_from_stream(
     owner,
     file_name,
     data_stream,
-    content_type ):
+    content_type,
+    view_type = None ):
     """
     Upload a new object into the archive.
     """
+    
+    # ViewType MUST have at least one consumer.
+    # Otherwise no downstream processor will get notified.
+    # Passing view_type allows the caller to specify 'consumers' 
+    # in view_type instance.
+    # TODO: Roger, please review
+    if view_type is None:
+        view_type = ViewType.objects.get_or_create(name = 'upload')[0]
 
     upload = manager(Upload).create(
         owner     = owner,
         gateway   = processor,
-        view_type = ViewType.objects.get_or_create(name = 'upload')[0],
+        view_type = view_type,
         file_name = os.path.basename(file_name) )
 
     create_work_item(processor, upload, data_stream, content_type)
@@ -383,7 +392,9 @@ def create_page_view_from_stream(
             output_channel,
             content_type ))
 
-    view_type = processor.output.get( name = output_channel )
+    logging.debug('processor.process.outputs=%s' % processor.process.outputs.all())
+    logging.debug('processor.outputs=%s' % processor.outputs.all())
+    view_type = processor.process.outputs.get( name = output_channel )
 
     page_view = manager(PageView).get_or_create(
         page      = page,
@@ -480,7 +491,13 @@ def create_work_item(
 
     sqs_connection = sqs_utils.get_connection()
 
-    for next_processor in view_type.consumers.all():
+    processors_to_notify = list(view_type.consumers.all())
+    try:
+        processors_to_notify.append(work_item.gateway)
+    except AttributeError, e:
+        pass
+        
+    for next_processor in processors_to_notify:
         logging.debug('Notifying %s' % next_processor)
         sqs_utils.post_message(
             sqs_utils.create_queue(
@@ -503,7 +520,7 @@ def get_work_item(
     temp_path = None
 
     try:
-        sqs_queue = sqs_utils.get_queue(processor.queue_name)
+        sqs_queue = sqs_utils.create_queue(processor.queue_name)
 
         message = sqs_utils.get_message(
             sqs_queue          = sqs_queue,
@@ -542,7 +559,7 @@ def get_work_item(
         model = django.db.models.get_model(*message['Model-Name'].split('.'))
         instance = model.objects.get(id = int(message['Primary-Key']))
 
-        assert( message_s3_path == instance.s3_path )
+        assert( message_s3_path == instance.s3_key )
         assert( message_content_type == metadata['Content-Type'] )
 
         message.update( metadata )

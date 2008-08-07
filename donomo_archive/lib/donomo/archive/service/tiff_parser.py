@@ -4,7 +4,7 @@ Multi-page TIFF parser
 """
 
 from donomo.archive            import operations
-from donomo.archive.service    import ProcessDriver
+from donomo.archive.service    import ProcessDriver, ocr
 from donomo.archive.models     import Upload
 from logging                   import getLogger
 from glob                      import glob
@@ -15,10 +15,11 @@ import os
 
 
 #
-# pylint: disable-msg=C0103,R0922
+# pylint: disable-msg=C0103,R0922,W0703
 #
 #   C0103 - variables at module scope must be all caps
 #   R0922 - Abstract class is only referenced once
+#   W0703 - Catch "Exception"
 #
 
 MODULE_NAME = os.path.splitext(os.path.basename(__file__))[0]
@@ -48,7 +49,7 @@ class TiffParserDriver(ProcessDriver):
     SERVICE_NAME = MODULE_NAME
 
     DEFAULT_OUTPUTS = (
-        ( 'tiff-original',      ['donomo.archive.service.ocr']),
+        ( 'tiff-original',      [ocr.MODULE_NAME]),
         ( 'jpeg-original',      []),
         ( 'jpeg-thumbnail-100', []),
         ( 'jpeg-thumbnail-200', []),
@@ -134,7 +135,7 @@ class TiffParserDriver(ProcessDriver):
         for path, view in ( ( tiff_orig_path, 'tiff-original'),
                             ( jpeg_orig_path, 'jpeg-original'),
                             ( jpeg_t100_path, 'jpeg-thumbnail-100'),
-                            ( jpeg_t200_path, 'jpeg_thumbnail-200') ) :
+                            ( jpeg_t200_path, 'jpeg-thumbnail-200') ) :
             operations.create_page_view_from_file(
                 self.processor,
                 view,
@@ -175,7 +176,7 @@ class TiffParserDriver(ProcessDriver):
                 upload.gateway )
 
             logging.info(
-                '%s - Creating new document for %s: %r' % (
+                'Creating new document for %s: %s' % (
                     upload.owner,
                     title))
 
@@ -184,7 +185,10 @@ class TiffParserDriver(ProcessDriver):
                 title = title )
 
             page_number = 0
-            for tiff_orig_path in glob(os.path.join(page_dir,'*.tif')).sort():
+            tiff_pages = glob(os.path.join(page_dir,'*.tif*'))
+            tiff_pages.sort()
+
+            for tiff_orig_path in tiff_pages:
                 page_number += 1
                 self.process_page_file(document, tiff_orig_path, page_number)
 
@@ -192,7 +196,11 @@ class TiffParserDriver(ProcessDriver):
                 'done. parsed tiffs for document %s by %s' % (
                     document,
                     document.owner))
+        except Exception, e:
+            logging.error(e)
+            return False
         finally:
             shutil.rmtree(page_dir)
-
+            
+        return True
 # ----------------------------------------------------------------------------

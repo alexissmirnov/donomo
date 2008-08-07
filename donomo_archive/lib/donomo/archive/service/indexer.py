@@ -56,7 +56,7 @@ class IndexDriver(ProcessDriver):
         <?xml version="1.0" encoding="UTF-8"?>
         <add>
           <doc>
-            <field name="id">{{id}}</field>
+            <field name="page_id">{{id}}</field>
             <field name="did">{{did}}</field>
             <field name="text">{{content}}</field>
             <field name="owner">{{owner.id}}</field>{% for tag in tags %}
@@ -137,12 +137,11 @@ class IndexDriver(ProcessDriver):
     def index_page_from_file(self, page, text_file_path):
         """
         Update the full-text index for the given page.  The textual
-        content of the page is in the file referencec by file_path.
+        content of the page is in the file referenced by file_path.
 
         """
         with open(text_file_path, 'r') as text_file:
-            return self.index_page_from_string(self, page, text_file.read())
-
+            return self.index_page_from_string(page, text_file.read())
 
 # ----------------------------------------------------------------------------
 

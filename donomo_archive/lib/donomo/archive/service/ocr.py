@@ -55,7 +55,7 @@ class OcrDriver(ProcessDriver):
         also be removed from the work queue.
 
         """
-        local_path = item['Local-path']
+        local_path = item['Local-Path']
 
         if 0 != os.system('tesseract %r %r' % (local_path, local_path)):
             logging.error('Failed to OCR source TIFF: %s' % local_path)
@@ -65,11 +65,12 @@ class OcrDriver(ProcessDriver):
         # tesseract adds .txt extension to the output
         #
         local_path += '.txt'
-
+    
         operations.create_page_view_from_file(
-            output_channel = OcrDriver.DEFAULT_OUTPUTS[0][0],
-            page           = item['Object'].page,
-            path           = local_path,
-            content_type   = 'text/plain' )
+            self.processor,
+            OcrDriver.DEFAULT_OUTPUTS[0][0],
+            item['Object'].page,
+            local_path,
+            'text/plain' )
 
         return True

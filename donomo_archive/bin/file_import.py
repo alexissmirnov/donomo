@@ -47,7 +47,7 @@ Usage: %prog -e user's mail address [-t <title>][files]
 
                 print "Importing: ", title
 
-                if file_type == '.tiff':
+                if file_type == '.tiff' or file_type == '.tif':
                     upload(tiff_parser, owner, title, stream)
                 elif file_type == '.pdf':
                     upload(pdf_parser, owner, title, stream)

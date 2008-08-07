@@ -4,8 +4,8 @@ pipeline.
 
 """
 
-from donomo.archive      import operations
-from logging import getLogger
+from donomo.archive         import operations
+from logging                import getLogger
 import os
 
 #

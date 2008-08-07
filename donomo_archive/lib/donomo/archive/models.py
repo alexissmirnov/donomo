@@ -605,7 +605,7 @@ class Page(models.Model):
     description = property(
         lambda self: '%s (%s / %s)' %  (
             self.title,
-            self.positoin,
+            self.position,
             self.document.num_pages ))
 
     #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
