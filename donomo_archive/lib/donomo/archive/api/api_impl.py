@@ -47,7 +47,7 @@ logging = logging.getLogger('web-api')
 
 class WebGateway(ProcessDriver):
     """
-    Adapter to allow the web-site to participate as a procesor.
+    Adapter to allow the web-site to participate as a processor.
 
     """
 
@@ -83,7 +83,7 @@ def refreshed( instance ):
 
 # ---------------------------------------------------------------------------
 
-def page_as_json_dict( page, only_api_url = False ):
+def page_as_json_dict( page, page_view_name, only_api_url = False):
     """
     Helper function to transform a page into a dictionary, suitable for
     transliteration into JSON.
@@ -93,20 +93,24 @@ def page_as_json_dict( page, only_api_url = False ):
     if only_api_url:
         return { 'url' : get_url('api_page_info', pk = page.pk) }
 
+    logging.debug(get_url('api_document_info', pk = page.document.pk))
+    
     return {
         'url'          : get_url('api_page_info', pk = page.pk),
         'owner'        : page.owner.pk,
         'document'     : get_url('api_document_info', pk = page.document.pk),
         'position'     : page.position,
-        'pdf_url'      : get_url('page_as_pdf', pk = page.pk ),
-        'upload_date'  : page.upload.timestamp,
-        'thumbnail'    : get_url('page_thumbnail', pk =  page.pk),
+        #TODO 'pdf_url'      : get_url('page_as_pdf', pk = page.pk ), -- this throws
+        #TODO 'upload_date'  : page.upload.timestamp, -- this doesnt exist
+        'thumbnail'    : get_url('api_page_view', 
+                                 pk =  page.pk, 
+                                 view_name = page_view_name),
         }
 
 
 # ---------------------------------------------------------------------------
 
-def document_as_json_dict( document, page_num_list = None ):
+def document_as_json_dict( document, page_view_name, page_num_list = None ):
     """
     Helper function to transform a document into a dictionary.  Handy for
     being further transformed into JSON.
@@ -125,8 +129,8 @@ def document_as_json_dict( document, page_num_list = None ):
         'title'  : document.title,
         'tags'   : [ tag.label for tag in document.tags.all() ],
         'length' : document.num_pages,
-        'pdf'    : get_url('document_as_pdf', { 'id' : document.pk }),
-        'pages'  : [ page_as_json_dict(page) for page in page_set ],
+        #TODO 'pdf'    : get_url('document_as_pdf', { 'id' : document.pk }), -- this throws!
+        'pages'  : [ page_as_json_dict(page, page_view_name) for page in page_set ],
         }
 
 # ----------------------------------------------------------------------------
@@ -221,7 +225,8 @@ def get_document_list(request):
     query_string = extract_query_string(request)
     start_index  = int(request.GET.get('start_index', 0))
     num_rows     = int(request.GET.get('num_rows', 25))
-
+    page_view_name = request.GET.get('view_name', 'jpeg-thumbnail-200')
+    
     if query_string is not None:
         return indexer.query(
             request.user,
@@ -229,10 +234,11 @@ def get_document_list(request):
             start_index,
             num_rows)
     else:
-        doc_list = request.user.documents.all() [ start_index : num_rows ]
+        all_docs = request.user.documents.all()
+        doc_list = all_docs [ start_index : num_rows ]
         return {
             'query' : query_string,
-            'documents' : [ document_as_json_dict(doc) for doc in doc_list ],
+            'documents' : [ document_as_json_dict(doc, page_view_name, [1]) for doc in doc_list ],
             }
 
 # ----------------------------------------------------------------------------

@@ -17,31 +17,31 @@ __all__ = ( 'urlpatterns' )
 
 urlpatterns = patterns(
     '',
-    url( r'^documents/?$',
+    url( r'^documents/$',
          document_list,
          name = 'api_document_list' ),
 
-    url( r'^documents/(?P<pk>\d+)/?$',
+    url( r'^documents/(?P<pk>\d+)/$',
          document_info,
          name = 'api_document_info' ),
 
-    url( r'^documents/(?P<pk>\d+)/(?P<view_name>\w+)/?$',
+    url( r'^documents/(?P<pk>\d+)/(?P<view_name>\w+|[\-])/$',
          document_view,
          name = 'api_document_view' ),
 
-    url( r'^pages/(?P<pk>\d+)/?$',
+    url( r'^pages/(?P<pk>\d+)/$',
          page_info,
          name = 'api_page_info' ),
 
-    url( r'^pages/(?P<pk>\d+)/(?P<view_name>\w+)/?$',
+    url( r'^pages/(?P<pk>\d+)/(?P<view_name>\w+|[\-])/$',
          page_view,
          name = 'api_page_view' ),
 
-    url( r'^tags/?$',
+    url( r'^tags/$',
          tag_list,
          name = 'api_tag_list' ),
 
-    url( r'^tags/(?P<label>\w+)/?$',
+    url( r'^tags/(?P<label>\w+|[\-])/$',
          tag_info,
          name = 'api_tag_info' ),
     )

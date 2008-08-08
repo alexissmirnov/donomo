@@ -68,6 +68,7 @@ def get_url( viewname, *args, **kwargs ):
     Wrapper for the reverse function.
 
     """
+    #FIXME: why reverse() return URLs in the forms of //?api/1.0/bla/...
     return reverse( viewname = viewname, args = args, kwargs = kwargs )
 
 # ---------------------------------------------------------------------------

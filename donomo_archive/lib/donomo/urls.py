@@ -14,5 +14,5 @@ urlpatterns = patterns(
     '',
     (r'^admin/', include('django.contrib.admin.urls')),
     (r'^media/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT }),
-    (r'^/?', include('donomo.archive.urls')),
+    (r'^', include('donomo.archive.urls')),
 )

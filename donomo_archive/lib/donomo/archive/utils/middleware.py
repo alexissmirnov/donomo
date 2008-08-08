@@ -23,7 +23,7 @@ import sys
 logging = logging_module.getLogger('middleware')
 
 
-JSON_CONTENT_TYPE  = 'application/json'
+JSON_CONTENT_TYPE  = 'text/plain'
 XML_CONTENT_TYPE   = 'application/xml'
 AJAX_CONTENT_TYPES = ( JSON_CONTENT_TYPE, XML_CONTENT_TYPE)
 

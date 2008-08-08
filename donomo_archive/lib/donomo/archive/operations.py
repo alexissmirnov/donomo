@@ -70,24 +70,15 @@ def create_upload_from_stream(
     owner,
     file_name,
     data_stream,
-    content_type,
-    view_type = None ):
+    content_type):
     """
     Upload a new object into the archive.
     """
     
-    # ViewType MUST have at least one consumer.
-    # Otherwise no downstream processor will get notified.
-    # Passing view_type allows the caller to specify 'consumers' 
-    # in view_type instance.
-    # TODO: Roger, please review
-    if view_type is None:
-        view_type = ViewType.objects.get_or_create(name = 'upload')[0]
-
     upload = manager(Upload).create(
         owner     = owner,
         gateway   = processor,
-        view_type = view_type,
+        view_type = ViewType.objects.get_or_create(name = 'upload')[0],
         file_name = os.path.basename(file_name) )
 
     create_work_item(processor, upload, data_stream, content_type)
@@ -491,6 +482,17 @@ def create_work_item(
 
     sqs_connection = sqs_utils.get_connection()
 
+    #TODO: Roger, please review
+    # When a work item is created by the gateway processor 
+    # (eg. via file_import.py) view_type doesn't have any consumers
+    # but we still need to port a message to the queue for the
+    # processor to pick it up. In this case the right processor seems to be
+    # work_item.gateway
+    # the gateway is undefined in cases where a work item is created by 
+    # a processor in the middle of the pipeline, but in this case
+    # view_type.consumers is non-empty
+    # does this code below makes sense?
+    # why can't we just have view_type.consumers set correctly in all cases?
     processors_to_notify = list(view_type.consumers.all())
     try:
         processors_to_notify.append(work_item.gateway)

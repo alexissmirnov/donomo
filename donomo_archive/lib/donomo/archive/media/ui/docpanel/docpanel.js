@@ -179,7 +179,7 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 			var tagName = args[0].getAttribute('name');
 			removeChildren(panel);
 			
-			YAHOO.util.Connect.asyncRequest('GET', '/store/tags/' + tagName + '/?viewtype=jpeg-thumbnail-200',
+			YAHOO.util.Connect.asyncRequest('GET', '/api/1.0/tags/' + tagName + '/?viewtype=jpeg-thumbnail-200',
 			{ 	success : renderDocumentsJSON,
 				faulure : onApiFailure
 			});		
@@ -192,7 +192,7 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 				YAHOO.donomo.Panel.renderSearchResults(postHashPathParts[2]);
 			}
 			else {
-				YAHOO.util.Connect.asyncRequest('GET', "/store/doc/?format=application/json&viewtype=jpeg-thumbnail-200",
+				YAHOO.util.Connect.asyncRequest('GET', "/api/1.0/documents/?view_name=jpeg-thumbnail-200",
 				{ 	success : renderDocumentsJSON ,
 					faulure : onApiFailure
 				});		

@@ -3,7 +3,7 @@ if (YAHOO.donomo.TagPanel == undefined) { YAHOO.donomo.TagPanel = function(){
 		var Dom = YAHOO.util.Dom;
 		
 		var config = {
-			urlTagList: '/tags/',
+			urlTagList: '/api/1.0/tags/',
 			idTagTemplate: 'tags.template',
 			classTagItem: 'tag-item',
 			panelId: 'tag.panel'

@@ -64,8 +64,8 @@ CACHE_PATH  = os.environ.get('DONOMO_CACHE_PATH', '/home/alexissmirnov/tmp/cache
 # TODO: Fix SOLR host information
 #
 
-AWS_ACCESS_KEY_ID     = os.environ.get('AWS_ACCESS_KEY_ID', '1GMGNJ65JN96A8BA6602')
-AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', 'xdopAFEUuh0AHhOiR8eIP0MWiRiLsL1Svcy+zTjl')
+AWS_ACCESS_KEY_ID     = os.environ.get('AWS_ACCESS_KEY_ID', '13Q9QPDKZE5BBGJHK7R2')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', 'om9OUC3onE699qGCw2Z70xay0hnqFssLq+jwMCXx')
 S3_HOST               = os.environ.get('S3_HOST', 's3.amazonaws.com')
 S3_IS_SECURE          = True
 S3_BUCKET_PREFIX      = DEVELOPMENT_MODE and ("dev-%s." % OS_USER_NAME) or ''
