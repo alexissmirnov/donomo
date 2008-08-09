@@ -47,43 +47,42 @@ jstemplate templates
 	</div>
 
 	<div id="document.template" jsselect="documents" class="panel-item" >
-		<div jsdisplay="$this.page_count > 0" jsvalues="donomo.tags:$this.tags_string;id:$this.document_url" class="line-item document page page-cover" >
+		<div jsdisplay="$this.length > 0" jsvalues="donomo.tags:$this.tags_string;id:$this.url" class="line-item document page page-cover" >
 			<p>
-				<b><a class="doc-expand" jsvalues="id:'expand:' + $this.document_url; href: '#' + $this.document_url" href="#" jscontent="$this.title">title</a></b>
-				<span jsdisplay="$this.page_count > 1"> |  
-				<a class="doc-expand" jsvalues="id:'expand:' + $this.document_url; href: '#' + $this.document_url" href="#"><span jscontent="$this.page_count">1</span> pages &raquo;</a>
+				<b><a class="doc-expand" jsvalues="id:'expand:' + $this.url; href: '#' + $this.url" href="#" jscontent="$this.title">title</a></b>
+				<span jsdisplay="$this.length > 1"> |  
+				<a class="doc-expand" jsvalues="id:'expand:' + $this.url; href: '#' + $this.url" href="#"><span jscontent="$this.length">1</span> pages &raquo;</a>
 				</span>
 			</p>
-			<img height="60%"  width="100%" jsvalues=".src:$this.title_page_img_url" src="img"/>
+			<img height="60%"  width="100%" jsvalues=".src:$this.thumbnail" src="img"/>
 			<p>	
-				<a jsvalues="href:$this.document_url + '?format=application/pdf'" href="#">pdf</a> |
-				<a class="doc-tag" jsvalues="id:'doc-tag:' + $this.document_url;" href="#">tags</a> <span jscontent="$this.tags_string"></span>
+				<a jsvalues="href:$this.url + '?format=application/pdf'" href="#">pdf</a> |
+				<a class="doc-tag" jsvalues="id:'doc-tag:' + $this.url;" href="#">tags</a> <span jscontent="$this.tags_string"></span>
 			</p>
 		</div>
 		<div 
-			jsdisplay="$this.page_count > 0" 
-			jsvalues="id:'join:' + $this.document_url" 
-			id="join:/doc/1/" 
+			jsdisplay="$this.length > 0" 
+			jsvalues="id:'join:' + $this.url" 
 			class="line-item doc-separator">
 		</div>
 	</div>
 
-	<div id="page.template" jsselect="pages" class="panel-item">		
+	<div id="page.template" jsselect="document.pages" class="panel-item">		
 		<div 
-			jsvalues="id:$this.page_url;donomo.tags:tags_string;donomo-doc-id:doc_id;class: 'page line-item '  + ( $index == 0 ? 'page-first ' : '' )  + ($index == total_pages - 1 ? 'page-last ' : '' ) + ( $index > 0 && $index < total_pages-1 ? 'page-middle ' : '');" 
+			jsvalues="id:$this.url;donomo.tags:tags_string;donomo-doc-id:doc_id;class: 'page line-item '  + ( $index == 0 ? 'page-first ' : '' )  + ($index == total_pages - 1 ? 'page-last ' : '' ) + ( $index > 0 && $index < total_pages-1 ? 'page-middle ' : '');" 
 			class="page line-item" 
 			donomo-doc-id="parent-doc"
 			>
 				<ul class="page-menu">
 					<li>
 						<a class="view-full-page" 
-							jsvalues="id:'view-full-page:' + $this.page_url;href:'#' + $this.page_url" 
+							jsvalues="id:'view-full-page:' + $this.url;href:'#' + $this.url" 
 							href="#">
 							<img title="Full Size" style='border:none' src='{{MEDIA_URL}}ui/docpanel/assets/page_white.png'/>
 						</a>	
 					</li>
 					<li>
-						<a jsvalues="href:$this.page_url + '?format=application/pdf'" href="#">
+						<a jsvalues="href:$this.url + '?format=application/pdf'" href="#">
 							<img title="Download this page as PDF" style='border:none' src='{{MEDIA_URL}}ui/docpanel/assets/page_white_acrobat.png'/>
 						</a>	
 					</li>
@@ -93,9 +92,9 @@ jstemplate templates
 						</a>
 					</li>				
 				</ul>
-				<img height="60%"  width="100%"  jsvalues=".src:$this.page_image_url" src="/aws/img"/>
+				<img height="60%"  width="100%"  jsvalues=".src:$this.view"/>
 				<p><a href="id" 
-					jsvalues="href:$this.page_url" 
+					jsvalues="href:$this.url" 
 					jscontent="'page ' + $this.page_index + ' of ' + ($index == 0 ? title : total_pages)">
 						page 1 of document title
 				</a></p>
@@ -105,11 +104,9 @@ jstemplate templates
 		</div>
 		<div  jsdisplay="(total_pages - $index) != 1" 
 				jsvalues="id:'split:/pages/' + $this.id + '/sep/' + $index + '/' + total_pages" 
-				id="split:/page/1/sep/" 
 				class="line-item page-middle page-separator"></div>
 		<div jsdisplay="(total_pages - $index) == 1" 
 			jsvalues="id:'join:' + doc_id" 
-			id="join:/doc/1/" 
 			class="line-item doc-separator"></div>
 	</div>
 	
@@ -121,6 +118,6 @@ jstemplate templates
 	image url for the given page.
 	-->
 	<div id="full-view-page.template" class="db" jsselect='pages'>
-		<img width='100%' jsdisplay='$this.page_url == page_id' jsvalues=".src:$this.page_image_url"/>
+		<img width='100%' jsdisplay='$this.url == page_id' jsvalues=".src:$this.page_image_url"/>
 	</div>
 </div>

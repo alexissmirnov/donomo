@@ -153,7 +153,7 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 			}			
 		}
 		var renderSearchResults = function(query){
-			YAHOO.util.Connect.asyncRequest('GET', "/search/?format=application/json&viewtype=jpeg-thumbnail-200&q=" + query, {
+			YAHOO.util.Connect.asyncRequest('GET', "/search/?&view_name=jpeg-thumbnail-200&q=" + query, {
 				success: function(o){
 					try {
 						var processingContext = new JsEvalContext(eval('(' + o.responseText + ')'));
@@ -179,7 +179,7 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 			var tagName = args[0].getAttribute('name');
 			removeChildren(panel);
 			
-			YAHOO.util.Connect.asyncRequest('GET', '/api/1.0/tags/' + tagName + '/?viewtype=jpeg-thumbnail-200',
+			YAHOO.util.Connect.asyncRequest('GET', '/api/1.0/tags/' + tagName + '/?view_name=jpeg-thumbnail-200',
 			{ 	success : renderDocumentsJSON,
 				faulure : onApiFailure
 			});		
@@ -255,17 +255,17 @@ YAHOO.util.Event.onContentReady("panel", function () {
 function onDocumentExpanded( type, args ) {
 	var doc = args[0];
 	var id = doc.id;
-	YAHOO.util.Connect.asyncRequest('GET', doc.id + "?format=application/json&viewtype=jpeg-thumbnail-200",
+	YAHOO.util.Connect.asyncRequest('GET', doc.id + "?view_name=jpeg-thumbnail-200",
 	{ argument : doc,
 	  success : function(o) {
 	  	var doc = o.argument;
 		jsonResponse = eval('('+o.responseText+')');
 		var processingContext = new JsEvalContext(jsonResponse);
-		processingContext.setVariable('title', jsonResponse.title);
+		processingContext.setVariable('title', jsonResponse.document.title);
 		processingContext.setVariable('doc_id', doc.id);
-		processingContext.setVariable('total_pages', jsonResponse.pages.length);
+		processingContext.setVariable('total_pages', jsonResponse.document.length);
 		processingContext.setVariable('search_result', false);
-		processingContext.setVariable('tags_string', jsonResponse.tags_string);
+		processingContext.setVariable('tags_string', jsonResponse.document.tags_string);
 		var template = jstGetTemplate('page.template');
 		var panel = document.getElementById('panel');
 		

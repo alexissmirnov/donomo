@@ -43,6 +43,8 @@ __all__ = (
 
 logging = logging.getLogger('web-api')
 
+DEFAULT_PAGE_VIEW_NAME = 'jpeg-thumbnail-200'
+
 # ---------------------------------------------------------------------------
 
 class WebGateway(ProcessDriver):
@@ -93,8 +95,6 @@ def page_as_json_dict( page, page_view_name, only_api_url = False):
     if only_api_url:
         return { 'url' : get_url('api_page_info', pk = page.pk) }
 
-    logging.debug(get_url('api_document_info', pk = page.document.pk))
-    
     return {
         'url'          : get_url('api_page_info', pk = page.pk),
         'owner'        : page.owner.pk,
@@ -102,7 +102,7 @@ def page_as_json_dict( page, page_view_name, only_api_url = False):
         'position'     : page.position,
         #TODO 'pdf_url'      : get_url('page_as_pdf', pk = page.pk ), -- this throws
         #TODO 'upload_date'  : page.upload.timestamp, -- this doesnt exist
-        'thumbnail'    : get_url('api_page_view', 
+        'view'    : get_url('api_page_view', 
                                  pk =  page.pk, 
                                  view_name = page_view_name),
         }
@@ -124,14 +124,27 @@ def document_as_json_dict( document, page_view_name, page_num_list = None ):
         page_set = document.pages.order_by('position').filter(
             position__in = page_num_list)
 
-    return {
+    tags = [ tag.label for tag in document.tags.all() ]
+    json = {
         'owner'  : document.owner.pk,
+        'url'    : get_url('api_document_info', pk = document.pk),
         'title'  : document.title,
-        'tags'   : [ tag.label for tag in document.tags.all() ],
+        'tags'   : tags,
+        'tags_sting' : ' '.join(tags),
         'length' : document.num_pages,
+        'thumbnail' : '',
         #TODO 'pdf'    : get_url('document_as_pdf', { 'id' : document.pk }), -- this throws!
         'pages'  : [ page_as_json_dict(page, page_view_name) for page in page_set ],
+        
         }
+    
+    if document.pages.count() > 0:
+        json['thumbnail'] = get_url(
+                                   'api_page_view', 
+                                   document.pages.order_by('position').all()[0].pk, 
+                                   view_name = page_view_name)
+    
+    return json
 
 # ----------------------------------------------------------------------------
 
@@ -225,7 +238,7 @@ def get_document_list(request):
     query_string = extract_query_string(request)
     start_index  = int(request.GET.get('start_index', 0))
     num_rows     = int(request.GET.get('num_rows', 25))
-    page_view_name = request.GET.get('view_name', 'jpeg-thumbnail-200')
+    page_view_name = request.GET.get('view_name', DEFAULT_PAGE_VIEW_NAME)
     
     if query_string is not None:
         return indexer.query(
@@ -315,9 +328,11 @@ def get_document_info(request, pk):
     Get a JSON representation of document.
 
     """
-    document = request.user.document.get(pk = pk)
+    document = request.user.documents.get(pk = pk)
+    page_view_name = request.GET.get('view_name', DEFAULT_PAGE_VIEW_NAME)
+    
     return {
-        'document' : document_as_json_dict(document),
+        'document' : document_as_json_dict(document, page_view_name, 'all'),
         }
 
 # ----------------------------------------------------------------------------
@@ -329,7 +344,7 @@ def get_document_view(request, pk):
 
     """
 
-    document = request.user.document.get(pk = pk)
+    document = request.user.documents.get(pk = pk)
     return HttpResponse(
         content = pdf_utils.render_document(document),
         content_type = 'application/pdf' )
@@ -376,8 +391,9 @@ def get_page_info(request, pk):
     Retrieve a page
 
     """
+    view_name = request.GET.get('view_name', 'jpeg-original')
     return {
-        'page' : page_as_json_dict( request.user.pages.get( pk = pk )),
+        'page' : page_as_json_dict( request.user.pages.get( pk = pk ), view_name),
         }
 
 # ----------------------------------------------------------------------------
