@@ -10,8 +10,9 @@ YAHOO.donomo.TagEditorDialog = function(){
 		doc.attributes['donomo.tags'].value = tags;
 		Connect.asyncRequest(
 			'POST', 
-			doc.id+'tags/',
+			doc.id + 'tags/',
 			{ success : function(o) {
+				console.log(o.responseText);
 			  },
 			  faulure : function(o) {
 			  }

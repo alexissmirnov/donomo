@@ -50,7 +50,9 @@ def http_method_dispatcher(method_table_function):
         The resulting view function
 
         """
-        handler = method_table.get(request.method, None)
+        method = request.GET.get('_method', request.method).upper()
+        
+        handler = method_table.get(method, None)
         if not handler:
             return HttpResponseNotAllowed(method_table.keys())
 

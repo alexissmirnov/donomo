@@ -47,7 +47,7 @@ jstemplate templates
 	</div>
 
 	<div id="document.template" jsselect="documents" class="panel-item" >
-		<div jsdisplay="$this.length > 0" jsvalues="donomo.tags:$this.tags_string;id:$this.url" class="line-item document page page-cover" >
+		<div jsdisplay="$this.length > 0" jsvalues="donomo.tags:$tags_string;id:$this.url" class="line-item document page page-cover" >
 			<p>
 				<b><a class="doc-expand" jsvalues="id:'expand:' + $this.url; href: '#' + $this.url" href="#" jscontent="$this.title">title</a></b>
 				<span jsdisplay="$this.length > 1"> |  
@@ -67,7 +67,7 @@ jstemplate templates
 		</div>
 	</div>
 
-	<div id="page.template" jsselect="document.pages" class="panel-item">		
+	<div id="page.template" jsselect="document.pages" class="panel-item">
 		<div 
 			jsvalues="id:$this.url;donomo.tags:tags_string;donomo-doc-id:doc_id;class: 'page line-item '  + ( $index == 0 ? 'page-first ' : '' )  + ($index == total_pages - 1 ? 'page-last ' : '' ) + ( $index > 0 && $index < total_pages-1 ? 'page-middle ' : '');" 
 			class="page line-item" 
@@ -76,7 +76,7 @@ jstemplate templates
 				<ul class="page-menu">
 					<li>
 						<a class="view-full-page" 
-							jsvalues="id:'view-full-page:' + $this.url;href:'#' + $this.url" 
+							jsvalues="id:'view-full-page:' + $this.url;href:'#' + $this.url + '?view_name=jpeg-original'" 
 							href="#">
 							<img title="Full Size" style='border:none' src='{{MEDIA_URL}}ui/docpanel/assets/page_white.png'/>
 						</a>	
@@ -95,8 +95,7 @@ jstemplate templates
 				<img height="60%"  width="100%"  jsvalues=".src:$this.view"/>
 				<p><a href="id" 
 					jsvalues="href:$this.url" 
-					jscontent="'page ' + $this.page_index + ' of ' + ($index == 0 ? title : total_pages)">
-						page 1 of document title
+					jscontent="'page ' + $this.position + ' of ' + total_pages">
 				</a></p>
 				<p jsdisplay="$index == 0">
 					<a class="doc-tag" jsvalues="id:'doc-tag:' + doc_id;" href="#">tags</a> <span jscontent="tags_string"></span>
@@ -117,7 +116,7 @@ jstemplate templates
 	This template scans though the list of pages in the input JSON and sets an <img> element with the
 	image url for the given page.
 	-->
-	<div id="full-view-page.template" class="db" jsselect='pages'>
-		<img width='100%' jsdisplay='$this.url == page_id' jsvalues=".src:$this.page_image_url"/>
+	<div id="full-view-page.template" class="db" jsselect='document.pages'>
+		<img width='100%' jsdisplay='$this.url == page_id' jsvalues=".src:$this.view"/>
 	</div>
 </div>

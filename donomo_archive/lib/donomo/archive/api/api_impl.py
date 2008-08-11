@@ -39,13 +39,15 @@ __all__ = (
     'get_tag_info',
     'delete_tag',
     'tag_documents',
+    'update_document_tags',
+    'delete_document_tags',
     )
 
 logging = logging.getLogger('web-api')
 
 DEFAULT_PAGE_VIEW_NAME = 'jpeg-thumbnail-200'
 
-# ---------------------------------------------------------------------------
+###############################################################################
 
 class WebGateway(ProcessDriver):
     """
@@ -70,7 +72,7 @@ class WebGateway(ProcessDriver):
         raise Exception(
             'The web gateway is not intended to run as a processor' )
 
-# ---------------------------------------------------------------------------
+###############################################################################
 
 def refreshed( instance ):
     """
@@ -83,7 +85,7 @@ def refreshed( instance ):
     return instance.objects.select_related().get( pk = instance.pk )
 
 
-# ---------------------------------------------------------------------------
+###############################################################################
 
 def page_as_json_dict( page, page_view_name, only_api_url = False):
     """
@@ -108,7 +110,7 @@ def page_as_json_dict( page, page_view_name, only_api_url = False):
         }
 
 
-# ---------------------------------------------------------------------------
+###############################################################################
 
 def document_as_json_dict( document, page_view_name, page_num_list = None ):
     """
@@ -130,7 +132,7 @@ def document_as_json_dict( document, page_view_name, page_num_list = None ):
         'url'    : get_url('api_document_info', pk = document.pk),
         'title'  : document.title,
         'tags'   : tags,
-        'tags_sting' : ' '.join(tags),
+        'tags_string' : ' '.join(tags),
         'length' : document.num_pages,
         'thumbnail' : '',
         #TODO 'pdf'    : get_url('document_as_pdf', { 'id' : document.pk }), -- this throws!
@@ -146,13 +148,14 @@ def document_as_json_dict( document, page_view_name, page_num_list = None ):
     
     return json
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 def tag_as_json_dict(
     tag,
     show_doc_count = False,
     show_documents = False,
-    show_url       = False ):
+    show_url       = False,
+    page_view_name      = DEFAULT_PAGE_VIEW_NAME ):
 
     """
     Helper function to express a tag as a dictionary suitable for
@@ -170,7 +173,7 @@ def tag_as_json_dict(
         if show_documents:
             out_dict.update(
                 documents = [
-                    document_as_json_dict(document)
+                    document_as_json_dict(document, page_view_name)
                     for document in documents ] )
 
         if show_doc_count:
@@ -178,7 +181,7 @@ def tag_as_json_dict(
 
     return out_dict
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 def extract_tag_list(request):
     """
@@ -202,12 +205,12 @@ def extract_tag_list(request):
 
     if label_list is not None:
         return models.Tag.objects.get_or_create_from_label_list(
-            request.owner,
+            request.user,
             label_list )
 
     return None
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 def extract_query_string(request):
     """
@@ -223,7 +226,7 @@ def extract_query_string(request):
     return query_string
 
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 @json_view
 def get_document_list(request):
@@ -254,7 +257,7 @@ def get_document_list(request):
             'documents' : [ document_as_json_dict(doc, page_view_name, [1]) for doc in doc_list ],
             }
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 @json_view
 def upload_document(request):
@@ -282,7 +285,7 @@ def upload_document(request):
         'location' : upload.get_absolute_url(),
         }
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 @json_view
 def split_document(request):
@@ -301,7 +304,7 @@ def split_document(request):
         'new_docment'       : document_as_json_dict(refreshed(new_document)),
         }
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 @json_view
 def merge_documents(request):
@@ -320,7 +323,7 @@ def merge_documents(request):
         'document' : document_as_json_dict(refreshed(target)),
         }
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 @json_view
 def get_document_info(request, pk):
@@ -335,7 +338,7 @@ def get_document_info(request, pk):
         'document' : document_as_json_dict(document, page_view_name, 'all'),
         }
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 def get_document_view(request, pk):
     """
@@ -349,7 +352,7 @@ def get_document_view(request, pk):
         content = pdf_utils.render_document(document),
         content_type = 'application/pdf' )
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 @json_view
 def update_document(request, pk):
@@ -372,7 +375,7 @@ def update_document(request, pk):
         'document' : document_as_json_dict(document),
         }
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 @json_view
 def delete_document(request, pk):
@@ -383,7 +386,7 @@ def delete_document(request, pk):
     request.user.document.get(pk = pk).delete()
     return {}
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 @json_view
 def get_page_info(request, pk):
@@ -396,7 +399,7 @@ def get_page_info(request, pk):
         'page' : page_as_json_dict( request.user.pages.get( pk = pk ), view_name),
         }
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 def get_page_view(request, pk, view_name):
     """
@@ -416,7 +419,7 @@ def get_page_view(request, pk, view_name):
         content = pdf_utils.render_page(page),
         content_type = 'application/pdf' )
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 @json_view
 def delete_page(request, pk):
@@ -428,7 +431,7 @@ def delete_page(request, pk):
     # TODO: delete from index
     return {}
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 @json_view
 def get_tag_list(request):
@@ -441,8 +444,8 @@ def get_tag_list(request):
 
     """
     prefix     = request.GET.get('startswith', None)
-    show_count = param_is_true(request.GET.get('show_count', 'false'))
-    show_url   = param_is_true(request.GET.get('show_url', 'false'))
+    show_count = param_is_true(request.GET.get('doc_count', 'false'))
+    show_url   = param_is_true(request.GET.get('url', 'false'))
 
     if prefix:
         tag_set = request.user.tags.filter(istartswith=prefix.lower())
@@ -459,7 +462,7 @@ def get_tag_list(request):
             for tag in tag_set ],
         }
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 @json_view
 def tag_documents(request, label):
@@ -488,7 +491,7 @@ def tag_documents(request, label):
 
     return tag_as_json_dict(tag)
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 @json_view
 def get_tag_info(request, label):
@@ -497,12 +500,12 @@ def get_tag_info(request, label):
 
     """
     return tag_as_json_dict(
-        request.user.tags.get(label = label.trim().lower()),
+        request.user.tags.get(label = label.rstrip().lower()),
         show_doc_count = True,
         show_documents = True,
         show_url       = param_is_true(request.GET.get('show_url', 'false')))
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 @json_view
 def delete_tag(request, label):
@@ -511,7 +514,44 @@ def delete_tag(request, label):
     currently bearing the tag.
 
     """
-    request.user.tags.get(label = label.trim().lower()).delete()
+    request.user.tags.get(label = label.rstrip().lower()).delete()
     return {}
 
-# ----------------------------------------------------------------------------
+###############################################################################
+
+@json_view
+def update_document_tags(request, pk):
+    """
+    Assign a set of tags to a document identified by pk
+    """
+    tags = extract_tag_list(request)
+    if not tags:
+        return {}
+    
+    document = request.user.documents.get(pk = pk)
+
+    for tag in tags:
+        document.tags.add(tag)
+    
+    document.save()
+    return {}
+
+
+###############################################################################
+
+@json_view
+def delete_document_tags(request, pk):
+    """
+    Unassign tags from a document identified by pk
+    """
+    tags = extract_tag_list(request)
+    if not tags:
+        return {}
+        
+    document = request.user.documents.get(pk = pk)
+
+    for tag in tags:
+        document.tags.remove(tag)
+    
+    document.save()
+    return {}

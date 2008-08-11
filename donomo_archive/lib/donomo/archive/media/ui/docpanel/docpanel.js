@@ -258,24 +258,24 @@ function onDocumentExpanded( type, args ) {
 	YAHOO.util.Connect.asyncRequest('GET', doc.id + "?view_name=jpeg-thumbnail-200",
 	{ argument : doc,
 	  success : function(o) {
-	  	var doc = o.argument;
-		jsonResponse = eval('('+o.responseText+')');
-		var processingContext = new JsEvalContext(jsonResponse);
-		processingContext.setVariable('title', jsonResponse.document.title);
-		processingContext.setVariable('doc_id', doc.id);
-		processingContext.setVariable('total_pages', jsonResponse.document.length);
-		processingContext.setVariable('search_result', false);
-		processingContext.setVariable('tags_string', jsonResponse.document.tags_string);
-		var template = jstGetTemplate('page.template');
-		var panel = document.getElementById('panel');
-		
-		
-		// replace a document node with a list of page nodes
-		panel.insertBefore(template, doc.parentNode);
-		// keep the parent node in the Dom so that we can show it when the document is collapsed
-		YAHOO.util.Dom.addClass(doc.parentNode, "hidden-item");
-		
-		jstProcess(processingContext, template);
+		  	var doc = o.argument;
+			jsonResponse = eval('('+o.responseText+')');
+			var processingContext = new JsEvalContext(jsonResponse);
+			processingContext.setVariable('title', jsonResponse.document.title);
+			processingContext.setVariable('doc_id', doc.id);
+			processingContext.setVariable('total_pages', jsonResponse.document.pages.length);
+			processingContext.setVariable('search_result', false);
+			processingContext.setVariable('tags_string', jsonResponse.document.tags_string);
+			var template = jstGetTemplate('page.template');
+			var panel = document.getElementById('panel');
+			
+			
+			// replace a document node with a list of page nodes
+			panel.insertBefore(template, doc.parentNode);
+			// keep the parent node in the Dom so that we can show it when the document is collapsed
+			YAHOO.util.Dom.addClass(doc.parentNode, "hidden-item");
+			
+			jstProcess(processingContext, template);
 		},
 		faulure : function(o) {
 			console.log('failure');
@@ -308,11 +308,10 @@ function onViewFullPage( type, args ) {
 		var page = args[0];
 		var docid = page.getAttribute('donomo-doc-id');
 		
-		console.log(page.id);
 		var panel = document.getElementById('panel');
 		new YAHOO.util.Element(panel).setStyle('display', 'none');
 		
-		YAHOO.util.Connect.asyncRequest('GET', docid, {
+		YAHOO.util.Connect.asyncRequest('GET', docid + '?view_name=jpeg-original', {
 				argument: page,
 				success: function(o) {
 					var page = o.argument;

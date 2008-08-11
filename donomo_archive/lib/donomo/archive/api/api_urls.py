@@ -25,15 +25,19 @@ urlpatterns = patterns(
          document_info,
          name = 'api_document_info' ),
 
-    url( r'^documents/(?P<pk>\d+)/(?P<view_name>[-a-zA-Z0-9_]+)/$',
+    url( r'^documents/(?P<pk>\d+)/view/(?P<view_name>[-a-zA-Z0-9_]+)/$',
          document_view,
          name = 'api_document_view' ),
+
+    url( r'^documents/(?P<pk>\d+)/tags/$',
+         document_tags,
+         name = 'api_document_tags' ),
 
     url( r'^pages/(?P<pk>\d+)/$',
          page_info,
          name = 'api_page_info' ),
 
-    url( r'^pages/(?P<pk>\d+)/(?P<view_name>[-a-zA-Z0-9_]+)/$',
+    url( r'^pages/(?P<pk>\d+)/view/(?P<view_name>[-a-zA-Z0-9_]+)/$',
          page_view,
          name = 'api_page_view' ),
 
@@ -44,5 +48,5 @@ urlpatterns = patterns(
     url( r'^tags/(?P<label>[-a-zA-Z0-9_]+)/$',
          tag_info,
          name = 'api_tag_info' ),
-    )
+)
 
