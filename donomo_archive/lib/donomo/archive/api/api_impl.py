@@ -29,7 +29,7 @@ __all__ = (
     'merge_documents',
     'get_document_list',
     'get_document_info',
-    'get_document_view',
+    'get_document_pdf',
     'update_document',
     'delete_document',
     'get_page_info',
@@ -41,6 +41,8 @@ __all__ = (
     'tag_documents',
     'update_document_tags',
     'delete_document_tags',
+    'get_document_pdf',
+    'get_page_pdf',
     )
 
 logging = logging.getLogger('web-api')
@@ -102,7 +104,7 @@ def page_as_json_dict( page, page_view_name, only_api_url = False):
         'owner'        : page.owner.pk,
         'document'     : get_url('api_document_info', pk = page.document.pk),
         'position'     : page.position,
-        #TODO 'pdf_url'      : get_url('page_as_pdf', pk = page.pk ), -- this throws
+        'pdf_url'      : get_url('api_page_as_pdf', pk = page.pk ),
         #TODO 'upload_date'  : page.upload.timestamp, -- this doesnt exist
         'view'    : get_url('api_page_view', 
                                  pk =  page.pk, 
@@ -135,9 +137,8 @@ def document_as_json_dict( document, page_view_name, page_num_list = None ):
         'tags_string' : ' '.join(tags),
         'length' : document.num_pages,
         'thumbnail' : '',
-        #TODO 'pdf'    : get_url('document_as_pdf', { 'id' : document.pk }), -- this throws!
+        'pdf'    : get_url('api_document_as_pdf', pk = document.pk),
         'pages'  : [ page_as_json_dict(page, page_view_name) for page in page_set ],
-        
         }
     
     if document.pages.count() > 0:
@@ -340,7 +341,7 @@ def get_document_info(request, pk):
 
 ###############################################################################
 
-def get_document_view(request, pk):
+def get_document_pdf(request, pk):
     """
     Retrieve a document by primary key, as a PDF file.  Note that this
     is not a JSON view.
@@ -555,3 +556,10 @@ def delete_document_tags(request, pk):
     
     document.save()
     return {}
+
+###############################################################################
+def get_page_pdf(request, pk):
+    """
+    Returns a PDF of a given page. Not a JSON view
+    """
+    return get_page_view(request, pk, 'pdf')

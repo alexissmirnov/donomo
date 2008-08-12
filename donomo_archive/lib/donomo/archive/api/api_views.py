@@ -22,6 +22,8 @@ __all__ = (
     'tag_list',
     'tag_info',
     'document_tags',
+    'document_as_pdf',
+    'page_as_pdf',
     )
 
 ###############################################################################
@@ -77,7 +79,7 @@ def document_view():
 
     """
     return {
-        'GET' : get_document_view,
+        'GET' : get_document_pdf,
         }
 
 ###############################################################################
@@ -141,7 +143,6 @@ def tag_info():
 def document_tags():
     """
     Dispatch map for HTTP operations on a tag
-
     """
     return {
         'DELETE' : delete_document_tags,
@@ -149,5 +150,33 @@ def document_tags():
         }
 
 ###############################################################################
+
+
+@login_required
+@http_method_dispatcher
+def document_as_pdf():
+    """
+    Get PDF of a document
+    """
+    return {
+        'GET' : get_document_pdf,
+        }
+
+###############################################################################
+
+@login_required
+@http_method_dispatcher
+def page_as_pdf():
+    """
+    Get PDF of a document
+    """
+    return {
+        'GET' : get_page_pdf,
+        }
+
+###############################################################################
+
+
+
 
 

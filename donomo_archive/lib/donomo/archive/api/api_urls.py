@@ -29,6 +29,10 @@ urlpatterns = patterns(
          document_view,
          name = 'api_document_view' ),
 
+    url( r'^documents/(?P<pk>\d+)/pdf/$',
+         document_as_pdf,
+         name = 'api_document_as_pdf' ),
+
     url( r'^documents/(?P<pk>\d+)/tags/$',
          document_tags,
          name = 'api_document_tags' ),
@@ -40,6 +44,10 @@ urlpatterns = patterns(
     url( r'^pages/(?P<pk>\d+)/view/(?P<view_name>[-a-zA-Z0-9_]+)/$',
          page_view,
          name = 'api_page_view' ),
+
+    url( r'^pages/(?P<pk>\d+)/pdf/$',
+         page_as_pdf,
+         name = 'api_page_as_pdf' ),
 
     url( r'^tags/$',
          tag_list,
