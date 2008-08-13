@@ -3,6 +3,7 @@ Admin function implementations
 """
 
 from django.http import HttpResponse
+from django.shortcuts import render_to_response
 from django.contrib.admin.views.decorators import staff_member_required
 from donomo.archive.utils import sqs as sqs_utils
 from donomo.archive.utils import s3 as s3_utils
@@ -18,17 +19,13 @@ logging = logging.getLogger('admin')
 def get_queue_list(request):
     """
     Get the list of queues used by the archive
-
     """
     logging.warn('Retrieving queue list for %s' % request.user)
 
     sqs_conn   = sqs_utils.get_connection()
     all_queues = sqs_conn.get_all_queues()
 
-    return HttpResponse(
-        '%s queues:\n%s' % (
-            len(all_queues),
-            ', '.join( [queue.id for queue in all_queues ])))
+    return render_to_response('admin/queues.html', {'queues' : all_queues } )
 
 # ----------------------------------------------------------------------------
 

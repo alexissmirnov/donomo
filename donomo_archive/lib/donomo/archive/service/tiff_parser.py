@@ -49,8 +49,8 @@ class TiffParserDriver(ProcessDriver):
     SERVICE_NAME = MODULE_NAME
 
     DEFAULT_OUTPUTS = (
-        ( 'tiff-original',      [ocr.MODULE_NAME]),
-        ( 'jpeg-original',      []),
+        ( 'tiff-original',      []),
+        ( 'jpeg-original',      [ocr.MODULE_NAME]),
         ( 'jpeg-thumbnail-100', []),
         ( 'jpeg-thumbnail-200', []),
     )
@@ -117,6 +117,7 @@ class TiffParserDriver(ProcessDriver):
         jpeg_t200_path = '%s-thumb-200.jpeg' % base_name
 
         # Convert original TIFF to RGBA
+        # TODO use convert instead of tiff2rgba
         self.system(
             'tiff2rgba %r %r' % (
                 tiff_orig_path,

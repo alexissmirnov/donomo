@@ -1,0 +1,82 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="{{ LANGUAGE_CODE }}" xml:lang="{{ LANGUAGE_CODE }}" {% if LANGUAGE_BIDI %}dir="rtl"{% endif %}>
+<head>
+<title>{% block title %}{% endblock %}</title>
+<link rel="stylesheet" type="text/css" href="{% block stylesheet %}{% load adminmedia %}{% admin_media_prefix %}css/base.css{% endblock %}" />
+{% if LANGUAGE_BIDI %}<link rel="stylesheet" type="text/css" href="{% block stylesheet_rtl %}{% admin_media_prefix %}css/rtl.css{% endblock %}" />{% endif %}
+{% block extrastyle %}{% endblock %}
+{% block extrahead %}{% endblock %}
+{% block blockbots %}<meta name="robots" content="NONE,NOARCHIVE" />{% endblock %}
+</head>
+{% load i18n %}
+
+</head>
+
+<body class="dashboard">
+
+<!-- Container -->
+<div id="container">
+
+    
+    <!-- Header -->
+    <div id="header">
+        <div id="branding">
+        
+<h1 id="site-name">Django administration</h1>
+
+        </div>
+        
+        <div id="user-tools">
+        Welcome, <strong>root</strong>.
+        
+        <a href="/admin/doc/">Documentation</a>
+
+        / <a href="/admin/password_change/">Change password</a>
+        / <a href="/admin/logout/">Log out</a>
+        
+        </div>
+        
+        
+    </div>
+    <!-- END Header -->
+
+    <!-- Content -->
+    <div id="content" class="colMS">
+        <h1>Donomo administration</h1>
+		<!-- Main -->
+		<div id="content-main">
+	        <div class="module">
+		        <table summary="Registered Queues">
+		        <caption>Queues</caption>
+				{% for q in queues %}
+	            <tr>            
+	                <th scope="row"><a href="/admin/queues{{q.id}}/">{{q.id}}</a></th>
+	                <td>{{q.count}}</td>
+	                <td><a href="/admin/queues{{q.id}}/?_method=DELETE" class="deletelink">Delete</a></td>
+	            </tr>
+				{% endfor %}
+				</table>
+			</div>
+		</div>
+        
+		<div id="content-related">
+		    <div class="module" >
+		        <h2>Actions</h2>
+	            <ul class="actionlist">
+	            <li class="deletelink"><a href="/admin/queues/?_method=DELETE">Delete all queues</a></li>
+	            </ul>
+		    </div>
+		</div>
+		<!-- End Main -->
+        <br class="clear" />
+		
+		
+    </div>
+    <!-- END Content -->
+
+    <div id="footer"></div>
+</div>
+<!-- END Container -->
+
+</body>
+</html>
