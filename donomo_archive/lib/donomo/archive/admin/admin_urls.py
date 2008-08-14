@@ -15,7 +15,7 @@ from donomo.archive.admin.admin_views import *
 urlpatterns = patterns(
     '',
     url( r'^queues/(?P<queue_name>[-a-zA-Z0-9_]+)/$', queue_info, name = 'admin_queue_info' ),
-    url( r'^queues/?$', queue_list, name = 'admin_queue_list' ),
+    url( r'^queues/$', queue_list, name = 'admin_queue_list' ),
     url( r'^/?$', status, name='admin_status' ),
 )
 

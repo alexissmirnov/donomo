@@ -50,9 +50,9 @@
 		        <caption>Queues</caption>
 				{% for q in queues %}
 	            <tr>            
-	                <th scope="row"><a href="/admin/queues{{q.id}}/">{{q.id}}</a></th>
+	                <th scope="row"><a href="/archiveadmin/queues{{q.id}}">{{q.id}}</a></th>
 	                <td>{{q.count}}</td>
-	                <td><a href="/admin/queues{{q.id}}/?_method=DELETE" class="deletelink">Delete</a></td>
+	                <td><a href="/archiveadmin/queues{{q.id}}/?_method=DELETE" class="deletelink">Delete</a></td>
 	            </tr>
 				{% endfor %}
 				</table>
@@ -63,7 +63,7 @@
 		    <div class="module" >
 		        <h2>Actions</h2>
 	            <ul class="actionlist">
-	            <li class="deletelink"><a href="/admin/queues/?_method=DELETE">Delete all queues</a></li>
+	            <li class="deletelink"><a href="/archiveadmin/queues/?_method=DELETE">Delete all queues</a></li>
 	            </ul>
 		    </div>
 		</div>

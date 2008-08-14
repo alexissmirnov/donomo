@@ -42,7 +42,6 @@ def delete_all_queues(request):
     return HttpResponse('OK')
 
 # ----------------------------------------------------------------------------
-
 @staff_member_required
 def get_queue_info(request, queue_name):
     """
@@ -54,10 +53,9 @@ def get_queue_info(request, queue_name):
             queue_name ))
     queue = sqs_utils.get_connection().create_queue(queue_name)
     return HttpResponse(
-        '%s has %d messages' % (queue.id, queue.count()))
+        '%s has %s messages' % (queue.id, queue.count()))
 
 # ----------------------------------------------------------------------------
-
 @staff_member_required
 def delete_queue(request, queue_name):
     """
@@ -72,7 +70,7 @@ def delete_queue(request, queue_name):
     queue.clear()
     queue.delete()
     return HttpResponse(
-        'Queue %s with %d messages was deleted' % (
+        'Queue %s with %s messages was deleted' % (
             queue_name,
             count ))
 
