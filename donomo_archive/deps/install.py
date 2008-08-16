@@ -18,7 +18,7 @@ from urllib import urlopen
 
 
 
-ALL_PACKAGES = ['jpeg', 'zlip', 'pil', 'tiff', 'yadis', 'urljr', 'openid', 'elementtree', 'libpng']
+ALL_PACKAGES = ['jpeg', 'zlip', 'pil', 'tiff', 'yadis', 'urljr', 'openid', 'elementtree', 'libpng', 'pypdf']
 
 ###############################################################################
 # Package descriptions
@@ -137,16 +137,15 @@ cd elementtree-1.2.6-20050316
 sudo python setup.py install
 """}
 
-#
-#foursuite = {
-#    "name":     "4Suite XPath support",
-#    "homepage": "http://4suite.org",
-#    "download": "ftp://ftp.4suite.org/pub/4Suite/4Suite-XML-1.0.2.tar.gz",
-#    "install": """\
-#tar xfz 4Suite-XML-1.0.2.tar.gz
-#cd 4Suite-XML-1.0.2
-#sudo python setup.py install
-#"""}
+pypdf = {
+    "name":     "pyPDF",
+    "homepage": "http://pybrary.net/pyPdf/",
+    "download": "http://pybrary.net/pyPdf/pyPdf-1.11.tar.gz",
+    "install": """\
+tar xfz pyPdf-1.11.tar.gz
+cd pyPdf-1.11/pyPDF
+sudo python setup.py install
+"""}
 
 
 ###############################################################################
