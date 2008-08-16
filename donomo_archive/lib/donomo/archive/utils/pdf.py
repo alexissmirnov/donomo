@@ -9,8 +9,10 @@ from PIL                        import Image
 from cStringIO                  import StringIO
 from shutil                     import rmtree
 from tempfile                   import mkdtemp
+from pyPdf                      import PdfFileWriter, PdfFileReader
 import os
 import logging
+
 
 logging = logging.getLogger('pdf-utils')
 
@@ -93,9 +95,23 @@ def split_pages(input_filename):
         # create a temporary directory
         output_dir = mkdtemp('donomo')
 
-        # run pdftk
-        if 0 != os.system('cd %r && pdftk %r burst' % (output_dir, input_filename)):
-            raise Exception('pdftk failed')
+        # open PDF
+        pdf_input = PdfFileReader(file(input_filename, 'rb'))
+        
+        # iterate over pages in the input PDF
+        for i in xrange(pdf_input.getNumPages()):
+            # get n-th page
+            page = pdf_input.getPage(i)
+            
+            # create a one-page pdf writer
+            pdf_output = PdfFileWriter()
+            pdf_output.addPage(page)
+
+            # save it in a new file
+            page_filename = os.path.join(output_dir, '%d.pdf' % i)
+            page_filestream = file(page_filename, "wb")
+            pdf_output.write(page_filestream)
+            page_filestream.close()
 
         # return the directory name to the caller
         return output_dir
