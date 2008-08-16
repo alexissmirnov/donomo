@@ -16,7 +16,7 @@ class TestPdf(unittest.TestCase):
         """
         from donomo.archive.utils import pdf
 
-        output_dir   = pdf.split_pages('/tmp/2008_06_26_15_42_45.pdf')
+        output_dir   = pdf.split_pages('data/2008_06_26_15_57_07.pdf')
         input_files  = glob(os.path.join(output_dir, '*.pdf'))
         output_files = [ pdf.convert(f) for f in input_files ]
 
