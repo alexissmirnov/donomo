@@ -18,7 +18,7 @@ from urllib import urlopen
 
 
 
-ALL_PACKAGES = ['jpeg', 'zlip', 'pil', 'tiff', 'yadis', 'urljr', 'openid', 'elementtree']
+ALL_PACKAGES = ['jpeg', 'zlip', 'pil', 'tiff', 'yadis', 'urljr', 'openid', 'elementtree', 'libpng']
 
 ###############################################################################
 # Package descriptions
@@ -116,27 +116,27 @@ cd python-openid-1.2.0
 sudo python setup.py install
 """}
 
-pdftk = {
-    "name":     "PDF tk",
-    "homepage": "http://www.accesspdf.com/pdftk/",
-    "download": "http://www.pdfhacks.com/pdftk/pdftk-1.12.tar.gz",
+libpng = {
+    "name":     "libPNG",
+    "homepage": "http://www.libpng.org",
+    "download": "http://download.sourceforge.net/libpng/libpng-1.2.29.tar.gz",
     "install": """\
-tar xfz pdftk-1.12.tar.gz
-cd pdftk-1.12/pdftk
-sudo make -f Makefile.RedHat
+tar xfz libpng-1.2.29.tar.gz
+cd libpng-1.2.29
+./configure
+sudo make install
 """}
 
+elementtree = {
+    "name":     "ElementTree",
+    "homepage": "http://effbot.org/zone/element-index.htm",
+    "download": "http://effbot.org/media/downloads/elementtree-1.2.6-20050316.tar.gz",
+    "install": """\
+tar xfz elementtree-1.2.6-20050316.tar.gz
+cd elementtree-1.2.6-20050316
+sudo python setup.py install
+"""}
 
-
-#elementtree = {
-#    "name":     "ElementTree",
-#    "homepage": "http://effbot.org/zone/element-index.htm",
-#    "download": "http://effbot.org/media/downloads/elementtree-1.2.6-20050316.tar.gz",
-#    "install": """\
-#tar xfz elementtree-1.2.6-20050316.tar.gz
-#cd elementtree-1.2.6-20050316
-#sudo python setup.py install
-#"""}
 #
 #foursuite = {
 #    "name":     "4Suite XPath support",
