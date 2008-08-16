@@ -143,7 +143,7 @@ pypdf = {
     "download": "http://pybrary.net/pyPdf/pyPdf-1.11.tar.gz",
     "install": """\
 tar xfz pyPdf-1.11.tar.gz
-cd pyPdf-1.11/pyPDF
+cd pyPdf-1.11
 sudo python setup.py install
 """}
 
