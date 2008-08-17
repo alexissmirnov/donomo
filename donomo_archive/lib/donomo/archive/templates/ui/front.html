@@ -2,15 +2,15 @@
 {% block title %}archive{% endblock %}
 {% block body %}
 	<!-- YUI_include fonts grids -->
-   <div id="hd"><h1>[logo] this is header [signin]</h1></div>
+   <div id="hd" align='left' color='greed'><i><b>donomo</b></i></div>
    <div id="bd">
 	<div class="yui-g">
 		<div style="background-image: url({{MEDIA_URL}}img/home.gif); height: 352px; width: 750px;">
-			this is a main part of the window, with visual and a pitch. 
+			<h1>Your papers. Safe, organised and searchable.</h1>
 		</div>
 	</div>
 	<div class="yui-g">
-		<p>New user? <a href="myopenid.com" title="Sign_Up.html">Sign Up for an OpenID</a>
+		<p>New user? <a href="http://myopenid.com" title="Sign_Up.html">Sign Up for an OpenID</a>
 		</p>
         <p>Already have an OpenID?
         <form action="/account/signin/?next=/" method="post">
