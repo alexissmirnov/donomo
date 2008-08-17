@@ -138,14 +138,16 @@ def document_as_json_dict( document, page_view_name, page_num_list = None ):
         'length' : document.num_pages,
         'thumbnail' : '',
         'pdf'    : get_url('api_document_as_pdf', pk = document.pk),
-        'pages'  : [ page_as_json_dict(page, page_view_name) for page in page_set ],
+        'pages'  : [ page_as_json_dict(
+                                       page, 
+                                       page_view_name) for page in page_set ],
         }
     
     if document.pages.count() > 0:
         json['thumbnail'] = get_url(
-                                   'api_page_view', 
-                                   document.pages.order_by('position').all()[0].pk, 
-                                   view_name = page_view_name)
+                               'api_page_view', 
+                               document.pages.order_by('position').all()[0].pk, 
+                               view_name = page_view_name)
     
     return json
 
@@ -255,7 +257,9 @@ def get_document_list(request):
         doc_list = all_docs [ start_index : num_rows ]
         return {
             'query' : query_string,
-            'documents' : [ document_as_json_dict(doc, page_view_name, [1]) for doc in doc_list ],
+            'documents' : [ document_as_json_dict(
+                      doc, 
+                      page_view_name, [1]) for doc in doc_list ],
             }
 
 ###############################################################################
@@ -397,7 +401,9 @@ def get_page_info(request, pk):
     """
     view_name = request.GET.get('view_name', 'jpeg-original')
     return {
-        'page' : page_as_json_dict( request.user.pages.get( pk = pk ), view_name),
+        'page' : page_as_json_dict( 
+                                   request.user.pages.get( pk = pk ), 
+                                   view_name),
         }
 
 ###############################################################################
@@ -563,3 +569,35 @@ def get_page_pdf(request, pk):
     Returns a PDF of a given page. Not a JSON view
     """
     return get_page_view(request, pk, 'pdf')
+
+###############################################################################
+@json_view
+def get_search(request):
+    """
+    Run search and return JSON with the results.
+    When search returns pages, they are returned as JSON representation
+    inside 'pages' node
+    """
+    query_string = extract_query_string(request)
+    start_index  = int(request.GET.get('start_index', 0))
+    num_rows     = int(request.GET.get('num_rows', 25))
+    page_view_name = request.GET.get('view_name', DEFAULT_PAGE_VIEW_NAME)
+    
+    if query_string is not None:
+        res = indexer.query(
+            request.user,
+            query_string,
+            start_index,
+            num_rows)
+
+        pages = list()
+        for d in res['results']['docs']:
+            page = request.user.pages.get(pk = d['page_id'])
+            pages.append(page_as_json_dict(page, page_view_name))
+        
+        res['pages'] = pages
+        return res
+    else:
+        return {}
+###############################################################################
+    

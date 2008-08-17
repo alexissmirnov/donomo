@@ -13,7 +13,7 @@ import logging
 
 logging = logging.getLogger('admin')
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 @staff_member_required
 def get_queue_list(request):
@@ -25,9 +25,9 @@ def get_queue_list(request):
     sqs_conn   = sqs_utils.get_connection()
     all_queues = sqs_conn.get_all_queues()
 
-    return render_to_response('admin/queues.html', {'queues' : all_queues } )
+    return render_to_response('archive_admin/queues.html', {'queues' : all_queues } )
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 @staff_member_required
 def delete_all_queues(request):
@@ -41,7 +41,7 @@ def delete_all_queues(request):
         queue.delete()
     return HttpResponse('OK')
 
-# ----------------------------------------------------------------------------
+###############################################################################
 @staff_member_required
 def get_queue_info(request, queue_name):
     """
@@ -54,8 +54,8 @@ def get_queue_info(request, queue_name):
     queue = sqs_utils.get_connection().create_queue(queue_name)
     return HttpResponse(
         '%s has %s messages' % (queue.id, queue.count()))
-
-# ----------------------------------------------------------------------------
+###############################################################################
+###############################################################################
 @staff_member_required
 def delete_queue(request, queue_name):
     """
@@ -74,7 +74,7 @@ def delete_queue(request, queue_name):
             queue_name,
             count ))
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 @staff_member_required
 def get_status(request):
@@ -83,7 +83,7 @@ def get_status(request):
     """
     return HttpResponse('%s documents' % manager(Document).count())
 
-# ----------------------------------------------------------------------------
+###############################################################################
 @staff_member_required
 def wipe_everything(request):
     """
@@ -99,7 +99,7 @@ def wipe_everything(request):
     return HttpResponse('everything deleted')
 
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 @staff_member_required
 def reset_search_index(request = None):
@@ -110,7 +110,7 @@ def reset_search_index(request = None):
     return HttpResponse('Not implemented', status=500)
 
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 @staff_member_required
 def delete_search_index( request = None ):
@@ -129,7 +129,7 @@ def delete_search_index( request = None ):
             content      = str(e),
             content_type = 'text/plain' )
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 def delete_bucket_contents():
     """

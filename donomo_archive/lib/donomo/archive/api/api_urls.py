@@ -12,6 +12,7 @@ Donomo Archive urls that form the AJAX API
 
 from django.conf.urls.defaults     import patterns, url
 from donomo.archive.api.api_views  import *
+from donomo.archive.api.api_views  import search
 
 __all__ = ( 'urlpatterns' )
 
@@ -56,5 +57,9 @@ urlpatterns = patterns(
     url( r'^tags/(?P<label>[-a-zA-Z0-9_]+)/$',
          tag_info,
          name = 'api_tag_info' ),
+
+    url( r'^search/$',
+         search,
+         name = 'api_search' ),
 )
 

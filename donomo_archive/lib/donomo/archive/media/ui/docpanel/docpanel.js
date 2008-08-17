@@ -153,10 +153,11 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 			}			
 		}
 		var renderSearchResults = function(query){
-			YAHOO.util.Connect.asyncRequest('GET', "/search/?&view_name=jpeg-thumbnail-200&q=" + query, {
+			YAHOO.util.Connect.asyncRequest('GET', "/api/1.0/search/?view_name=jpeg-thumbnail-200&q=" + query, {
 				success: function(o){
 					try {
 						var processingContext = new JsEvalContext(eval('(' + o.responseText + ')'));
+						//processingContext.setVariable('pages_count', processingContext.results.numFound);
 						var template = jstGetTemplate('searchresults.template');
 						var panel = new YAHOO.util.Element('panel');
 						removeChildren(panel);

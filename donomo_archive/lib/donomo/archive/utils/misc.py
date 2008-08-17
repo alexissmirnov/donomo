@@ -13,8 +13,7 @@ import mimetypes
 #   C0103 - variables at module scope must be all caps
 #   W0142 - use of * and ** magic
 #
-
-# ---------------------------------------------------------------------------
+###############################################################################
 
 def guess_mime_type( file_name, default = None ):
     """
@@ -26,7 +25,19 @@ def guess_mime_type( file_name, default = None ):
              or default
              or 'application/octet-stream' )
 
-# -----------------------------------------------------------------------------
+###############################################################################
+def guess_extension(type):
+    """
+    A utility to fix up the stupid image/jpeg -> jpe extension done by mimetypes
+    module
+    """
+    ext = mimetypes.guess_extension(type)
+    if ext == '.jpe':
+        return '.jpg'
+    else:
+        return ext
+
+###############################################################################--
 
 def make_property( func ):
     """
@@ -61,7 +72,7 @@ def make_property( func ):
     return property( doc = func.__doc__, **func() )
 
 
-# ---------------------------------------------------------------------------
+###############################################################################
 
 def get_url( viewname, *args, **kwargs ):
     """
@@ -71,7 +82,7 @@ def get_url( viewname, *args, **kwargs ):
     #FIXME: why reverse() return URLs in the forms of //?api/1.0/bla/...
     return reverse( viewname = viewname, args = args, kwargs = kwargs )
 
-# ---------------------------------------------------------------------------
+###############################################################################
 
 true_re = re.compile(r'^\s*(true)|(yes)|1\s*$', re.IGNORECASE)
 
@@ -82,7 +93,7 @@ def param_is_true(value):
     """
     return true_re.match(value.strip()) is not None
 
-# ---------------------------------------------------------------------------
+###############################################################################
 
 false_re = re.compile(r'^\s*(false)|(no)|0\s*', re.IGNORECASE)
 
@@ -93,4 +104,4 @@ def param_is_false(value):
     """
     return false_re.match(value.strip()) is not None
 
-# ---------------------------------------------------------------------------
+###############################################################################

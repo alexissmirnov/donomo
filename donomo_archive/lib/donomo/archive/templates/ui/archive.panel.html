@@ -41,8 +41,8 @@ jstemplate templates
 -->
 <div style='display: none;'>
 	<div id='searchresults.template'
-		jsselect='documents' 
-		jsvars="search_result: true; title: $this.title; page_classes: page line-item ; total_pages:$this.page_count; doc_id: $this.document_url" class='panel-item' >
+		jsselect='pages' 
+		jsvars="search_result: true; title: $this.position; page_classes: page line-item ; total_pages:$page_count; doc_id: $this.document" class='panel-item' >
 		<div transclude="page.template"></div>
 	</div>
 

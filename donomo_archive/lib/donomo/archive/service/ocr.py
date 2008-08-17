@@ -42,7 +42,7 @@ class OcrDriver(ProcessDriver):
         ('ocr_text', [indexer.MODULE_NAME]),
         ]
 
-    ACCEPTED_CONTENT_TYPES = [ 'image/tiff' ]
+    ACCEPTED_CONTENT_TYPES = [ 'image/jpeg' ]
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -56,21 +56,18 @@ class OcrDriver(ProcessDriver):
 
         """
         local_path = item['Local-Path']
+        # ocropus outputs HTML
+        output_path = local_path + '.html'
 
-        if 0 != os.system('tesseract %r %r' % (local_path, local_path)):
-            logging.error('Failed to OCR source TIFF: %s' % local_path)
+        if 0 != os.system('ocroscript rec-tess %s > %s' % (local_path, output_path)):
+            logging.error('Failed to OCR source JPEG: %s' % local_path)
             return False
-
-        #
-        # tesseract adds .txt extension to the output
-        #
-        local_path += '.txt'
-    
+        
         operations.create_page_view_from_file(
             self.processor,
             OcrDriver.DEFAULT_OUTPUTS[0][0],
             item['Object'].page,
-            local_path,
-            'text/plain' )
+            output_path,
+            'text/html' )
 
         return True

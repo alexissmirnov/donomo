@@ -25,8 +25,7 @@ MODULE_NAME = os.path.splitext(os.path.basename(__file__))[0]
 
 logging = getLogger(MODULE_NAME)
 
-# ----------------------------------------------------------------------------
-
+###############################################################################
 def get_driver():
 
     """ Factory function to retrieve the driver object implemented by this
@@ -35,7 +34,7 @@ def get_driver():
 
     return IndexDriver()
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 class IndexDriver(ProcessDriver):
 
@@ -48,7 +47,7 @@ class IndexDriver(ProcessDriver):
 
     DEFAULT_OUTPUTS = []
 
-    ACCEPTED_CONTENT_TYPES = [ 'text/plain' ]
+    ACCEPTED_CONTENT_TYPES = [ 'text/html' ]
 
     SOLR_UPDATE_TEMPLATE = Template(
         """{% spaceless %}
@@ -85,20 +84,6 @@ class IndexDriver(ProcessDriver):
             item['Object'].page,
             item['Local-Path'] )
 
-    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-
-    @staticmethod
-    def get_ocr_text( original_text ):
-        """ Get a version of the OCR text that the indexer can handle
-            Omit all non-ascii characters from the input.
-        """
-
-        # TODO: Must we omit non-ascii chars from the index input?
-
-        return "".join(
-            [ char
-              for char in original_text
-              if ord(char) < 128 ] )
 
     #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
@@ -111,14 +96,23 @@ class IndexDriver(ProcessDriver):
         http_client = httplib2.Http()
 
         data = {
-            'page' : page,
-            'text' : self.get_ocr_text(text),
+            'id' : page.pk,
+            'content' : text,
+            'did' : page.document.pk,
+            'owner': page.owner,
+            'tags':page.document.tags.all()
             }
 
+        body    = self.SOLR_UPDATE_TEMPLATE.render(Context(data))
+        logging.debug('Sending to SOLR:')
+        logging.debug('--------------')
+        logging.debug(body)
+        logging.debug('--------------')
+        
         response, content = http_client.request(
             uri     = self.SOLR_UPDATE_URL,
             method  = 'POST',
-            body    = self.SOLR_UPDATE_TEMPLATE.render(Context(data)),
+            body    = body,
             headers = { "Content-type" : "text/xml; charset=utf-8" })
 
         if response.status >= 400:
@@ -143,7 +137,7 @@ class IndexDriver(ProcessDriver):
         with open(text_file_path, 'r') as text_file:
             return self.index_page_from_string(page, text_file.read())
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 def validate_query_string(query_string):
     """
@@ -165,7 +159,7 @@ def validate_query_string(query_string):
     if nesting_level != 0:
         raise ValidationError("Malformed query string")
 
-# ----------------------------------------------------------------------------
+###############################################################################
 
 def raw_query( user, query_string, start_index = 0, num_rows = 50):
     """
@@ -207,92 +201,28 @@ def raw_query( user, query_string, start_index = 0, num_rows = 50):
 
     return simplejson.load(StringIO(content))
 
+############################################################################### 
 
-# ----------------------------------------------------------------------------
-
-def collate_results( query_results ):
+def query( user, 
+           query_string, 
+           start_index = 0, 
+           num_rows = 50):
     """
-    Transform a SOLR response (dictionary parsed from JSON) into a dictionary
-    more directly suitable for our purposes.  Pages are indexed individually
-    but we want to collate them into documents and store any highlighting
-    information alongside the document.
-
-    The resulting dictionary has the following structure.
-
-    documents = {
-        document.pk : {
-            solr_label_x     : solr_value_x,
-            'document_model' : document_model,
-            'search_hits'    : {
-                position : {
-                    'page_model'   : page_model,
-                    'highlighting' : {
-                        field : [ snippet1, snippet2 ],
-                    },
-                }
-            }
-        }
-    }
-
+    Query the SOLR index on behalf of the user and return results
     """
-    documents = {}
-
-    for page_result in query_results['response']['docs']:
-
-        #
-        # Find the page in the database
-        #
-
-        page_id = page_result['id']
-        page_model = manager(Page).get(pk = page_id)
-
-        #
-        # Get or create an entry for this pages document
-        #
-
-        document = documents.setdefault(
-            page_model.document.pk,
-            { 'document_model' : page_model.document,
-              'search_hits'    : {},
-              })
-
-        #
-        # take the SOLR search result and merge in the page model and
-        # highlighting information
-        #
-
-        page_result.update(
-            page_model   = page_model,
-            highlighting = query_results['highlighting'][page_id] )
-
-        #
-        # Save the resulting merged result as a hit or this document
-        #
-
-        document['search_hits'][ page_model.position ] = page_result
-
-
-    return documents
-
-# ----------------------------------------------------------------------------
-
-def query( user, query_string, start_index = 0, num_rows = 50):
-    """
-    Query the SOLR index on behalf of the user and return the collated results
-
-    """
+    res = raw_query( user,
+                    query_string,
+                    start_index,
+                    num_rows )['response']
+    
     return {
         'query'       : query_string,
         'start_index' : start_index,
         'max_rows'    : num_rows,
-        'documents'   : collate_results( user,
-                                         raw_query( user,
-                                                    query_string,
-                                                    start_index,
-                                                    num_rows ) ),
+        'results'     : res,
         }
 
-# ----------------------------------------------------------------------------
+############################################################################### 
 
 def reset():
     """
@@ -314,4 +244,4 @@ def reset():
 
     logging.critical('Search index deleted')
 
-# ----------------------------------------------------------------------------
+############################################################################### 

@@ -12,6 +12,7 @@ AJAX API Views.
 from django.contrib.auth.decorators  import login_required
 from donomo.archive.utils.http       import http_method_dispatcher
 from donomo.archive.api.api_impl     import *
+from donomo.archive.api.api_impl     import get_search
 
 __all__ = (
     'document_list',
@@ -172,6 +173,19 @@ def page_as_pdf():
     """
     return {
         'GET' : get_page_pdf,
+        }
+
+###############################################################################
+
+
+@login_required
+@http_method_dispatcher
+def search():
+    """
+    Run search
+    """
+    return {
+        'GET' : get_search,
         }
 
 ###############################################################################

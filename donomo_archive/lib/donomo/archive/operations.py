@@ -506,8 +506,8 @@ def create_work_item(
                 next_processor.queue_name,
                 sqs_connection),
             message )
-
-#-----------------------------------------------------------------------------
+###############################################################################
+###############################################################################
 
 def get_work_item(
     processor,
@@ -542,7 +542,7 @@ def get_work_item(
         message_content_type = message['Content-Type']
 
         temp_fd, temp_path = tempfile.mkstemp(
-            mimetypes.guess_extension(message_content_type) or '.bin',
+            misc.guess_extension(message_content_type) or '.bin',
             '%s-work-item-' % processor.name,
             processor.temp_dir )
 
@@ -588,7 +588,7 @@ def get_work_item(
             os.remove(temp_path)
         return None
 
-#-----------------------------------------------------------------------------
+###############################################################################
 
 def close_work_item(processor, message, delete_from_queue):
 
@@ -609,5 +609,5 @@ def close_work_item(processor, message, delete_from_queue):
         logging.debug('Deleting local copy from %s' % local_path)
         os.remove(local_path)
 
-#-----------------------------------------------------------------------------
+###############################################################################
 

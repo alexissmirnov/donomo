@@ -4,12 +4,13 @@ Multi-page PDF parser
 """
 
 from donomo.archive                        import operations
+from donomo.archive.service                import ocr, DEFAULT_THUMBNAIL_OUTPUTS
 from donomo.archive.service.tiff_parser    import TiffParserDriver
 from donomo.archive.models                 import Upload
-from donomo.archive.utils                  import pdf
+from donomo.archive.utils                  import pdf, image
 from logging                               import getLogger
 from glob                                  import glob
-
+from PIL                                   import Image
 import shutil
 import os
 
@@ -47,8 +48,10 @@ class PdfParserDriver(TiffParserDriver):
 
     SERVICE_NAME = MODULE_NAME
 
-    DEFAULT_OUTPUTS = (( 'pdf-original', []),) \
-        + TiffParserDriver.DEFAULT_OUTPUTS
+    DEFAULT_OUTPUTS = (
+        ( 'pdf-original',      []),
+        ( 'jpeg-original',      [ocr.MODULE_NAME]) )\
+         + DEFAULT_THUMBNAIL_OUTPUTS
 
     ACCEPTED_CONTENT_TYPES = [ 'application/pdf' ]
 
@@ -60,25 +63,29 @@ class PdfParserDriver(TiffParserDriver):
                            page_number = None ):
         """
         Convert the given PDF file (representing a s single page) to a
-        JPEG (via TIFF).  We punt by doing the conversion to TIFF then
-        calling the process_page_file function on the TIFF Parser
-        driver (passing this object as fake tiff parser driver
-        instance.
-
+        JPEG.
         """
+        base_name      = os.path.splitext(pdf_orig_path)[0]
+        jpeg_orig_path = pdf.convert(pdf_orig_path, 'jpeg')
+        original = Image.open(jpeg_orig_path)
+        
+        jpeg_t100_path = '%s-thumb-100.jpeg' % base_name
+        jpeg_t200_path = '%s-thumb-200.jpeg' % base_name
+        image.make_thumbnail(original, 100, jpeg_t100_path)
+        image.make_thumbnail(original, 200, jpeg_t200_path)
 
-        tiff_orig_path = pdf.convert(pdf_orig_path, 'tiff')
-        page = TiffParserDriver.process_page_file(
-            self,
-            document,
-            tiff_orig_path,
-            page_number)
-
-        operations.create_page_view_from_file(
-            self.processor,
-            PdfParserDriver.DEFAULT_OUTPUTS[0][0],
-            page,
-            pdf_orig_path )
+        page = operations.create_page(document, page_number)
+        i = 0
+        for path in ( pdf_orig_path, 
+                      jpeg_orig_path, 
+                      jpeg_t100_path, 
+                      jpeg_t200_path) :
+            operations.create_page_view_from_file(
+                self.processor,
+                PdfParserDriver.DEFAULT_OUTPUTS[i][0],
+                page,
+                path )
+            i = i + 1
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

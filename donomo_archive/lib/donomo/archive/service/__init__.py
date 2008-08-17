@@ -20,7 +20,11 @@ import os
 __all__ = ( 'ProcessDriver' )
 logging = getLogger('process_driver')
 
-# ---------------------------------------------------------------------------
+###############################################################################
+DEFAULT_THUMBNAIL_OUTPUTS = (     
+    ( 'jpeg-thumbnail-100', []),
+    ( 'jpeg-thumbnail-200', []),
+)
 
 class ProcessDriver:
 
@@ -31,7 +35,7 @@ class ProcessDriver:
     DEFAULT_OUTPUTS = None
     ACCEPTED_CONTENT_TYPES = ()
 
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    ############################################################################
 
     def __init__(self):
 
@@ -42,7 +46,7 @@ class ProcessDriver:
 
         self._processor = None
 
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    ############################################################################
 
     @property
     def processor(self):
@@ -59,7 +63,7 @@ class ProcessDriver:
                 self.DEFAULT_OUTPUTS or []  )[0]
         return self._processor
 
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    ############################################################################
 
     def handles_content_type( self, content_type ):
 
@@ -71,7 +75,7 @@ class ProcessDriver:
 
         return ( content_type in self.ACCEPTED_CONTENT_TYPES )
 
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    ############################################################################
 
     def __str__(self):
 
@@ -82,7 +86,7 @@ class ProcessDriver:
 
         return str(self.processor)
 
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    ############################################################################
 
 
     def handle_work_item(self, item):
@@ -98,8 +102,8 @@ class ProcessDriver:
 
         raise NotImplementedError()
 
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
+    ############################################################################
+    
     def system(self, command):
         """
         Run a command, logging the results.
@@ -108,7 +112,7 @@ class ProcessDriver:
         logging.debug( '%s - %s' % (self, command))
         return os.system(command)
 
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    ############################################################################
 
     def run_once(self):
 
@@ -143,4 +147,3 @@ class ProcessDriver:
 
         return was_successful
 
-# ----------------------------------------------------------------------------
