@@ -42,9 +42,33 @@ jstemplate templates
 <div style='display: none;'>
 	<div id='searchresults.template'
 		jsselect='pages' 
-		jsvars="search_result: true; title: $this.position; page_classes: page line-item ; total_pages:$page_count; doc_id: $this.document" class='panel-item' >
-		<div transclude="page.template"></div>
+		jsvars="title: $this.position; page_classes: page line-item ; total_pages:$page_count; doc_id: $this.document" 
+		class='panel-item' >
+		<div jsvalues="id:$this.url;donomo.tags:tags_string;donomo-doc-id:doc_id;class: 'page line-item '  + ( $index == 0 ? 'page-first ' : '' )  + ($index == total_pages - 1 ? 'page-last ' : '' ) + ( $index > 0 && $index < total_pages-1 ? 'page-middle ' : '');" 
+			 class="page line-item" 
+			 donomo-doc-id="parent-doc" >
+			<ul class="page-menu">
+				<li>
+					<a class="view-full-page" 
+						jsvalues="id:'view-full-page:' + $this.url;href:'#' + $this.url + '?view_name=jpeg-original'" 
+						href="#">
+						<img title="Full Size" style='border:none' src='{{MEDIA_URL}}ui/docpanel/assets/page_white.png'/>
+					</a>	
+				</li>
+				<li>
+					<a jsvalues="href:$this.url + '?format=application/pdf'" href="#">
+						<img title="Download this page as PDF" style='border:none' src='{{MEDIA_URL}}ui/docpanel/assets/page_white_acrobat.png'/>
+					</a>	
+				</li>
+			</ul>
+			<img height="60%"  width="100%"  jsvalues=".src:$this.view"/>
+			<p><a href="id" 
+				jsvalues="href:$this.document" 
+				jscontent="'page ' + $this.position">
+			</a></p>
+		</div>
 	</div>
+
 
 	<div id="document.template" jsselect="documents" class="panel-item" >
 		<div jsdisplay="$this.length > 0" jsvalues="donomo.tags:$tags_string;id:$this.url" class="line-item document page page-cover" >

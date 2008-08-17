@@ -157,7 +157,6 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 				success: function(o){
 					try {
 						var processingContext = new JsEvalContext(eval('(' + o.responseText + ')'));
-						//processingContext.setVariable('pages_count', processingContext.results.numFound);
 						var template = jstGetTemplate('searchresults.template');
 						var panel = new YAHOO.util.Element('panel');
 						removeChildren(panel);
