@@ -1,0 +1,37 @@
+{% extends "archive_admin/base.html" %}
+{% block body %}
+    <!-- Content -->
+    <div id="content" class="colMS">
+        <h1>Donomo administration</h1>
+		<!-- Main -->
+		<div id="content-main">
+	        <div class="module">
+		        <table summary="Registered Queues">
+		        <caption>Queues</caption>
+				{% for q in queues %}
+	            <tr>            
+	                <th scope="row"><a href="/archiveadmin/queues{{q.id}}">{{q.id}}</a></th>
+	                <td>{{q.count}}</td>
+	                <td><a href="/archiveadmin/queues{{q.id}}/?_method=DELETE" class="deletelink">Delete</a></td>
+	            </tr>
+				{% endfor %}
+				</table>
+			</div>
+		</div>
+        
+		<div id="content-related">
+		    <div class="module" >
+		        <h2>Actions</h2>
+	            <ul class="actionlist">
+	            <li class="deletelink"><a href="/archiveadmin/queues/?_method=DELETE">Delete all queues</a></li>
+	            <!-- <li class="deletelink"><a href="/archiveadmin/?_method=DELETE">DELETE EVERYTHING (queues, s3, search index, db)</a></li> -->
+	            </ul>
+		    </div>
+		</div>
+		<!-- End Main -->
+        <br class="clear" />
+		
+		
+    </div>
+    <!-- END Content -->
+{% endblock %}
