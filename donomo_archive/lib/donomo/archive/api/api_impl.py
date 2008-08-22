@@ -243,7 +243,7 @@ def get_document_list(request):
 
     query_string = extract_query_string(request)
     start_index  = int(request.GET.get('start_index', 0))
-    num_rows     = int(request.GET.get('num_rows', 25))
+    num_rows     = int(request.GET.get('num_rows', 250))
     page_view_name = request.GET.get('view_name', DEFAULT_PAGE_VIEW_NAME)
     
     if query_string is not None:
@@ -253,7 +253,8 @@ def get_document_list(request):
             start_index,
             num_rows)
     else:
-        all_docs = request.user.documents.all()
+        # FIXME Return all documents in inverse order of their primary key. This is a hack
+        all_docs = request.user.documents.all().order_by('-pk')
         doc_list = all_docs [ start_index : num_rows ]
         return {
             'query' : query_string,

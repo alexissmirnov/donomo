@@ -44,9 +44,8 @@ jstemplate templates
 		jsselect='pages' 
 		jsvars="title: $this.position; page_classes: page line-item ; total_pages:$page_count; doc_id: $this.document" 
 		class='panel-item' >
-		<div jsvalues="id:$this.url;donomo.tags:tags_string;donomo-doc-id:doc_id;class: 'page line-item '  + ( $index == 0 ? 'page-first ' : '' )  + ($index == total_pages - 1 ? 'page-last ' : '' ) + ( $index > 0 && $index < total_pages-1 ? 'page-middle ' : '');" 
-			 class="page line-item" 
-			 donomo-doc-id="parent-doc" >
+		<div jsvalues="id:$this.url;donomo.tags:tags_string;donomo-doc-id:$this.document" 
+			 class="page line-item" >
 			<ul class="page-menu">
 				<li>
 					<a class="view-full-page" 

@@ -14,6 +14,7 @@ import httplib2
 import simplejson
 import urllib
 import os
+import BeautifulSoup
 
 #
 # pylint: disable-msg=C0103
@@ -66,7 +67,7 @@ class IndexDriver(ProcessDriver):
         {% endautoescape %}
         {% endspaceless %}""")
 
-    SOLR_UPDATE_URL = 'http://%s/solr/update/' % settings.SOLR_HOST
+    SOLR_UPDATE_URL = 'http://%s/solr/update/?commit=true' % settings.SOLR_HOST
 
     SOLR_QUERY_URL = 'http://%s/solr/select/' % settings.SOLR_HOST
 
@@ -94,6 +95,24 @@ class IndexDriver(ProcessDriver):
 
         """
         http_client = httplib2.Http()
+
+        # Clean the text from HTML tags
+        bsoup = BeautifulSoup.BeautifulSoup(text)
+        
+        # Remove all comments
+        comments = bsoup.findAll(
+                    text=lambda text:isinstance(text, BeautifulSoup.Comment))
+        for comment in comments:
+            comment.extract()
+        
+        # Remove all script elements
+        script_elements=bsoup.findAll('script')
+        for script_element in script_elements:
+            script_element.extract()
+        
+        # Now get the text of the body
+        body = bsoup.body(text=True)
+        text = ''.join(body)
 
         data = {
             'id' : page.pk,
