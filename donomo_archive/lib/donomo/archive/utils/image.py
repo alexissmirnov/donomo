@@ -4,9 +4,11 @@ Heper utility to generate thumbnail images
 
 from PIL import Image, ImageFilter, ImageChops
 
+from django.conf import settings
+
 ##############################################################################
 
-def open( path ):
+def load( path ):
 
     """ Open the image located at path.
     """
@@ -67,7 +69,7 @@ def thumbnail( image, size ):
 
     # Scale the image to the new size
     image = image.resize(
-        settings.THUMBNAIL_SIZE,
+        ( int(width * ratio), int(height * ratio) ),
         resample = Image.ANTIALIAS)
 
     # Apply light sharpening to bring out the details

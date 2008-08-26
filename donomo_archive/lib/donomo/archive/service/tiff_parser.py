@@ -47,7 +47,9 @@ def handle_work_item(processor, item):
             asset.producer.process ))
 
     position = 1
-    for page_tiff_path in glob.glob('%s*.tif*' % page_prefix).sort():
+    all_page_files = glob.glob('%s*.tif*' % page_prefix)
+    all_page_files.sort()
+    for page_tiff_path in all_page_files:
         handle_page(
             processor,
             asset,
@@ -84,13 +86,13 @@ def handle_page(
 
     # Save the original as JPEG
     image.save(
-        image.open(rgba_path),
+        image.load(rgba_path),
         jpeg_path)
 
     # Save the thumbnail as JPEG
     image.save(
         image.thumbnail(
-            image.open(rgba_path),
+            image.load(rgba_path),
             settings.THUMBNAIL_SIZE),
         thumb_path)
 

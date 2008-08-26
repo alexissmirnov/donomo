@@ -260,7 +260,7 @@ def download_to_file( s3_source_path, local_dest_path ):
         'Content-Length' : s3_key.size,
         'ETag'           : s3_key.etag,
         'Last-Modified'  : s3_key.last_modified,
-        'Local-Path'     : local_dest_path,
+        'Local-Path'     : str(local_dest_path),
         }
 
 ##############################################################################

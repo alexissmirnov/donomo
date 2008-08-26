@@ -57,7 +57,7 @@ def init_processor(module):
     """
 
     return operations.initialize_processor(
-        module.MODULE_NAME,
+        module.__name__.rsplit('.', 1)[-1],
         module.DEFAULT_INPUTS,
         module.DEFAULT_OUTPUTS,
         module.DEFAULT_ACCEPTED_MIME_TYPES ) [0]
@@ -82,7 +82,7 @@ def load_modules( name_list ):
 @transaction.commit_on_success
 def handle_work_item( options, work_item ):
     """ Transactionally handle work item """
-    module = options.modules[ work_item['Process'] ]
+    module = options.process[ work_item['Process-Name'] ]
     module.handle_work_item(
         init_processor(module),
         work_item )
@@ -138,6 +138,10 @@ def main():
             args   = (options,))
         for i in xrange(1, 1 + options.num_threads)
         ]
+
+    for thread in thread_list:
+        thread.setDaemon(True)
+        thread.start()
 
     for thread in thread_list:
         while True:

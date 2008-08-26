@@ -47,7 +47,9 @@ def handle_work_item(processor, item):
             asset.producer.process ))
 
     position = 1
-    for page_pdf_path in glob.glob('%s*.pdf' % page_prefix).sort():
+    all_page_files = glob.glob('%s*.pdf' % page_prefix)
+    all_page_files.sort()
+    for page_pdf_path in all_page_files:
         handle_page(
             processor,
             asset,
@@ -78,7 +80,7 @@ def handle_page(
     # Save the converted JPEG as a thumbnail JPEG
     image.save(
         image.thumbnail(
-            image.open(jpeg_path),
+            image.load(jpeg_path),
             settings.THUMBNAIL_SIZE),
         thumb_path)
 

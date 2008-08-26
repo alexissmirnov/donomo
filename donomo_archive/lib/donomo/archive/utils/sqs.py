@@ -131,13 +131,13 @@ def get_message(
         if message:
             return message
 
+        max_backoff = settings.SQS_MAX_BACKOFF
         if max_wait_time:
             time_spent = time() - start_time
             if time_spent >= max_wait_time:
                 return None
             time_left   = max_wait_time - time_spent
-            max_backoff = min( settings.SQS_MAX_BACKOFF, time_left )
-            max_backoff = max( max_backoff, 1 )
+            max_backoff = min( max_backoff, max( time_left, 1))
 
         for _ in xrange(sleep_duration):
             sleep(1)
@@ -173,3 +173,4 @@ def clear_all_messages():
     queue = _get_queue()
     logging.getLogger('sqs').critical('Clearing messages from %s' % queue.url)
     queue.clear()
+
