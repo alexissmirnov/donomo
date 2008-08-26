@@ -8,13 +8,15 @@ import os.path
 import platform
 import logging
 import sys
+import tempfile
 
 #
 # pylint: disable-msg=W0142
 #   W0142 - Used * or ** magic
 #
+#
 
-# ---------------------------------------------------------------------------
+##############################################################################
 
 def get_module_dir(module_name):
     """
@@ -26,7 +28,7 @@ def get_module_dir(module_name):
     return os.path.dirname(__import__(module_name, {}, {}, ['']).__file__)
 
 
-# ---------------------------------------------------------------------------
+##############################################################################
 
 def join_and_normalize( *path_components ):
     """
@@ -35,17 +37,19 @@ def join_and_normalize( *path_components ):
     """
     return os.path.normpath(os.path.join(*path_components))
 
-# ---------------------------------------------------------------------------
+##############################################################################
 #
 # Debugging Status
 #
 
-DEVELOPMENT_MODE = (platform.node() != 'web18.webfaction.com')
+TEST_MODE        = os.environ.get('USE_TEST_ENV', False)
+DEVELOPMENT_MODE = (platform.node() != 'web18.webfaction.com') and not TEST_MODE
 DEBUG            = DEVELOPMENT_MODE or os.environ.get('DEBUG', False)
 TEMPLATE_DEBUG   = DEBUG
 OS_USER_NAME     = os.environ.get('LOGNAME', None) or os.getlogin()
+TEMP_DIR         = tempfile.gettempdir()
 
-# ---------------------------------------------------------------------------
+##############################################################################
 #
 # Handy path shortcuts
 #
@@ -57,7 +61,7 @@ DJANGO_PATH = get_module_dir('django')
 LOG_PATH    = os.environ.get('DONOMO_LOG_PATH', '.')
 CACHE_PATH  = os.environ.get('DONOMO_CACHE_PATH', '/home/alexissmirnov/tmp/cache/')
 
-# ---------------------------------------------------------------------------
+##############################################################################
 #
 # Info and credentials for external services
 #
@@ -66,28 +70,34 @@ CACHE_PATH  = os.environ.get('DONOMO_CACHE_PATH', '/home/alexissmirnov/tmp/cache
 
 AWS_ACCESS_KEY_ID     = os.environ.get('AWS_ACCESS_KEY_ID', '13Q9QPDKZE5BBGJHK7R2')
 AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', 'om9OUC3onE699qGCw2Z70xay0hnqFssLq+jwMCXx')
+AWS_MODE_PREFIX       = TEST_MODE and 'test' or (DEVELOPMENT_MODE and 'dev' or None)
+AWS_PREFIX            = AWS_MODE_PREFIX and ("%s.%s." % (AWS_MODE_PREFIX, OS_USER_NAME)) or ''
 S3_HOST               = os.environ.get('S3_HOST', 's3.amazonaws.com')
-S3_IS_SECURE          = True
-S3_BUCKET_PREFIX      = DEVELOPMENT_MODE and ("dev-%s." % OS_USER_NAME) or ''
-S3_BUCKET             = '%sdata.donomo.com' % S3_BUCKET_PREFIX
+S3_IS_SECURE          = os.environ.get('S3_IS_SECURE', 'yes').lower() in ('yes', 'true', '1')
+S3_BUCKET_NAME        = '%sarchive.donomo.com' % AWS_PREFIX
 SQS_HOST              = os.environ.get('SQS_HOST', 'queue.amazonaws.com')
-SQS_IS_SECURE         = True
+SQS_IS_SECURE         = os.environ.get('SQS_IS_SECURE', 'yes').lower() in ('yes', 'true', '1')
+SQS_QUEUE_NAME        = '%sarchive-donomo-com' % AWS_PREFIX.replace('.', '-')
 SOLR_HOST             = '127.0.0.1:8983'
 S3_ACCESS_WINDOW      = 300
+SQS_MAX_BACKOFF       = int(os.environ.get('SQS_MAX_BACKOFF', 300))
 
-# ---------------------------------------------------------------------------
+# Thumbnail settings
+THUMBNAIL_SIZE        = ( 170, 220 ) # 8.5" x 11.0" scaled to 20 ppi
+
+##############################################################################
 #
 # Logging setup
 #
 
 LOGGING_PARAMS = {
-    'format'  : '%(asctime)s %(name)s %(levelname)s [%(filename)s:%(lineno)d] %(module)s.%(funcName)s : %(message)s',
+    'format'  : '%(asctime)s %(levelname)s %(funcName)s (%(filename)s:%(lineno)d): %(message)s',
     }
 
 if DEVELOPMENT_MODE:
     LOGGING_PARAMS.update( {
             'stream'   : sys.stderr,
-            'level'    : logging.DEBUG,
+            'level'    : logging.INFO,
             })
 else:
     LOGGING_PARAMS.update( {
@@ -99,22 +109,20 @@ if __name__ == 'donomo.settings':
     logging.basicConfig(**LOGGING_PARAMS)
 
 logging.getLogger('boto').setLevel(logging.INFO)
-logging.getLogger('S3').setLevel(logging.INFO)
-logging.getLogger('SQS').setLevel(logging.INFO)
 
-# ---------------------------------------------------------------------------
+##############################################################################
 #
 # Storage Settings
 #
 # [ Database, Cache, etc. ]
 #
 
-if DEVELOPMENT_MODE:
+if DEVELOPMENT_MODE or TEST_MODE:
     DATABASE_ENGINE    = 'sqlite3'
     DATABASE_NAME      = join_and_normalize(DONOMO_PATH, 'donomo.db')
     DATABASE_USER      = None
     DATABASE_PASSWORD  = None
-    MEDIA_ROOT         = join_and_normalize(DONOMO_PATH, 'archive/media/')
+    MEDIA_ROOT         = join_and_normalize(DONOMO_PATH, 'archive', 'media/')
     ADMIN_MEDIA_PREFIX = '/admin_media/'
 else:
     DATABASE_ENGINE    = 'mysql'
@@ -130,7 +138,7 @@ else:
     CACHE_MIDDLEWARE_ANONYMOUS_ONLY = True
 
 
-# ---------------------------------------------------------------------------
+##############################################################################
 #
 # Database Settings
 #
@@ -183,6 +191,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
 #    'django.middleware.cache.CacheMiddleware',
     'django_openidconsumer.middleware.OpenIDMiddleware',
+    'donomo.archive.utils.middleware.AjaxErrorHandlingMiddleware',
     'donomo.archive.utils.yui.middleware.YUIIncludeMiddleware',
 )
 
@@ -195,7 +204,7 @@ TEMPLATE_DIRS = [
         # path and replacing backslash characters with forward slash.
         # You just have to supply the absolute paths.
 
-        os.path.join(DONOMO_PATH, 'templates'),
+        os.path.join(DONOMO_PATH, 'archive', 'templates'),
         os.path.join(DJANGO_PATH, 'contrib', 'admin', 'templates'),
         )
     ]
@@ -225,3 +234,4 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.request",
     )
 
+APPEND_SLASH = False

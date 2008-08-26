@@ -9,9 +9,10 @@ out these operations, including:
 """
 
 #
-# pylint: disable-msg=C0103,W0142,W0212,W0401,W0614,W0702
+# pylint: disable-msg=C0103,R0913,W0142,W0212,W0401,W0614,W0702
 #
 #   C0103 - variables at module scope must be all caps
+#   R0913 - too many arguments to function
 #   W0142 - use of * and ** magic
 #   W0212 - access to protected class member (model._meta)
 #   W0401 - wildcard import
@@ -20,13 +21,10 @@ out these operations, including:
 #
 
 from __future__                         import with_statement
-from django.contrib.contenttypes.models import ContentType
 from django.core.validators             import ValidationError
+from django.conf                        import settings
 from donomo.archive.models              import *
-from donomo.archive.utils               import s3 as s3_utils
-from donomo.archive.utils               import sqs as sqs_utils
-from donomo.archive.utils               import misc
-from logging                            import getLogger
+from donomo.archive.utils               import s3, sqs
 from platform                           import node
 from socket                             import gethostbyname, gaierror
 
@@ -34,8 +32,10 @@ import django.db
 import mimetypes
 import os
 import tempfile
+import shutil
+import logging
 
-logging    = getLogger('donomo-archive')
+logging    = logging.getLogger('donomo-archive')
 page_meta  = manager(Page).model._meta
 get_field  = page_meta.get_field
 quote_name = django.db.connection.ops.quote_name
@@ -47,64 +47,17 @@ get_cursor = django.db.connection.cursor
 #
 
 __all__ = (
-    'create_upload_from_stream',
-    'create_upload_from_file',
     'create_document',
     'create_page',
     'split_document',
-    'merge_document',
+    'merge_documents',
     'move_page',
-    'get_or_create_processor',
-    'create_page_view_from_stream',
-    'create_page_view_from_file',
-    'create_work_item',
-    'get_work_item',
+    'create_asset_from_stream',
+    'create_asset_from_file',
+    'publish_work_item',
+    'retrieve_work_item',
     'close_work_item',
     )
-
-###############################################################################
-# pylint: disable-msg=E1101
-
-def create_upload_from_stream(
-    processor,
-    owner,
-    file_name,
-    data_stream,
-    content_type):
-    """
-    Upload a new object into the archive.
-    """
-    
-    upload = manager(Upload).create(
-        owner     = owner,
-        gateway   = processor,
-        view_type = ViewType.objects.get_or_create(name = 'upload')[0],
-        file_name = os.path.basename(file_name) )
-
-    create_work_item(processor, upload, data_stream, content_type)
-
-    return upload
-# pylint: enable-msg=E1101
-###############################################################################
-
-def create_upload_from_file(
-    processor,
-    owner,
-    file_name,
-    content_type = None ):
-
-    """
-    Upload a new object into the archive.
-
-    """
-
-    with open(file_name, 'rb') as data_stream:
-        return create_upload_from_stream(
-            processor,
-            owner,
-            file_name,
-            data_stream,
-            content_type or misc.guess_mime_type(file_name))
 
 ###############################################################################
 
@@ -113,14 +66,12 @@ def create_document( owner, title = None):
     Create a new document
     """
 
-    # TODO: add document creation event history
-    # TODO: add timestamp to end of document title
+    if title is None:
+        title = 'New Document'
 
-    document = manager(Document).create(
-        title = title or 'New Document',
-        owner = owner)
+    logging.info( 'Creating new document for %s: %s' % ( owner, title))
 
-    return document
+    return manager(Document).create( title = title, owner = owner)
 
 ###############################################################################
 
@@ -128,8 +79,6 @@ def create_page (document, position = None):
     """
     Create a new page
     """
-
-    # TODO: add page creation event history
 
     page = manager(Page).create(
         document = document,
@@ -147,8 +96,6 @@ def split_document( document, at_page_number):
 
     """
 
-    # TODO: add page binding event
-
     if at_page_number < 1:
         raise Exception(
             'Cannot split document at position %d' % at_page_number)
@@ -157,9 +104,9 @@ def split_document( document, at_page_number):
     cursor       = get_cursor()
 
     params = {
-        'old_doc_id'      : document.id,
-        'new_doc_id'      : new_document.id,
-        'owner_id'        : document.owner.id,
+        'old_document_id' : document.pk,
+        'new_document_id' : new_document.pk,
+        'owner_id'        : document.owner.pk,
         'offset'          : at_page_number,
         'page_table'      : quote_name(page_meta.db_table),
         'document_column' : quote_name(get_field('document').column),
@@ -193,18 +140,20 @@ def merge_documents( target, source, offset):
         # avoid odd requests
         return
 
+    num_target_pages = target.num_pages
+
     if offset is None:
-        offset = target.num_pages
-    elif (offset < 0 or offset > target.num_pages):
+        offset = num_target_pages
+    elif (offset < 0 or offset > num_target_pages):
         raise ValidationError('Invalid merge position: %d' % offset)
 
     cursor = get_cursor()
 
     params = {
-        'src_doc_id'      : source.id,
-        'tgt_doc_id'      : target.id,
-        'owner_id'        : target.owner.id,
-        'offset'          : offset or target.num_pages,
+        'src_doc_id'      : source.pk,
+        'tgt_doc_id'      : target.pk,
+        'owner_id'        : target.owner.pk,
+        'offset'          : offset,
         'required_space'  : source.num_pages,
         'page_table'      : quote_name(page_meta.db_table),
         'document_column' : quote_name(get_field('document').column),
@@ -216,7 +165,7 @@ def merge_documents( target, source, offset):
     # Make space in the target document
     #
 
-    if offset is not None:
+    if offset != num_target_pages:
         cursor.execute("""
           UPDATE    %(page_table)s
             SET     %(position_column)s = %(position_column)s + %(required_space)d
@@ -241,105 +190,55 @@ def merge_documents( target, source, offset):
 
     source.delete()
 
-    #
-    # TODO: add page binding event
-    #
-
 
 ###############################################################################
 
-def move_page(
-    source_document,
-    source_offset,
-    target_document,
-    target_offset ):
-
-    """
-    Move a page from one document/position to another.
-
+def initialize_infrastructure():
+    """  Initialize the AWS infrastructure used by donomo archive.
     """
 
-
-    cursor = get_cursor()
-
-    params = {
-        'owner_id'        : target_document.owner.pk,
-        'src_doc_id'      : source_document.pk,
-        'tgt_doc_id'      : target_document.pk,
-        'src_offset'      : source_offset,
-        'tgt_offset'      : target_offset,
-        'page_table'      : quote_name(page_meta.db_table),
-        'document_column' : quote_name(get_field('document').column),
-        'owner_column'    : quote_name(get_field('owner').column),
-        'position_column' : quote_name(get_field('position').column),
-        }
-
-    #
-    # Make space in the target document
-    #
-
-    cursor.execute("""
-        UPDATE    %(page_table)s
-          SET     %(position_column)s = %(position_column)s + 1
-          WHERE   %(owner_column)s = %(owner_id)d
-                    AND %(document_column)s = %(tgt_doc_id)d
-                    AND %(position_column)s > %(tgt_offset)d;""" % params)
-
-    #
-    # Move source page into target document
-    #
-
-    cursor.execute("""
-        UPDATE    %(page_table)s
-          SET     %(document_column)s = %(tgt_doc_id)d,
-                  %(position_column)s = %(tgt_offset)d
-          WHERE   %(document_column)s = %(src_doc_id)d
-                    AND %(owner_column)s = %(owner_id)d
-                    AND %(position_column)s = %(src_offset)d;""" % params)
-
-    #
-    # Close gap in the source document
-    #
-    cursor.execute("""
-        UPDATE    %(page_table)s
-          SET     %(position_column)s = %(position_column)s - 1
-          WHERE   %(owner_column)s = %(owner_id)d
-                    AND %(document_column)s = %(src_doc_id)d
-                    AND %(position_column)s > %(src_offset)d;""" % params)
-
-    # TODO: add evcent to history
+    s3.initialize()
+    sqs.initialize()
 
 ###############################################################################
 
-def get_or_create_processor(
+def initialize_processor(
     name,
-    default_outputs ):
+    default_inputs = None,
+    default_outputs = None,
+    default_accepted_mime_types = None ):
+
+    """ Obtain a processor object based on its name and the names of its
+        outputs.  The processor will be created if it does not already
+        exist.  On creating a processor, this function assumes it will
+        be running on local node.
+
+        Returns a tuple processor and a boolean indicating if the
+        processor was created.
 
     """
-    Obtain a processor object based on its name and the names of its
-    outputs.  The processor will be created if it does not already
-    exist.  On creating a processor, this function assumes it will
-    be running on local node.
-    
-    Returns a tuple processor and a boolean indicating if the 
-    processor was created.
 
-    """
-
-    process, created = manager(Process).get_or_create(
-        name = name)
+    process, created = manager(Process).get_or_create( name = name )
 
     if created:
         logging.debug('Registered process: %s' % process)
 
-    if process.outputs.count() == 0:
-        logging.debug('Adding default output routing for %s' % process)
-        for view_name, consumers in default_outputs:
-            view_type = manager(ViewType).get_or_create(name = view_name)[0]
-            view_type.producers.add(process)
-            for consumer in consumers:
-                consumer = manager(Process).get_or_create(name = consumer) [0]
-                view_type.consumers.add(consumer)
+        logging.debug('Setting up input routing for %s' % process)
+
+        for value in default_inputs or ():
+            process.inputs.add(
+                manager(AssetClass).get_or_create( name = value ) [0] )
+
+        for value in default_outputs or ():
+            process.outputs.add(
+                manager(AssetClass).get_or_create( name = value ) [0] )
+
+        for value in default_accepted_mime_types or ():
+            extension = mimetypes.guess_extension(value)
+            process.mime_types.add(
+                manager(MimeType).get_or_create(
+                    name = value,
+                    defaults = { 'extension' : extension }) [0] )
 
     try:
         address = gethostbyname(node())
@@ -357,240 +256,117 @@ def get_or_create_processor(
     if created:
         logging.debug('Registered processor: %s' % processor)
 
-    sqs_utils.create_queue(processor.queue_name)
-
     logging.debug('Retrieved processor: %s' % processor)
 
     return processor, created
 
 ###############################################################################
 
-def create_page_view_from_stream(
-    processor,
-    output_channel,
-    page,
-    data_stream,
-    content_type ):
+def create_asset_from_stream( data_stream, **kwargs ):
 
-    """
-    Create a page view work item on the output channel (given by
-    name) from the passed data stream.
+    """ Create a page view work item on the output channel (given by name)
+        from the passed data stream.
 
     """
     logging.debug(
-        'Streaming page %s (%s) - %s' % (
-            page,
-            output_channel,
-            content_type ))
+        'Creating Asset<%s>' % ', '.join(
+            '%s=%s' % n_v for n_v in kwargs.iteritems() ) )
 
-    logging.debug('processor.process.outputs=%s' % processor.process.outputs.all())
-    logging.debug('processor.outputs=%s' % processor.outputs.all())
-    view_type = processor.process.outputs.get( name = output_channel )
+    asset = manager(Asset).create(**kwargs)
 
-    page_view = manager(PageView).get_or_create(
-        page      = page,
-        view_type = view_type ) [0]
+    logging.info('Uploading %r' % asset)
 
-    create_work_item(
-        processor,
-        page_view,
-        data_stream,
-        content_type)
+    s3.upload_from_stream( asset.s3_key, data_stream, asset.mime_type.name )
+
+    return asset
 
 ###############################################################################
 
-def create_page_view_from_file(
-    processor,
-    output_channel,
-    page,
-    file_name,
-    content_type = None):
+def create_asset_from_file( file_name, **kwargs ):
 
-    """
-    Create a page view work item on the output channel (given by
-    name) from the contents of the file denoted by path.
+    """ Create a page view work item on the output channel (given by name)
+        from the contents of the file denoted by path.
 
     """
 
-    logging.debug(
-        'Uploading page %s (%s) - %s' % (
-            page,
-            output_channel,
-            file_name ))
+    kwargs = kwargs.copy()
+    kwargs.setdefault('orig_file_name', file_name)
+    kwargs.setdefault('mime_type', mimetypes.guess_type(file_name)[0])
 
     with open(file_name, 'rb') as data_stream:
-        create_page_view_from_stream(
-            processor,
-            output_channel,
-            page,
-            data_stream,
-            content_type or misc.guess_mime_type(file_name))
+        return create_asset_from_stream( data_stream, **kwargs )
 
 ###############################################################################
 
-def create_work_item(
-    processor,
-    work_item,
-    data_stream,
-    content_type ):
+def publish_work_item( *asset_list ):
+
+    """ Broadcast messages about the existence or modification of an set
+        of assets to the relevant listening services.sq
 
     """
-    Upload a file to S3 then broadcast a message to one or more SQS
-    queues.
-
-    work_item:
-        Data model object representing a work item - a page view or
-        an upload.
-
-    data_stream:
-        The actual data that corresponds to this work item. will be
-        saved in s3
-
-    content_type:
-        Content type of the data comprising work item
-
-    """
-
-    view_type = work_item.view_type
-    meta_data = ContentType.objects.get_for_model(work_item)
-    s3_key   = work_item.s3_key
-    item_type = '%s.%s' % (meta_data.app_label, meta_data.model)
-
     logging.info(
-        'Creating work item: ' \
-            'processor = %s, ' \
-            'view_type = %s, ' \
-            'item_type = %s, ' \
-            'item_id = %s' % (
-            processor,
-            view_type,
-            item_type,
-            work_item.id ))
+        'Queuing work items:%s' % ''.join( '\n  %r' % a for a in asset_list ))
 
-    s3_utils.upload_stream(
-        s3_utils.get_bucket(create=True),
-        s3_key,
-        data_stream,
-        content_type )
+    sqs.post_message_list(
+        ( {  'Asset-ID'     : asset.pk,
+             'Process-Name' : consumer.name }
+          for asset in asset_list
+          for consumer in asset.consumers ) )
 
-    message = {
-        'Content-Type' : content_type,
-        'S3-Key'       : s3_key,
-        'Model-Name'   : item_type,
-        'Primary-Key'  : work_item.id,
-        }
 
-    sqs_connection = sqs_utils.get_connection()
-
-    #TODO: Roger, please review
-    # When a work item is created by the gateway processor 
-    # (eg. via file_import.py) view_type doesn't have any consumers
-    # but we still need to port a message to the queue for the
-    # processor to pick it up. In this case the right processor seems to be
-    # work_item.gateway
-    # the gateway is undefined in cases where a work item is created by 
-    # a processor in the middle of the pipeline, but in this case
-    # view_type.consumers is non-empty
-    # does this code below makes sense?
-    # why can't we just have view_type.consumers set correctly in all cases?
-    processors_to_notify = list(view_type.consumers.all())
-    try:
-        processors_to_notify.append(work_item.gateway)
-    except AttributeError, e:
-        pass
-        
-    for next_processor in processors_to_notify:
-        logging.debug('Notifying %s' % next_processor)
-        sqs_utils.post_message(
-            sqs_utils.create_queue(
-                next_processor.queue_name,
-                sqs_connection),
-            message )
-###############################################################################
 ###############################################################################
 
-def get_work_item(
-    processor,
-    max_wait_time  = None,
-    interrupt_func = None,
-    poll_frequency = None ):
+def retrieve_work_item(
+    visibility_timeout = None,
+    max_wait_time      = None,
+    interrupt_func     = None ):
+
+    """ Retrieve the next work item for the given processor.
 
     """
-    Retrieve the next work item for the given processor
 
-    """
-    temp_path = None
+    temp_dir = tempfile.mkdtemp(
+        prefix = 'donomo-work-item-',
+        dir    = settings.TEMP_DIR )
 
     try:
-        sqs_queue = sqs_utils.create_queue(processor.queue_name)
-
-        message = sqs_utils.get_message(
-            sqs_queue          = sqs_queue,
-            visibility_timeout = processor.visibility_timeout,
+        message = sqs.get_message(
+            visibility_timeout = visibility_timeout,
             max_wait_time      = max_wait_time,
-            interrupt_func     = interrupt_func,
-            poll_frequency     = poll_frequency )
+            interrupt_func     = interrupt_func )
 
         if message is None:
             return None
 
-        logging.debug(
-            'Retrieved message %s from queue %s' % (
-                message,
-                processor.queue_name ))
-
-        message_content_type = message['Content-Type']
-
-        temp_fd, temp_path = tempfile.mkstemp(
-            misc.guess_extension(message_content_type) or '.bin',
-            '%s-work-item-' % processor.name,
-            processor.temp_dir )
-
-        logging.debug('Downloading work item to %s' % temp_path)
-
-        message_s3_path = message['S3-Key']
-
-        with os.fdopen(temp_fd,'wb') as file_stream:
-            metadata = s3_utils.download_stream(
-                s3_utils.get_bucket(),
-                message_s3_path,
-                file_stream )
-
-        logging.debug('Created work item file at %s' % temp_path)
-
-        model = django.db.models.get_model(*message['Model-Name'].split('.'))
-        instance = model.objects.get(id = int(message['Primary-Key']))
-
-        assert( message_s3_path == instance.s3_key )
-        assert( message_content_type == metadata['Content-Type'] )
-
-        message.update( metadata )
+        asset = manager(Asset).get( pk = message['Asset-ID'] )
 
         message.update(
-            { 'Local-Path'     : temp_path,
-              'Model'          : model,
-              'Object'         : instance,
-              'Processor'      : processor,
+            s3.download_to_file(
+                s3_source_path = asset.s3_key,
+                local_dest_path = os.path.join(temp_dir, asset.file_name)))
+
+        message.update(
+            { 'Asset-Instance' : asset,
+              'Asset-Class'    : asset.asset_class,
+              'Owner'          : asset.owner,
               })
 
         logging.info(
-            'Retrieved work item: ' \
-                'processor = %(Processor)s,'
-                'model = %(Model)s, ' \
-                'object = %(Object)s, ' \
-                'content-type = %(Content-Type)s' % message)
+            'Retrieved work item: '         \
+                'process=%(Process-Name)s,' \
+                'asset=%(Asset-Instance)r'  \
+                % message)
 
         return message
 
     except:
-        logging.exception("%s - failed to retrieve work item" % processor)
-        if temp_path:
-            os.remove(temp_path)
+        logging.exception("Failed to retrieve work item")
+        shutil.rmtree(temp_dir)
         return None
 
 ###############################################################################
 
-def close_work_item(processor, message, delete_from_queue):
+def close_work_item(processor, work_item, delete_from_queue):
 
     """
     Finish handling the given work_item, deleting it from the input
@@ -598,16 +374,19 @@ def close_work_item(processor, message, delete_from_queue):
 
     """
 
-    logging.info("%s : closing work item %s" % (processor, message))
+    logging.info(
+        "%s %s %r" % (
+            processor,
+            (delete_from_queue and ' closing ' or ' aborting '),
+            work_item['Asset-Instance'] ))
+
+    local_path = work_item['Local-Path']
 
     if delete_from_queue:
-        logging.debug("Removing %s from message_queue" % message)
-        sqs_utils.delete_message(message)
+        sqs.delete_message(work_item)
 
-    local_path = message['Local-Path']
     if os.path.exists(local_path):
-        logging.debug('Deleting local copy from %s' % local_path)
-        os.remove(local_path)
+        shutil.rmtree(os.path.dirname(local_path))
 
 ###############################################################################
 

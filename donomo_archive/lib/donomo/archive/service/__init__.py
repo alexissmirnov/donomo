@@ -1,149 +1,155 @@
-"""
-Process driver framework for services exposed in the document processing
-pipeline.
+#!/usr/bin/env python
 
+""" Driver script which runs the processing pipeline
 """
 
-from donomo.archive         import operations
-from logging                import getLogger
+from donomo.archive import operations
+from django.db import transaction
+
+import time
+import threading
+import signal
+import traceback
+import logging
+import optparse
 import os
 
 #
-# pylint: disable-msg=C0103,W0142,W0702,R0921
+# pylint: disable-msg=C0103
 #
 #   C0103 - variables at module scope must be all caps
-#   W0142 - use of * and ** magic
-#   W0702 - catch exceptions of unspecifed type
-#   R0921 - unreferenced abstract class
 #
 
-__all__ = ( 'ProcessDriver' )
-logging = getLogger('process_driver')
+DEFAULT_PROCESSORS = ( 'pdf_parser', 'tiff_parser', 'ocr', 'indexer' )
 
-###############################################################################
-DEFAULT_THUMBNAIL_OUTPUTS = (     
-    ( 'jpeg-thumbnail-100', []),
-    ( 'jpeg-thumbnail-200', []),
-)
+MUST_SHUT_DOWN = False
 
-class ProcessDriver:
+logging = logging.getLogger('process-driver')
 
-    """ Base class for process driver instances
+##############################################################################
+
+def stop_process_driver(*args):
+    """ Signal handler called when a shutdown must
     """
 
-    SERVICE_NAME = None
-    DEFAULT_OUTPUTS = None
-    ACCEPTED_CONTENT_TYPES = ()
+    # pylint: disable-msg=W0603,W0613
+    #   W0603 - use of global keyword
+    #   W0613 - unused argument
+    logging.info('Shutting down')
+    global MUST_SHUT_DOWN
+    MUST_SHUT_DOWN = True
+    # pylint: enable-msg=W0603,W0613
 
-    ############################################################################
+##############################################################################
 
-    def __init__(self):
+def must_shut_down():
+    """ Check if the process driver is supposed to shut down
+    """
+    return MUST_SHUT_DOWN
 
-        """
-        Constructor
+##############################################################################
 
-        """
+def init_processor(module):
 
-        self._processor = None
+    """ Private initialization function to get the processor object
+        representing this service.
 
-    ############################################################################
+    """
 
-    @property
-    def processor(self):
+    return operations.initialize_processor(
+        module.MODULE_NAME,
+        module.DEFAULT_INPUTS,
+        module.DEFAULT_OUTPUTS,
+        module.DEFAULT_ACCEPTED_MIME_TYPES ) [0]
 
-        """
-        The processor represented by this process driver.
+##############################################################################
 
-        """
-
-        if self._processor is None:
-            assert self.SERVICE_NAME, 'ProcessDriver instances require a name'
-            self._processor = operations.get_or_create_processor(
-                self.SERVICE_NAME,
-                self.DEFAULT_OUTPUTS or []  )[0]
-        return self._processor
-
-    ############################################################################
-
-    def handles_content_type( self, content_type ):
-
-        """
-        Returns True if the passed content type is in the list of
-        types handled by this service.
-
-        """
-
-        return ( content_type in self.ACCEPTED_CONTENT_TYPES )
-
-    ############################################################################
-
-    def __str__(self):
-
-        """
-        A textual representation of this process driver
-
-        """
-
-        return str(self.processor)
-
-    ############################################################################
+def init_module( name ):
+    """ Load and initialize a service module """
+    module = __import__('donomo.archive.service.%s' % name, {}, {}, [''])
+    init_processor(module)
+    return module
 
 
-    def handle_work_item(self, item):
+##############################################################################
 
-        """
-        Derived classes must implement this method to handle a work
-        item, returning True if the work item has been successfully
-        and completely handled.  The return value will be used to
-        determine whether or not the work item should be removed from
-        the intput queue for this process.
+def load_modules( name_list ):
+    """ Create a mapping form service names to the corresponding module """
+    return dict((name, init_module(name)) for name in name_list)
 
-        """
+##############################################################################
 
-        raise NotImplementedError()
+@transaction.commit_on_success
+def handle_work_item( options, work_item ):
+    """ Transactionally handle work item """
+    module = options.modules[ work_item['Process'] ]
+    module.handle_work_item(
+        init_processor(module),
+        work_item )
 
-    ############################################################################
-    
-    def system(self, command):
-        """
-        Run a command, logging the results.
+##############################################################################
 
-        """
-        logging.debug( '%s - %s' % (self, command))
-        return os.system(command)
-
-    ############################################################################
-
-    def run_once(self):
-
-        """
-        Run one iteration of the process loop
-
-        """
-
-        work_item = operations.get_work_item(self.processor, max_wait_time = 0)
-
-        if work_item is None:
-            return False
-
-        if not self.handles_content_type( work_item['Content-Type'] ):
-            logging.warn(
-                '%(Processor)s - dropping item of ' \
-                    'unsupported content type: %(Content-Type)s)' \
-                    % work_item )
-            return True
-
-        was_successful = False
+def thread_proc( options ):
+    """ Thread main """
+    # pylint: disable-msg=W0702
+    #   -> no exception type given
+    while not must_shut_down():
         try:
-            try:
-                was_successful = self.handle_work_item(work_item)
-            except:
-                logging.exception('Failed to handle work item')
-        finally:
-            operations.close_work_item(
-                self.processor,
-                work_item,
-                was_successful)
+            work_item = operations.retrieve_work_item(
+                interrupt_func = must_shut_down)
 
-        return was_successful
+            if not work_item:
+                continue
+
+            handle_work_item( options, work_item )
+
+        except:
+            logging.exception('An exception occurred!')
+    # pylint: enable-msg=W0702
+
+##############################################################################
+
+def main():
+
+    """ Main.
+    """
+
+    signal.signal( signal.SIGTERM, stop_process_driver )
+    signal.signal( signal.SIGINT,  stop_process_driver )
+
+    parser = optparse.OptionParser()
+
+    parser.add_option(
+        '--num-threads',
+        default = 1,
+        type    = 'int')
+
+    options, process_names = parser.parse_args()
+
+    if len(process_names) == 0:
+        process_names = DEFAULT_PROCESSORS
+
+    options.process = load_modules(process_names)
+
+    thread_list = [
+        threading.Thread(
+            target = thread_proc,
+            name   = 'Worker-%03d' % i,
+            args   = (options,))
+        for i in xrange(1, 1 + options.num_threads)
+        ]
+
+    for thread in thread_list:
+        while True:
+            thread.join(0.5)
+            if not thread.isAlive():
+                break
+
+    print "Stopped"
+
+
+##############################################################################
+
+if __name__ == '__main__':
+    main()
 

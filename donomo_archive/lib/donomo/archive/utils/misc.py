@@ -15,15 +15,13 @@ import mimetypes
 #
 ###############################################################################
 
-def guess_mime_type( file_name, default = None ):
+def guess_mime_type( file_name, default = 'application/octet-stream' ):
     """
     Guess the mime type of the given path or url, falling back to a binary
     blob if we can't decipher the type.
 
     """
-    return ( mimetypes.guess_type(file_name) [0]
-             or default
-             or 'application/octet-stream' )
+    return mimetypes.guess_type(file_name) [0] or default
 
 ###############################################################################
 def guess_extension(type):
@@ -79,7 +77,8 @@ def get_url( viewname, *args, **kwargs ):
     Wrapper for the reverse function.
 
     """
-    #FIXME: why reverse() return URLs in the forms of //?api/1.0/bla/...
+    # TODO: FIXME -reverse() returns URLs in the forms of //?api/1.0/bla/...
+
     return reverse( viewname = viewname, args = args, kwargs = kwargs )
 
 ###############################################################################

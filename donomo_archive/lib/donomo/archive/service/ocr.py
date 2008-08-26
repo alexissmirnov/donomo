@@ -1,73 +1,63 @@
+
 """
-OCR Process Driver
+Wrapper module for the OCR service.  This service converts images to
+text/html representations, suitable for indexing in a search engine.
+
 """
 
-from donomo.archive            import operations
-from donomo.archive.service    import ProcessDriver, indexer
-from logging                   import getLogger
+from donomo.archive import operations, models
 import os
 
-#
-# pylint: disable-msg=C0103
-#
-#   C0103 - variables at module scope must be all caps
-#
+DEFAULT_INPUTS  = (
+    models.AssetClass.PAGE_IMAGE,
+    )
 
+DEFAULT_OUTPUTS = (
+    models.AssetClass.PAGE_TEXT,
+    )
 
-MODULE_NAME = os.path.splitext(os.path.basename(__file__))[0]
-logging = getLogger(MODULE_NAME)
+DEFAULT_ACCEPTED_MIME_TYPES = (
+    models.MimeType.JPEG,
+    models.MimeType.PNG,
+    models.MimeType.TIFF,
+    )
 
-# ---------------------------------------------------------------------------
+##############################################################################
 
-def get_driver():
+def image_to_html( in_path, out_path = None ):
 
-    """ Factory function to retrieve the driver object implemented by this
-        this module
+    """ Uses an OCR engine (ocropus) to convert JPEG source file into an
+        HTML output file.
+
     """
 
-    return OcrDriver()
+    if out_path is None:
+        out_path = '%s.html' % in_path
 
-# ---------------------------------------------------------------------------
+    if 0 != os.system('ocroscript rec-tess %r > %r' % (in_path, out_path)):
+        raise Exception( 'Failed to OCR: %r' % in_path)
 
-class OcrDriver(ProcessDriver):
+    return out_path
 
-    """ OCR Process Driver
-    """
+##############################################################################
 
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+def handle_work_item(processor, item):
 
-    SERVICE_NAME = MODULE_NAME
-
-    DEFAULT_OUTPUTS = [
-        ('ocr_text', [indexer.MODULE_NAME]),
-        ]
-
-    ACCEPTED_CONTENT_TYPES = [ 'image/jpeg' ]
-
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    def handle_work_item(self, item):
-
-        """
-        Process a work item.  The work item will be provided and its
-        local temp file will be cleaned up by the process driver
-        framework.  If this method returns true, the work item will
+    """ Process a work item.  The work item will be provided and its local
+        temp directory will be cleaned up by the process driver framework.
+        If this method does not raise an exception the work item will
         also be removed from the work queue.
 
-        """
-        local_path = item['Local-Path']
-        # ocropus outputs HTML
-        output_path = local_path + '.html'
+    """
+    parent_asset = item['Asset-Instance']
+    operations.publish_work_item(
+        operations.create_asset_from_file(
+            owner        = item['Owner'],
+            producer     = processor,
+            asset_class  = models.AssetClass.PAGE_TEXT,
+            file_name    = image_to_html( item['Local-Path'] ),
+            related_page = parent_asset.related_page,
+            parent       = parent_asset,
+            mime_type    = models.MimeType.HTML ))
 
-        if 0 != os.system('ocroscript rec-tess %s > %s' % (local_path, output_path)):
-            logging.error('Failed to OCR source JPEG: %s' % local_path)
-            return False
-        
-        operations.create_page_view_from_file(
-            self.processor,
-            OcrDriver.DEFAULT_OUTPUTS[0][0],
-            item['Object'].page,
-            output_path,
-            'text/html' )
-
-        return True
+##############################################################################

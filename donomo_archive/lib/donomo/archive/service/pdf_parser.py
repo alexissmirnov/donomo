@@ -3,143 +3,117 @@ Multi-page PDF parser
 
 """
 
-from donomo.archive                        import operations
-from donomo.archive.service                import ocr, DEFAULT_THUMBNAIL_OUTPUTS
-from donomo.archive.service.tiff_parser    import TiffParserDriver
-from donomo.archive.models                 import Upload
-from donomo.archive.utils                  import pdf, image
-from logging                               import getLogger
-from glob                                  import glob
-from PIL                                   import Image
-import shutil
+from donomo.archive       import models, operations
+from donomo.archive.utils import pdf, image
+from django.conf          import settings
+
+import glob
 import os
 
+DEFAULT_INPUTS  = (
+    models.AssetClass.UPLOAD,
+    )
 
-#
-# pylint: disable-msg=C0103,R0922,W0703
-#
-#   C0103 - variables at module scope must be all caps
-#   R0922 - Abstract class is only referenced once
-#   W0703 - Catch "Exception"
+DEFAULT_OUTPUTS = (
+    models.AssetClass.PAGE_ORIGINAL,
+    models.AssetClass.PAGE_IMAGE,
+    models.AssetClass.PAGE_THUMBNAIL,
+    )
 
-MODULE_NAME = os.path.splitext(os.path.basename(__file__))[0]
-logging = getLogger(MODULE_NAME)
+DEFAULT_ACCEPTED_MIME_TYPES = (
+    models.MimeType.PDF,
+    )
 
-# ---------------------------------------------------------------------------
+##############################################################################
 
-def get_driver():
-    """
-    Factory function to retrieve the driver object implemented by this
-    this module
+def handle_work_item(processor, item):
 
-    """
-    return PdfParserDriver()
-
-# ---------------------------------------------------------------------------
-
-class PdfParserDriver(TiffParserDriver):
-
-    """
-    PDF Parser Process Driver
+    """ Pick up a (possibly) multipage PDF upload and turn it into a
+        document having (possibly) multiple individual pages.
 
     """
 
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    asset       = item['Asset-Instance']
+    local_path  = item['Local-Path']
+    work_dir    = os.path.dirname(local_path)
+    page_prefix = os.path.join(work_dir, 'page-')
 
-    SERVICE_NAME = MODULE_NAME
+    pdf.split_pages( local_path, page_prefix )
 
-    DEFAULT_OUTPUTS = (
-        ( 'pdf-original',      []),
-        ( 'jpeg-original',      [ocr.MODULE_NAME]) )\
-         + DEFAULT_THUMBNAIL_OUTPUTS
+    document = operations.create_document(
+        owner = asset.owner,
+        title = 'Uploaded on %s (%s)' % (
+            asset.date_created,
+            asset.producer.process ))
 
-    ACCEPTED_CONTENT_TYPES = [ 'application/pdf' ]
+    position = 1
+    for page_pdf_path in glob.glob('%s*.pdf' % page_prefix).sort():
+        handle_page(
+            processor,
+            asset,
+            document,
+            page_pdf_path,
+            position )
+        position += 1
 
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+##############################################################################
 
-    def process_page_file( self,
-                           document,
-                           pdf_orig_path,
-                           page_number = None ):
-        """
-        Convert the given PDF file (representing a s single page) to a
-        JPEG.
-        """
-        base_name      = os.path.splitext(pdf_orig_path)[0]
-        jpeg_orig_path = pdf.convert(pdf_orig_path, 'jpeg')
-        original = Image.open(jpeg_orig_path)
-        
-        jpeg_t100_path = '%s-thumb-100.jpeg' % base_name
-        jpeg_t200_path = '%s-thumb-200.jpeg' % base_name
-        image.make_thumbnail(original, 100, jpeg_t100_path)
-        image.make_thumbnail(original, 200, jpeg_t200_path)
+def handle_page(
+    processor,
+    parent_asset,
+    document,
+    pdf_orig_path,
+    position ):
+    """
+    Convert the given PDF file (representing a s single page) to a
+    JPEG and a thumbnail.
+    """
 
-        page = operations.create_page(document, page_number)
-        i = 0
-        for path in ( pdf_orig_path, 
-                      jpeg_orig_path, 
-                      jpeg_t100_path, 
-                      jpeg_t200_path) :
-            operations.create_page_view_from_file(
-                self.processor,
-                PdfParserDriver.DEFAULT_OUTPUTS[i][0],
-                page,
-                path )
-            i = i + 1
+    # Stuff we'll need later
+    new_page     = operations.create_page(document, position)
+    base_name    = os.path.splitext(pdf_orig_path)[0]
+    jpeg_path    = pdf.convert(pdf_orig_path, 'jpeg')
+    thumb_path   = '%s-thumbnail.jpeg' % base_name
 
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # Save the converted JPEG as a thumbnail JPEG
+    image.save(
+        image.thumbnail(
+            image.open(jpeg_path),
+            settings.THUMBNAIL_SIZE),
+        thumb_path)
 
-    def handle_work_item(self, item):
-        """
-        Pick up a (possibly) multipage PDF upload and turn it into a document
-        having (possibly) multiple individual pages.
+    # Put the assets into the work queue
+    operations.publish_work_item(
 
-        """
-        local_path = item['Local-Path']
-        upload     = item['Object']
+        # The oginal full-res page as a PDF
+        operations.create_asset_from_file(
+            owner        = document.owner,
+            producer     = processor,
+            asset_class  = models.AssetClass.PAGE_ORIGINAL,
+            file_name    = pdf_orig_path,
+            related_page = new_page,
+            parent       = parent_asset,
+            mime_type    = models.MimeType.PDF ),
 
-        if not isinstance(upload, Upload):
-            logging.error('%s - Dropped!  Work item is not an upload!' % self)
-            return True
+        # The full-res page as a JPEG
+        operations.create_asset_from_file(
+            owner        = document.owner,
+            producer     = processor,
+            asset_class  = models.AssetClass.PAGE_IMAGE,
+            file_name    = jpeg_path,
+            related_page = new_page,
+            parent       = parent_asset,
+            mime_type    = models.MimeType.JPEG ),
 
-        page_dir = None
+        # The thumbnail as a JPEG
+        operations.create_asset_from_file(
+            owner        = document.owner,
+            producer     = processor,
+            asset_class  = models.AssetClass.PAGE_THUMBNAIL,
+            file_name    = thumb_path,
+            related_page = new_page,
+            parent       = parent_asset,
+            mime_type    = models.MimeType.JPEG ),
+        )
 
-        try:
-            page_dir = pdf.split_pages(local_path)
-
-            logging.debug('Extracted pages to %s' % page_dir)
-
-            title = 'Uploaded on %s (%s)' % (
-                upload.timestamp,
-                upload.gateway )
-
-            logging.info(
-                'Creating new document for %s: %s' % (
-                    upload.owner,
-                    title))
-
-            document = operations.create_document(
-                owner = upload.owner,
-                title = title )
-
-            page_number = 0
-            pdf_pages = glob(os.path.join(page_dir,'*.pdf'))
-            pdf_pages.sort()
-            
-            for pdf_orig_path in pdf_pages:
-                page_number += 1
-                self.process_page_file(document, pdf_orig_path, page_number)
-
-            logging.info(
-                'done. parsed pdfs for document %s by %s' % (
-                    document,
-                    document.owner))
-        except Exception, e:
-            logging.error(e)
-            return False
-        finally:
-            if page_dir:
-                shutil.rmtree(page_dir)
-                
-        return True
-# ----------------------------------------------------------------------------
+##############################################################################

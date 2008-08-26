@@ -10,7 +10,7 @@ from django.http            import HttpResponse, Http404
 import simplejson
 import httplib
 import traceback
-import logging as logging_module
+import logging
 import sys
 
 #
@@ -20,7 +20,7 @@ import sys
 #   W0142 - use of * and ** magic
 #
 
-logging = logging_module.getLogger('middleware')
+logging = logging.getLogger('middleware')
 
 
 JSON_CONTENT_TYPE  = 'text/plain'
@@ -79,7 +79,7 @@ class AjaxErrorHandlingMiddleware(object):
                 assert content_type in AJAX_CONTENT_TYPES, \
                     'Bad AJAX response type (%s); expected [%s]' \
                     % ( content_type, ','.join(AJAX_CONTENT_TYPES))
-            return None
+            return response
 
     #  -  -   -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
@@ -102,7 +102,7 @@ class AjaxErrorHandlingMiddleware(object):
             #
             # Django's ValidationError and CriticalValidationError exceptions
             #
-            messages = exception.message
+            messages = exception.messages
 
         elif hasattr(exception, 'message'):
             #

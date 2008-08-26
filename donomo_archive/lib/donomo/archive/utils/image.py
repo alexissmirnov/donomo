@@ -1,44 +1,78 @@
-""" Image manipulation utilities
 """
-import PIL.Image as Image
-import os
-from logging                   import getLogger
+Heper utility to generate thumbnail images
+"""
 
-MODULE_NAME = os.path.splitext(os.path.basename(__file__))[0]
-logging     = getLogger(MODULE_NAME)
+from PIL import Image, ImageFilter, ImageChops
+
+##############################################################################
+
+def open( path ):
+
+    """ Open the image located at path.
+    """
+
+    return Image.open(path)
+
+##############################################################################
+
+def save( image, path ):
+    """ Save the given image to the given path
+    """
+
+    image.save(path, 'JPEG', quality=95)
+
+##############################################################################
+
+def trim( image ):
+
+    """ Return a copy of the original image with excess whitespace
+        removed.
+
+    """
+
+    # Create black and white version of the image
+    two_tone = image.convert('1')
+    two_tone = two_tone.filter(ImageFilter.MedianFilter)
+
+    # Create a white background the same size as the image
+    white = Image.new('1', image.size, 255)
+
+    # Compare the two images and get a bounding box for the differences.
+    diff = ImageChops.difference(two_tone, white)
+    bbox = diff.getbbox()
+
+    # Crop the image to the bounding box, if any
+    if bbox:
+        image = image.crop(bbox)
+
+    # we're done
+    return image
 
 ###############################################################################
-def make_thumbnail( original,
-                    max_edge_length,
-                    save_as = None,
-                    format = 'JPEG'):
-    """
-    Create a thumbnail of the given original images, where the
-    longest edge has max_edge_length, and the other edge is scaled
-    accordingly.  If you specify a file name to save as, the resulting
-    thumbnail will be written to disk.
+
+def thumbnail( image, size ):
+
+    """ Create a thumbnail of the given image that fits into a box
+        having the dimentions given in size (a tuple: width, height).
 
     """
-    logging.debug(
-        'Creating thumbnail %s, save_as = %s' % (
-            max_edge_length,
-            save_as ))
 
-    width, height = original.size
+    # Trim whitespace around image
+    image = trim(image)
 
-    if width > height:
-        ratio = float( height ) / float( width )
-        scale = ( max_edge_length,
-                  int( ratio * max_edge_length) )
-    else:
-        ratio = float( width ) / float( height )
-        scale = ( int( ratio * max_edge_length),
-                  max_edge_length )
+    # Calculate scaling ratio to get image to fit into the given size
+    width, height         = [float(v) for v in image.size]
+    new_width, new_height = [float(v) for v in size]
+    ratio                 = min( new_width / width, new_height / height )
 
-    new_image = original.copy()
-    new_image.thumbnail(scale, Image.ANTIALIAS)
+    # Scale the image to the new size
+    image = image.resize(
+        settings.THUMBNAIL_SIZE,
+        resample = Image.ANTIALIAS)
 
-    if save_as:
-        new_image.save(save_as, format)
+    # Apply light sharpening to bring out the details
+    image = image.filter(ImageFilter.DETAIL)
 
-    return new_image
+    return image
+
+##############################################################################

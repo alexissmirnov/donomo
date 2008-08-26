@@ -3,18 +3,17 @@ Full Text Indexer Process Driver
 """
 
 from __future__             import with_statement
-from donomo.archive.service import ProcessDriver
-from donomo.archive.models  import Page, manager
+from donomo.archive.models  import AssetClass, MimeType
 from django.conf            import settings
 from django.template        import Template, Context
 from django.core.validators import ValidationError
-from logging                import getLogger
 from StringIO               import StringIO
 import httplib2
 import simplejson
 import urllib
 import os
 import BeautifulSoup
+import logging
 
 #
 # pylint: disable-msg=C0103
@@ -24,137 +23,123 @@ import BeautifulSoup
 
 MODULE_NAME = os.path.splitext(os.path.basename(__file__))[0]
 
-logging = getLogger(MODULE_NAME)
+logging = logging.getLogger(MODULE_NAME)
 
-###############################################################################
-def get_driver():
+DEFAULT_INPUTS  = (
+    AssetClass.PAGE_TEXT,
+    )
 
-    """ Factory function to retrieve the driver object implemented by this
-        this module
+DEFAULT_OUTPUTS = ()
+
+DEFAULT_ACCEPTED_MIME_TYPES = (
+    MimeType.TEXT,
+    MimeType.HTML,
+    )
+
+SOLR_UPDATE_TEMPLATE = Template(
+    """{% spaceless %}
+       {% autoescape on %}
+       <?xml version="1.0" encoding="UTF-8"?>
+       <add>
+         <doc>
+           <field name="page_id">{{id}}</field>
+           <field name="did">{{did}}</field>
+           <field name="text">{{content}}</field>
+           <field name="owner">{{owner.id}}</field>{% for tag in tags %}
+           <field name="tag">{{tag}}</field>{% endfor %}
+         </doc>
+       </add>
+       <commit/>
+       {% endautoescape %}
+       {% endspaceless %}""")
+
+SOLR_UPDATE_URL = 'http://%s/solr/update/?commit=true' % settings.SOLR_HOST
+
+SOLR_QUERY_URL = 'http://%s/solr/select/' % settings.SOLR_HOST
+
+##############################################################################
+
+def handle_work_item(processor, item):
+
+    """ Process a work item.  The work item will be provided and its local
+        temp file will be cleaned up by the process driver framework.
+        If this method returns true, the work item will also be
+        removed from the work queue.
+
     """
 
-    return IndexDriver()
+    index_page_from_file(
+        processor,
+        item['Asset-Instance'].related_page,
+        item['Local-Path'] )
 
-###############################################################################
+##############################################################################
 
-class IndexDriver(ProcessDriver):
-
-    """ Full Text Indexer Process Driver
+def index_page_from_file( processor, page, local_path ):
     """
+    Update the full-text index for the given page.  The textual
+    content of the page is in the file referenced by file_path.
 
-    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+    """
+    with open(local_path, 'r') as text_file:
+        index_page_from_string(processor, page, text_file.read())
 
-    SERVICE_NAME = MODULE_NAME
+##############################################################################
 
-    DEFAULT_OUTPUTS = []
+def index_page_from_string( page, text ):
+    """
+    Update the full-text index for the given page.  The textual
+    content of the page the string 'text'.
 
-    ACCEPTED_CONTENT_TYPES = [ 'text/html' ]
+    """
+    http_client = httplib2.Http()
 
-    SOLR_UPDATE_TEMPLATE = Template(
-        """{% spaceless %}
-        {% autoescape on %}
-        <?xml version="1.0" encoding="UTF-8"?>
-        <add>
-          <doc>
-            <field name="page_id">{{id}}</field>
-            <field name="did">{{did}}</field>
-            <field name="text">{{content}}</field>
-            <field name="owner">{{owner.id}}</field>{% for tag in tags %}
-            <field name="tag">{{tag}}</field>{% endfor %}
-          </doc>
-        </add>
-        <commit/>
-        {% endautoescape %}
-        {% endspaceless %}""")
+    # Clean the text from HTML tags
+    bsoup = BeautifulSoup.BeautifulSoup(text)
 
-    SOLR_UPDATE_URL = 'http://%s/solr/update/?commit=true' % settings.SOLR_HOST
-
-    SOLR_QUERY_URL = 'http://%s/solr/select/' % settings.SOLR_HOST
-
-    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-
-    def handle_work_item(self, item):
-
-        """ Process a work item.  The work item will be provided and
-            its local temp file will be cleaned up by the process driver
-            framework.  If this method returns true, the work item will
-            also be removed from the work queue.
-        """
-
-        return self.index_page_from_file(
-            item['Object'].page,
-            item['Local-Path'] )
-
-
-    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-
-    def index_page_from_string( self, page, text ):
-        """
-        Update the full-text index for the given page.  The textual
-        content of the page the string 'text'.
-
-        """
-        http_client = httplib2.Http()
-
-        # Clean the text from HTML tags
-        bsoup = BeautifulSoup.BeautifulSoup(text)
-        
         # Remove all comments
-        comments = bsoup.findAll(
-                    text=lambda text:isinstance(text, BeautifulSoup.Comment))
-        for comment in comments:
-            comment.extract()
-        
-        # Remove all script elements
-        script_elements=bsoup.findAll('script')
-        for script_element in script_elements:
-            script_element.extract()
-        
-        # Now get the text of the body
-        body = bsoup.body(text=True)
-        text = ''.join(body)
+    comments = bsoup.findAll(
+        text=lambda text:isinstance(text, BeautifulSoup.Comment))
 
-        data = {
-            'id' : page.pk,
-            'content' : text,
-            'did' : page.document.pk,
-            'owner': page.owner,
-            'tags':page.document.tags.all()
-            }
+    for comment in comments:
+        comment.extract()
 
-        body    = self.SOLR_UPDATE_TEMPLATE.render(Context(data))
-        logging.debug('Sending to SOLR:')
-        logging.debug('--------------')
-        logging.debug(body)
-        logging.debug('--------------')
-        
-        response, content = http_client.request(
-            uri     = self.SOLR_UPDATE_URL,
-            method  = 'POST',
-            body    = body,
-            headers = { "Content-type" : "text/xml; charset=utf-8" })
+    # Remove all script elements
+    for script_element in bsoup.findAll('script'):
+        script_element.extract()
 
-        if response.status >= 400:
-            logging.error(
-                'Failed to index page (%s, %s)' % (
-                    response.status,
-                    content ))
-            return False
+    # Now get the text of the body
+    body = bsoup.body(text=True)
+    text = ''.join(body)
 
-        logging.info('Updated full-text index for %s' % page)
+    data = {
+        'id' : page.pk,
+        'content' : text,
+        'did' : page.document.pk,
+        'owner': page.owner,
+        'tags':page.document.tags.all()
+        }
 
-        return True
+    body = SOLR_UPDATE_TEMPLATE.render(Context(data))
+    logging.debug('Sending to SOLR:')
+    logging.debug('--------------')
+    logging.debug(body)
+    logging.debug('--------------')
 
-    #  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+    response, content = http_client.request(
+        uri     = SOLR_UPDATE_URL,
+        method  = 'POST',
+        body    = body,
+        headers = { "Content-type" : "text/xml; charset=utf-8" })
 
-    def index_page_from_file(self, page, text_file_path):
-        """
-        Update the full-text index for the given page.  The textual
-        content of the page is in the file referenced by file_path.
+    if response.status >= 400:
+        raise Exception(
+            'Failed to index page (%s, %s)' % (
+                response.status,
+                content ))
 
-        """
-        with open(text_file_path, 'r') as text_file:
-            return self.index_page_from_string(page, text_file.read())
+    logging.info('Updated full-text index for %s' % page)
+
 
 ###############################################################################
 
@@ -201,7 +186,7 @@ def raw_query( user, query_string, start_index = 0, num_rows = 50):
     solr_query_string = urllib.urlencode(solr_query_params)
 
     solr_request_url = '%s?%s' % (
-        IndexDriver.SOLR_QUERY_URL,
+        SOLR_QUERY_URL,
         solr_query_string)
 
     logging.debug(
@@ -220,11 +205,11 @@ def raw_query( user, query_string, start_index = 0, num_rows = 50):
 
     return simplejson.load(StringIO(content))
 
-############################################################################### 
+###############################################################################
 
-def query( user, 
-           query_string, 
-           start_index = 0, 
+def query( user,
+           query_string,
+           start_index = 0,
            num_rows = 50):
     """
     Query the SOLR index on behalf of the user and return results
@@ -233,7 +218,7 @@ def query( user,
                     query_string,
                     start_index,
                     num_rows )['response']
-    
+
     return {
         'query'       : query_string,
         'start_index' : start_index,
@@ -241,7 +226,7 @@ def query( user,
         'results'     : res,
         }
 
-############################################################################### 
+###############################################################################
 
 def reset():
     """
@@ -251,7 +236,7 @@ def reset():
 
     http_client = httplib2.Http()
     response, content = http_client.request(
-        uri     = IndexDriver.SOLR_UPDATE_URL,
+        uri     = SOLR_UPDATE_URL,
         method  = 'POST',
         body    = "<delete><query>*:*</query></delete><commit/>",
         headers = { "Content-Type" : "text/xml; charset=utf-8" } )
@@ -263,4 +248,4 @@ def reset():
 
     logging.critical('Search index deleted')
 
-############################################################################### 
+###############################################################################

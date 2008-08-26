@@ -15,9 +15,8 @@ from django.core.validators          import ValidationError
 from django.db.models                import ObjectDoesNotExist
 from django.http                     import HttpResponse, HttpResponseRedirect
 from donomo.archive                  import models, operations
-from donomo.archive.service          import ProcessDriver, indexer
-from donomo.archive.utils            import pdf as pdf_utils
-from donomo.archive.utils            import s3 as s3_utils
+from donomo.archive.service          import indexer
+from donomo.archive.utils            import pdf, s3
 from donomo.archive.utils.middleware import json_view
 from donomo.archive.utils.misc       import get_url, param_is_true
 
@@ -39,60 +38,46 @@ __all__ = (
     'get_tag_info',
     'delete_tag',
     'tag_documents',
-    'update_document_tags',
-    'delete_document_tags',
     'get_document_pdf',
     'get_page_pdf',
     )
 
 logging = logging.getLogger('web-api')
 
-DEFAULT_PAGE_VIEW_NAME = 'jpeg-thumbnail-200'
+##############################################################################
 
-###############################################################################
+def _init_processor():
+    return operations.initialize_processor(
+        'web-api',
+        default_inputs  = (),
+        default_outputs = (
+            models.AssetClass.UPLOAD,
+            ),
+        default_accepted_mime_types = (
+            models.MimeType.JPEG,
+            models.MimeType.PDF,
+            models.MimeType.TIFF,
+            ))
 
-class WebGateway(ProcessDriver):
-    """
-    Adapter to allow the web-site to participate as a processor.
-
-    """
-
-    SERVICE_NAME    = 'web'
-
-    DEFAULT_OUTPUTS = (
-        ( 'upload', ['donomo.archive.service.tiff_parser']),
-        )
-
-    ACCEPTED_CONTENT_TYPES = (
-        'image/tiff',
-        )
-
-    def handle_work_item(self, work_item):
-        """
-        The gateway should never be run as a processor
-        """
-        raise Exception(
-            'The web gateway is not intended to run as a processor' )
-
-###############################################################################
+##############################################################################
 
 def refreshed( instance ):
-    """
-    Return a fresh copy of this instance (i.e., not cached).  This is handy
-    if we're previously made some change in the db without going through
-    the instance.  For example, using custom SQL.
+
+    """ Return a fresh copy of this instance (i.e., not cached).  This is
+        handy if we're previously made some change in the db without
+        going through the instance.  For example, using custom SQL.
 
     """
 
     return instance.objects.select_related().get( pk = instance.pk )
 
 
-###############################################################################
+##############################################################################
 
-def page_as_json_dict( page, page_view_name, only_api_url = False):
-    """
-    Helper function to transform a page into a dictionary, suitable for
-    transliteration into JSON.
+def page_as_json_dict( page, view_name, only_api_url = False):
+
+    """ Helper function to transform a page into a dictionary, suitable
+        for transliteration into JSON.
 
     """
 
@@ -100,19 +85,16 @@ def page_as_json_dict( page, page_view_name, only_api_url = False):
         return { 'url' : get_url('api_page_info', pk = page.pk) }
 
     return {
-        'url'          : get_url('api_page_info', pk = page.pk),
-        'owner'        : page.owner.pk,
-        'document'     : get_url('api_document_info', pk = page.document.pk),
-        'position'     : page.position,
-        'pdf_url'      : get_url('api_page_as_pdf', pk = page.pk ),
-        #TODO 'upload_date'  : page.upload.timestamp, -- this doesnt exist
-        'view'    : get_url('api_page_view', 
-                                 pk =  page.pk, 
-                                 view_name = page_view_name),
+        'url'      : get_url('api_page_info', pk = page.pk),
+        'owner'    : page.owner.pk,
+        'document' : get_url('api_document_info', pk = page.document.pk),
+        'position' : page.position,
+        'pdf_url'  : get_url('api_page_as_pdf', pk = page.pk ),
+        'view'     : get_url('api_page_view', pk = page.pk, view_name = view_name),
         }
 
 
-###############################################################################
+##############################################################################
 
 def document_as_json_dict( document, page_view_name, page_num_list = None ):
     """
@@ -139,26 +121,26 @@ def document_as_json_dict( document, page_view_name, page_num_list = None ):
         'thumbnail' : '',
         'pdf'    : get_url('api_document_as_pdf', pk = document.pk),
         'pages'  : [ page_as_json_dict(
-                                       page, 
+                                       page,
                                        page_view_name) for page in page_set ],
         }
-    
+
     if document.pages.count() > 0:
         json['thumbnail'] = get_url(
-                               'api_page_view', 
-                               document.pages.order_by('position').all()[0].pk, 
-                               view_name = page_view_name)
-    
+            'api_page_view',
+            pk = document.pages.get(position=1).pk,
+            view_name = page_view_name)
+
     return json
 
-###############################################################################
+##############################################################################
 
 def tag_as_json_dict(
     tag,
     show_doc_count = False,
     show_documents = False,
     show_url       = False,
-    page_view_name      = DEFAULT_PAGE_VIEW_NAME ):
+    view_name      = models.AssetClass.PAGE_THUMBNAIL ):
 
     """
     Helper function to express a tag as a dictionary suitable for
@@ -176,7 +158,7 @@ def tag_as_json_dict(
         if show_documents:
             out_dict.update(
                 documents = [
-                    document_as_json_dict(document, page_view_name)
+                    document_as_json_dict(document, view_name)
                     for document in documents ] )
 
         if show_doc_count:
@@ -184,7 +166,7 @@ def tag_as_json_dict(
 
     return out_dict
 
-###############################################################################
+##############################################################################
 
 def extract_tag_list(request):
     """
@@ -213,7 +195,7 @@ def extract_tag_list(request):
 
     return None
 
-###############################################################################
+##############################################################################
 
 def extract_query_string(request):
     """
@@ -229,7 +211,7 @@ def extract_query_string(request):
     return query_string
 
 
-###############################################################################
+##############################################################################
 
 @json_view
 def get_document_list(request):
@@ -245,7 +227,7 @@ def get_document_list(request):
     start_index  = int(request.GET.get('start_index', 0))
     num_rows     = int(request.GET.get('num_rows', 250))
     page_view_name = request.GET.get('view_name', DEFAULT_PAGE_VIEW_NAME)
-    
+
     if query_string is not None:
         return indexer.query(
             request.user,
@@ -259,11 +241,11 @@ def get_document_list(request):
         return {
             'query' : query_string,
             'documents' : [ document_as_json_dict(
-                      doc, 
+                      doc,
                       page_view_name, [1]) for doc in doc_list ],
             }
 
-###############################################################################
+##############################################################################
 
 @json_view
 def upload_document(request):
@@ -272,26 +254,31 @@ def upload_document(request):
 
     """
 
-    gateway      = WebGateway()
+    gateway      = _get_processor()
     the_file     = request.FILES['file']
     content_type = the_file['content-type']
+    asset_class  = manager(AssetClass).get(name = AssetClass.UPLOAD)
 
-    if not gateway.handles_content_type( content_type ):
+    if not asset_class.has_consumer(content_type):
         raise ValidationError(
             'Unsupported content type: %s' % content_type)
 
-    upload = operations.create_upload_from_stream(
-        gateway.processor,
-        request.user,
-        StringIO( the_file['content'] ),
-        content_type )
+    upload = operations.create_asset_from_stream(
+        data_stream = StringIO( the_file['content'] ),
+        owner       = request.user,
+        producer    = gateway,
+        asset_class = AssetClass.UPLOAD,
+        file_name   = the_file['filename'],
+        mime_type   = content_type)
+
+    operations.publish_work_item(upload)
 
     return {
-        'status'   : 201,
-        'location' : upload.get_absolute_url(),
+        'status'   : 202,
+        # 'location' : upload.get_absolute_url(),
         }
 
-###############################################################################
+##############################################################################
 
 @json_view
 def split_document(request):
@@ -305,12 +292,14 @@ def split_document(request):
         old_document,
         int( request['split_after_page'] ))
 
+    # TODO: what work items are generated by spliting a document?
+
     return {
         'original-document' : document_as_json_dict(refreshed(old_document)),
         'new_docment'       : document_as_json_dict(refreshed(new_document)),
         }
 
-###############################################################################
+##############################################################################
 
 @json_view
 def merge_documents(request):
@@ -325,11 +314,13 @@ def merge_documents(request):
 
     operations.merge_documents(target, source, offset)
 
+    # TODO: what work items are generated by merging two documents?
+
     return {
         'document' : document_as_json_dict(refreshed(target)),
         }
 
-###############################################################################
+##############################################################################
 
 @json_view
 def get_document_info(request, pk):
@@ -339,12 +330,12 @@ def get_document_info(request, pk):
     """
     document = request.user.documents.get(pk = pk)
     page_view_name = request.GET.get('view_name', DEFAULT_PAGE_VIEW_NAME)
-    
+
     return {
         'document' : document_as_json_dict(document, page_view_name, 'all'),
         }
 
-###############################################################################
+##############################################################################
 
 def get_document_pdf(request, pk):
     """
@@ -358,7 +349,7 @@ def get_document_pdf(request, pk):
         content = pdf_utils.render_document(document),
         content_type = 'application/pdf' )
 
-###############################################################################
+##############################################################################
 
 @json_view
 def update_document(request, pk):
@@ -381,7 +372,7 @@ def update_document(request, pk):
         'document' : document_as_json_dict(document),
         }
 
-###############################################################################
+##############################################################################
 
 @json_view
 def delete_document(request, pk):
@@ -390,9 +381,12 @@ def delete_document(request, pk):
 
     """
     request.user.document.get(pk = pk).delete()
+
+    # TODO: clean up stuff related to the document
+
     return {}
 
-###############################################################################
+##############################################################################
 
 @json_view
 def get_page_info(request, pk):
@@ -402,32 +396,38 @@ def get_page_info(request, pk):
     """
     view_name = request.GET.get('view_name', 'jpeg-original')
     return {
-        'page' : page_as_json_dict( 
-                                   request.user.pages.get( pk = pk ), 
+        'page' : page_as_json_dict(
+                                   request.user.pages.get( pk = pk ),
                                    view_name),
         }
 
-###############################################################################
+##############################################################################
 
 def get_page_view(request, pk, view_name):
     """
-    Retrieve a view of a page
+    Retrieve a view (asset) for a page
 
     """
     page = request.user.pages.get(pk = pk)
 
-    if view_name != 'pdf':
-        return HttpResponseRedirect(
-            s3_utils.get_url(
-                key        = page.get_s3_key(view_name),
-                method     = 'GET',
-                expires_in = settings.S3_ACCESS_WINDOW ))
+    return HttpResponseRedirect(
+        s3.generate_url(
+            page.assets.get(asset_class__name == view_name).s3_key,
+            expires_in = settings.S3_ACCESS_WINDOW ))
+
+##############################################################################
+
+def get_page_pdf(request, pk):
+    """
+    Returns a PDF of a given page. Not a JSON view
+    """
+    page = request.user.pages.get(pk = pk)
 
     return HttpResponse(
-        content = pdf_utils.render_page(page),
+        content = pdf.render_page(page),
         content_type = 'application/pdf' )
 
-###############################################################################
+##############################################################################
 
 @json_view
 def delete_page(request, pk):
@@ -439,7 +439,7 @@ def delete_page(request, pk):
     # TODO: delete from index
     return {}
 
-###############################################################################
+##############################################################################
 
 @json_view
 def get_tag_list(request):
@@ -470,7 +470,7 @@ def get_tag_list(request):
             for tag in tag_set ],
         }
 
-###############################################################################
+##############################################################################
 
 @json_view
 def tag_documents(request, label):
@@ -499,7 +499,7 @@ def tag_documents(request, label):
 
     return tag_as_json_dict(tag)
 
-###############################################################################
+##############################################################################
 
 @json_view
 def get_tag_info(request, label):
@@ -513,7 +513,7 @@ def get_tag_info(request, label):
         show_documents = True,
         show_url       = param_is_true(request.GET.get('show_url', 'false')))
 
-###############################################################################
+##############################################################################
 
 @json_view
 def delete_tag(request, label):
@@ -525,80 +525,5 @@ def delete_tag(request, label):
     request.user.tags.get(label = label.rstrip().lower()).delete()
     return {}
 
-###############################################################################
 
-@json_view
-def update_document_tags(request, pk):
-    """
-    Assign a set of tags to a document identified by pk
-    """
-    tags = extract_tag_list(request)
-    if not tags:
-        return {}
-    
-    document = request.user.documents.get(pk = pk)
-
-    for tag in tags:
-        document.tags.add(tag)
-    
-    document.save()
-    return {}
-
-
-###############################################################################
-
-@json_view
-def delete_document_tags(request, pk):
-    """
-    Unassign tags from a document identified by pk
-    """
-    tags = extract_tag_list(request)
-    if not tags:
-        return {}
-        
-    document = request.user.documents.get(pk = pk)
-
-    for tag in tags:
-        document.tags.remove(tag)
-    
-    document.save()
-    return {}
-
-###############################################################################
-def get_page_pdf(request, pk):
-    """
-    Returns a PDF of a given page. Not a JSON view
-    """
-    return get_page_view(request, pk, 'pdf')
-
-###############################################################################
-@json_view
-def get_search(request):
-    """
-    Run search and return JSON with the results.
-    When search returns pages, they are returned as JSON representation
-    inside 'pages' node
-    """
-    query_string = extract_query_string(request)
-    start_index  = int(request.GET.get('start_index', 0))
-    num_rows     = int(request.GET.get('num_rows', 25))
-    page_view_name = request.GET.get('view_name', DEFAULT_PAGE_VIEW_NAME)
-    
-    if query_string is not None:
-        res = indexer.query(
-            request.user,
-            query_string,
-            start_index,
-            num_rows)
-
-        pages = list()
-        for d in res['results']['docs']:
-            page = request.user.pages.get(pk = d['page_id'])
-            pages.append(page_as_json_dict(page, page_view_name))
-        
-        res['pages'] = pages
-        return res
-    else:
-        return {}
-###############################################################################
-    
+##############################################################################

@@ -12,19 +12,16 @@ AJAX API Views.
 from django.contrib.auth.decorators  import login_required
 from donomo.archive.utils.http       import http_method_dispatcher
 from donomo.archive.api.api_impl     import *
-from donomo.archive.api.api_impl     import get_search
 
 __all__ = (
     'document_list',
     'document_info',
-    'document_view',
+    'document_as_pdf',
     'page_info',
     'page_view',
+    'page_as_pdf',
     'tag_list',
     'tag_info',
-    'document_tags',
-    'document_as_pdf',
-    'page_as_pdf',
     )
 
 ###############################################################################
@@ -74,10 +71,9 @@ def document_info():
 
 @login_required
 @http_method_dispatcher
-def document_view():
+def document_as_pdf():
     """
-    Dispatch map for HTTP operations on a document view
-
+    Get PDF of a document
     """
     return {
         'GET' : get_document_pdf,
@@ -114,6 +110,18 @@ def page_view():
 
 @login_required
 @http_method_dispatcher
+def page_as_pdf():
+    """
+    Get PDF of a document
+    """
+    return {
+        'GET' : get_page_pdf,
+        }
+
+###############################################################################
+
+@login_required
+@http_method_dispatcher
 def tag_list():
     """
     Dispatch map for HTTP operations on the tag list
@@ -124,6 +132,7 @@ def tag_list():
         }
 
 ###############################################################################
+
 @login_required
 @http_method_dispatcher
 def tag_info():
@@ -138,59 +147,5 @@ def tag_info():
         }
 
 ###############################################################################
-
-@login_required
-@http_method_dispatcher
-def document_tags():
-    """
-    Dispatch map for HTTP operations on a tag
-    """
-    return {
-        'DELETE' : delete_document_tags,
-        'POST'   : update_document_tags,
-        }
-
-###############################################################################
-
-
-@login_required
-@http_method_dispatcher
-def document_as_pdf():
-    """
-    Get PDF of a document
-    """
-    return {
-        'GET' : get_document_pdf,
-        }
-
-###############################################################################
-
-@login_required
-@http_method_dispatcher
-def page_as_pdf():
-    """
-    Get PDF of a document
-    """
-    return {
-        'GET' : get_page_pdf,
-        }
-
-###############################################################################
-
-
-@login_required
-@http_method_dispatcher
-def search():
-    """
-    Run search
-    """
-    return {
-        'GET' : get_search,
-        }
-
-###############################################################################
-
-
-
 
 

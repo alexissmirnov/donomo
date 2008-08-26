@@ -1,12 +1,14 @@
 #!/usr/bin/env python
-from django.core.management import execute_manager
+
 import os
+import sys
+import django.core.management
 
 DJANGO_SETTINGS_MODULE = os.environ.setdefault(
     'DJANGO_SETTINGS_MODULE',
     'donomo.settings' )
 
-# ---------------------------------------------------------------------------
+##############################################################################
 
 def get_module(module_name):
     """
@@ -20,7 +22,7 @@ def get_module(module_name):
 
     return module
 
-# ---------------------------------------------------------------------------
+##############################################################################
 
 def main():
     """
@@ -28,15 +30,17 @@ def main():
 
     """
     try:
+        if sys.argv[1] == 'test':
+            os.environ['USE_TEST_SETTINGS'] = 'yes'
+
         settings = get_module(DJANGO_SETTINGS_MODULE)
     except ImportError:
-        import sys
         sys.stderr.write("Error: Failed to import %s" % DJANGO_SETTINGS_MODULE)
         sys.exit(1)
 
-    execute_manager(settings)
+    django.core.management.execute_manager(settings)
 
-# ---------------------------------------------------------------------------
+##############################################################################
 
 if __name__ == "__main__":
     main()

@@ -77,7 +77,7 @@ def render_page(page, output_buffer = None, view_type = None):
 
 # ----------------------------------------------------------------------------
 
-def split_pages(input_filename):
+def split_pages(input_filename, prefix = None):
 
     """
     Splits up a PDF file into single page PDF files.  Returns
@@ -92,29 +92,31 @@ def split_pages(input_filename):
     """
     output_dir = None
     try:
-        # create a temporary directory
-        output_dir = mkdtemp('donomo')
+        if prefix is None:
+            # create a temporary directory
+            output_dir = mkdtemp('donomo')
+            prefix = os.path.join(output_dir, 'page-')
 
         # open PDF
         pdf_input = PdfFileReader(file(input_filename, 'rb'))
-        
+
         # iterate over pages in the input PDF
         for i in xrange(pdf_input.getNumPages()):
             # get n-th page
             page = pdf_input.getPage(i)
-            
+
             # create a one-page pdf writer
             pdf_output = PdfFileWriter()
             pdf_output.addPage(page)
 
             # save it in a new file
-            page_filename = os.path.join(output_dir, '%d.pdf' % i)
+            page_filename = '%s%03d.pdf' % (prefix, i)
             page_filestream = file(page_filename, "wb")
             pdf_output.write(page_filestream)
             page_filestream.close()
 
         # return the directory name to the caller
-        return output_dir
+        return os.path.dirname(prefix)
     except Exception, e:
         logging.error(str(e))
         # delete a temporary directory along with all its contents
@@ -124,15 +126,22 @@ def split_pages(input_filename):
 
 # ----------------------------------------------------------------------------
 
-def convert(input_path, format = 'png', density = 200, quality = 80):
+def convert(
+    input_path,
+    format = 'jpeg',
+    density = 200,
+    quality = 95,
+    output_path = None ):
+
     """
     Converts a PDF file into a file of a given format.  Returns the
     filename of the resulting file
 
     """
-    output_path = '%s.%s' % (
-        os.path.splitext(input_path)[0],
-        format )
+    if output_path is None:
+        output_path = '%s.%s' % (
+            os.path.splitext(input_path)[0],
+            format )
 
     if 0 != os.system(
         'convert -density %d -quality %d %r %r' % (

@@ -1,89 +1,265 @@
+"""
+Test Donomo Archive operations
+"""
+
+#
+# pylint: disable-msg=C0103,C0111,R0904,W0401,W0614
+#
+#   C0103 - variables at module scope must be all caps
+#   C0111 - missing docstring
+#   R0904 - too many public methods
+#   W0401 - wildcard import
+#   W0614 - unused import from wildcard
+#
+
 from __future__ import with_statement
 import unittest
 import traceback
 import tempfile
-from donomo.archive import models, operations
+from donomo.archive.models import *
+from donomo.archive import operations
 import os
 from cStringIO import StringIO
+from time import sleep
 
 MODULE_NAME = os.path.splitext(os.path.basename(__file__))[0]
 
-def function():
-    """
-    Get the name of the current function
-    """
-    return traceback.extract_stack(limit=1)[0][2]
+TEST_DATA = """
+This is just a test!
+In the event of actual data, there would be something interesting here.
+"""
 
 class DocumentOperations(unittest.TestCase):
-# pylint: disable-msg=E1101
-    """
-    Validate the various doucment related operations.
-    """
 
-    test_data = 'This is just a test'
 
-    def setUp(self):
-        """
-        Setup steps before running any tests
-        """
+    # ------------------------------------------------------------------------
+
+    @staticmethod
+    def _init_user():
         try:
-            self.user = models.User.objects.get(username = 'testuser' )
-        except models.User.DoesNotExist:
+            return manager(User).get(username = 'testuser' )
+        except User.DoesNotExist:
             # Make sure we have a test user
-            self.user = models.User.objects.create_user(
+            return manager(User).create_user(
                 username = 'testuser',
                 email    = 'testuser@donomo.com',
-                password = models.User.objects.make_random_password())
+                password = manager(User).make_random_password())
 
-        self.processor = operations.get_or_create_processor(
-            MODULE_NAME,
-            [])[0]
+    # ------------------------------------------------------------------------
 
-    def test_001_user_created(self):
-        """
-        Make sure setup worked - is there are user?
+    @staticmethod
+    def _init_producer():
+        return operations.initialize_processor(
+            name                        = MODULE_NAME + '_producer',
+            default_inputs              = [],
+            default_outputs             = ['test_data'],
+            default_accepted_mime_types = [] )
 
-        """
-        self.failIf(
-            self.user is None,
-            'User creation failed.')
+    # ------------------------------------------------------------------------
 
-    def test_002_create_processor(self):
-        """
-        Make sure setup worked - is there a processor?
+    @staticmethod
+    def _init_consumer():
+        return operations.initialize_processor(
+            name                        = MODULE_NAME + '_consumer',
+            default_inputs              = ['test_data'],
+            default_outputs             = [],
+            default_accepted_mime_types = ['text/plain'] )
 
-        """
-        self.failIf(
-            self.processor is None,
-            'Procesor not created properly')
+    # ------------------------------------------------------------------------
 
-    def test_003_create_upload_from_stream(self):
-        """
-        Create a new upload
-        """
+    @staticmethod
+    def _init_infra():
+        from donomo.archive.utils import sqs
 
-        upload = operations.create_upload_from_stream(
-            self.processor,
-            self.user,
-            '%s.dat' % function(),
-            StringIO('This is just a test'),
-            'text/plain')
+        operations.initialize_infrastructure()
+        sqs.clear_all_messages()
 
-    def test_003_create_upload_from_file(self):
-        """
-        Create a new upload
-        """
+    # ------------------------------------------------------------------------
 
+    def _validate_consumer(self, asset, content):
+
+        work_item = operations.retrieve_work_item(max_wait_time=30)
+
+        self.assert_( work_item is not None )
+        self.assert_( int(work_item['Asset-ID']) == asset.pk )
+        self.assert_( open(work_item['Local-Path']).read() == content )
+
+        operations.close_work_item(
+            processor         = self.consumer,
+            work_item         = work_item,
+            delete_from_queue = True )
+
+        work_item = operations.retrieve_work_item(max_wait_time=30)
+
+        for i in work_item and work_item.iteritems() or ():
+            print '  %s = %r' % i
+
+        self.assert_( work_item is None )
+
+    # ------------------------------------------------------------------------
+
+    def setUp(self):
+        self._init_infra()
+
+        self.user = self._init_user()
+        self.producer = self._init_producer() [0]
+        self.consumer = self._init_consumer() [0]
+
+
+    # ------------------------------------------------------------------------
+
+    def test_create_infra(self):
+        from donomo.archive.utils import s3, sqs
+
+        self.assert_(sqs._get_queue() is not None)
+        self.assert_(s3._get_bucket() is not None)
+
+    # ------------------------------------------------------------------------
+
+    def test_create_user(self):
+        self.assert_( self.user is not None )
+
+    # ------------------------------------------------------------------------
+
+    def test_create_producer(self):
+        self.assert_( self.producer is not None )
+        self.assert_( self._init_producer() [1] == False )
+
+    # ------------------------------------------------------------------------
+
+    def test_create_consumer(self):
+        self.assert_( self.consumer is not None )
+        self.assert_( self._init_consumer() [1] == False )
+
+    # ------------------------------------------------------------------------
+
+    def test_create_asset_from_stream(self):
+        asset = operations.create_asset_from_stream(
+            owner        = self.user,
+            producer     = self.producer,
+            asset_class  = 'test_data',
+            data_stream  = StringIO(TEST_DATA),
+            file_name    = 'create_asset_from_string.txt',
+            mime_type    = 'text/plain' )
+
+        operations.publish_work_item(asset)
+
+        self._validate_consumer(asset, TEST_DATA)
+
+    # ------------------------------------------------------------------------
+
+    def test_create_asset_from_file(self):
         fd, temp_file_name = tempfile.mkstemp()
         try:
-            os.write(fd, self.test_data)
+            os.write(fd, TEST_DATA)
             os.close(fd)
-            upload = operations.create_upload_from_file(
-                self.processor,
-                self.user,
-                temp_file_name,
-                'text/plain')
+            fd = None
+            asset = operations.create_asset_from_file(
+                owner        = self.user,
+                producer     = self.producer,
+                asset_class  = 'test_data',
+                file_name    = temp_file_name,
+                mime_type    = 'text/plain' )
+
         finally:
+            if fd is not None:
+                os.close(fd)
             os.remove(temp_file_name)
 
+        operations.publish_work_item(asset)
+
+        self._validate_consumer(asset, TEST_DATA)
+
+    # ------------------------------------------------------------------------
+
+    def test_split_document(self):
+        doc1 = operations.create_document( owner = self.user )
+
+        pages = [ operations.create_page(doc1) for _ in xrange(10) ]
+
+        self.assert_( doc1.num_pages == 10 )
+
+        doc2 = operations.split_document(doc1, 5)
+
+        self.assert_( doc1.num_pages == 5 )
+        self.assert_( doc2.num_pages == 5 )
+
+        for i in xrange(5):
+            self.assert_(pages[i].pk   == doc1.pages.get(position=i+1).pk)
+            self.assert_(pages[i+5].pk == doc2.pages.get(position=i+1).pk)
+
+    # ------------------------------------------------------------------------
+
+    def test_merge_documents_1(self):
+        # Append doc2 to end of doc 1
+        doc1 = operations.create_document( owner = self.user )
+        doc2 = operations.create_document( owner = self.user )
+
+        pages = ( [ operations.create_page(doc1) for _ in xrange(5) ]
+                  + [ operations.create_page(doc2) for _ in xrange(5) ] )
+
+        self.assert_( doc1.num_pages == 5 )
+        self.assert_( doc2.num_pages == 5 )
+
+        operations.merge_documents(doc1, doc2, 5)
+
+        self.assert_( manager(Document).filter( pk = doc2.pk ).count() == 0 )
+        self.assert_( doc1.num_pages == 10 )
+
+        for i in xrange(5):
+            self.assert_(pages[i].pk   == doc1.pages.get(position=i+1).pk)
+            self.assert_(pages[i+5].pk == doc1.pages.get(position=i+6).pk)
+
+    # ------------------------------------------------------------------------
+
+
+    def test_merge_documents_2(self):
+        # Prepend doc2 to beginning of doc 1
+        doc1 = operations.create_document( owner = self.user )
+        doc2 = operations.create_document( owner = self.user )
+
+        pages = ( [ operations.create_page(doc1) for _ in xrange(5) ]
+                  + [ operations.create_page(doc2) for _ in xrange(5) ] )
+
+        self.assert_( doc1.num_pages == 5 )
+        self.assert_( doc2.num_pages == 5 )
+
+        operations.merge_documents(doc1, doc2, 0)
+
+        self.assert_( manager(Document).filter( pk = doc2.pk ).count() == 0 )
+        self.assert_( doc1.num_pages == 10 )
+
+        for i in xrange(5):
+            self.assert_(pages[i].pk   == doc1.pages.get(position=i+6).pk)
+            self.assert_(pages[i+5].pk == doc1.pages.get(position=i+1).pk)
+
+    # ------------------------------------------------------------------------
+
+    def test_merge_documents_3(self):
+        # Insert doc2 into middle of doc 1
+        doc1 = operations.create_document( owner = self.user )
+        doc2 = operations.create_document( owner = self.user )
+
+        pages = ( [ operations.create_page(doc1) for _ in xrange(5) ]
+                  + [ operations.create_page(doc2) for _ in xrange(5) ] )
+
+        self.assert_( doc1.num_pages == 5 )
+        self.assert_( doc2.num_pages == 5 )
+
+        operations.merge_documents(doc1, doc2, 3)
+
+        self.assert_( manager(Document).filter( pk = doc2.pk ).count() == 0 )
+        self.assert_( doc1.num_pages == 10 )
+
+        # First 3 pages of doc1 stay first pages of 10 pager
+        for i in xrange(0,3):
+            self.assert_(pages[i].pk == doc1.pages.get(position=i+1).pk)
+
+        # all pages from doc2 not starting at 4th page of 10 pager
+        for i in xrange(3,8):
+            self.assert_(pages[i+2].pk == doc1.pages.get(position=i+1).pk)
+
+        # last tow pages of dooc 1 are now last two pages or 10 pager
+        for i in xrange(8, 10):
+            self.assert_(pages[i-5].pk == doc1.pages.get(position=i+1).pk)
 

@@ -3,167 +3,129 @@ Multi-page TIFF parser
 
 """
 
-from donomo.archive            import operations
-from donomo.archive.service    import ProcessDriver, ocr, DEFAULT_THUMBNAIL_OUTPUTS
-from donomo.archive.models     import Upload
-from donomo.archive.utils      import image
-from logging                   import getLogger
-from glob                      import glob
-from PIL                       import Image
+from donomo.archive       import models, operations
+from donomo.archive.utils import image
+from django.conf          import settings
 
-import shutil
+import glob
 import os
 
+DEFAULT_INPUTS  = (
+    models.AssetClass.UPLOAD,
+    )
 
-#
-# pylint: disable-msg=C0103,R0922,W0703
-#
-#   C0103 - variables at module scope must be all caps
-#   R0922 - Abstract class is only referenced once
-#   W0703 - Catch "Exception"
-#
+DEFAULT_OUTPUTS = (
+    models.AssetClass.PAGE_ORIGINAL,
+    models.AssetClass.PAGE_IMAGE,
+    models.AssetClass.PAGE_THUMBNAIL,
+    )
 
-MODULE_NAME = os.path.splitext(os.path.basename(__file__))[0]
-logging     = getLogger(MODULE_NAME)
+DEFAULT_ACCEPTED_MIME_TYPES = (
+    models.MimeType.TIFF,
+    )
 
-###############################################################################
+##############################################################################
 
-def get_driver():
-    """
-    Factory function to retrieve the driver object implemented by this
-    this module
+def handle_work_item(processor, item):
 
-    """
-    return TiffParserDriver()
-
-###############################################################################
-
-class TiffParserDriver(ProcessDriver):
-
-    """
-    TIFF Parser Process Driver
+    """ Pick up a (possibly) multipage TIFF upload and turn it into a
+        document having (possibly) multiple individual pages.
 
     """
 
-    ###########################################################################
+    asset       = item['Asset-Instance']
+    local_path  = item['Local-Path']
+    work_dir    = os.path.dirname(local_path)
+    page_prefix = os.path.join(work_dir, 'page-')
 
-    SERVICE_NAME = MODULE_NAME
+    os.system( 'tiffsplit %r %r' % (local_path, page_prefix) )
+
+    document = operations.create_document(
+        owner = asset.owner,
+        title = 'Uploaded on %s (%s)' % (
+            asset.date_created,
+            asset.producer.process ))
+
+    position = 1
+    for page_tiff_path in glob.glob('%s*.tif*' % page_prefix).sort():
+        handle_page(
+            processor,
+            asset,
+            document,
+            page_tiff_path,
+            position )
+        position += 1
+
+##############################################################################
+
+def handle_page(
+    processor,
+    parent_asset,
+    document,
+    tiff_original_path,
+    position ):
 
 
-
-    DEFAULT_OUTPUTS = (
-        ( 'tiff-original',      []),
-        ( 'jpeg-original',      [ocr.MODULE_NAME]) )\
-         + DEFAULT_THUMBNAIL_OUTPUTS
-    
-    ACCEPTED_CONTENT_TYPES = [ 'image/tiff' ]
-
-
-
-    ###########################################################################
-
-    def process_page_file( self,
-                           document,
-                           tiff_orig_path,
-                           page_number = None ):
-        """
-        Convert the given TIFF file (representing a s single page) whose path
+    """ Convert the given TIFF file (representing a s single page) whose path
         is given to a JPEG (via RGBA).  Also create two thumbnails.
 
-        """
+    """
 
-        # Paths we'll need later
-        base_name      = os.path.splitext(tiff_orig_path)[0]
-        rgba_orig_path = '%s.rgba' % base_name
-        jpeg_orig_path = '%s.jpeg' % base_name
+    # Stuff we'll need later
+    new_page     = operations.create_page(document, position)
+    base_name    = os.path.splitext(tiff_original_path)[0]
+    rgba_path    = '%s.rgba' % base_name
+    jpeg_path    = '%s.jpeg' % base_name
+    thumb_path   = '%s-thumbnail.jpeg' % base_name
 
-        # Convert original TIFF to RGBA
-        # TODO use convert instead of tiff2rgba
-        self.system(
-            'tiff2rgba %r %r' % (
-                tiff_orig_path,
-                rgba_orig_path))
+    # Convert original TIFF to RGBA
+    # TODO use convert instead of tiff2rgba
+    os.system('tiff2rgba %r %r' % (tiff_original_path, rgba_path))
 
-        # Save RGBA to JPEG
-        original = Image.open(rgba_orig_path)
-        original.save(jpeg_orig_path, 'JPEG')
+    # Save the original as JPEG
+    image.save(
+        image.open(rgba_path),
+        jpeg_path)
 
-        # Make thunbnails
-        jpeg_t100_path = '%s-thumb-100.jpeg' % base_name
-        jpeg_t200_path = '%s-thumb-200.jpeg' % base_name
-        image.make_thumbnail(original, 100, jpeg_t100_path)
-        image.make_thumbnail(original, 200, jpeg_t200_path)
+    # Save the thumbnail as JPEG
+    image.save(
+        image.thumbnail(
+            image.open(rgba_path),
+            settings.THUMBNAIL_SIZE),
+        thumb_path)
 
-        # Create the page and upload all the views
-        page = operations.create_page(document, page_number)
-        for path, view in ( ( tiff_orig_path, 'tiff-original'),
-                            ( jpeg_orig_path, 'jpeg-original'),
-                            ( jpeg_t100_path, 'jpeg-thumbnail-100'),
-                            ( jpeg_t200_path, 'jpeg-thumbnail-200') ) :
-            operations.create_page_view_from_file(
-                self.processor,
-                view,
-                page,
-                path )
+    # Put the assets into the work queue
+    operations.publish_work_item(
 
-        return page
+        # The oginal full-res page as a TIFF
+        operations.create_asset_from_file(
+            owner        = document.owner,
+            producer     = processor,
+            asset_class  = models.AssetClass.PAGE_ORIGINAL,
+            file_name    = tiff_original_path,
+            related_page = new_page,
+            parent       = parent_asset,
+            mime_type    = models.MimeType.TIFF ),
 
-    ###########################################################################
+        # The full-res page as a JPEG
+        operations.create_asset_from_file(
+            owner        = document.owner,
+            producer     = processor,
+            asset_class  = models.AssetClass.PAGE_IMAGE,
+            file_name    = jpeg_path,
+            related_page = new_page,
+            parent       = parent_asset,
+            mime_type    = models.MimeType.JPEG ),
 
-    def handle_work_item(self, item):
-        """
-        Pick up a (possibly) multipage TIFF upload and turn it into a document
-        having (possibly) multiple individual pages.
+        # The thumbnail as a JPEG
+        operations.create_asset_from_file(
+            owner        = document.owner,
+            producer     = processor,
+            asset_class  = models.AssetClass.PAGE_THUMBNAIL,
+            file_name    = thumb_path,
+            related_page = new_page,
+            parent       = parent_asset,
+            mime_type    = models.MimeType.JPEG ),
+        )
 
-        """
-        local_path = item['Local-Path']
-        upload     = item['Object']
-
-        if not isinstance(upload, Upload):
-            logging.error('%s - Dropped!  Work item is not an upload!' % self)
-            return True
-
-        page_dir = '%s.pages' % local_path
-        os.mkdir(page_dir)
-
-        try:
-
-            logging.debug('Extracting pages to %s' % page_dir)
-
-            self.system(
-                'tiffsplit %r %r' % (
-                    local_path,
-                    os.path.join(page_dir, 'page-')))
-
-            title = 'Uploaded on %s (%s)' % (
-                upload.timestamp,
-                upload.gateway )
-
-            logging.info(
-                'Creating new document for %s: %s' % (
-                    upload.owner,
-                    title))
-
-            document = operations.create_document(
-                owner = upload.owner,
-                title = title )
-
-            page_number = 0
-            tiff_pages = glob(os.path.join(page_dir,'*.tif*'))
-            tiff_pages.sort()
-
-            for tiff_orig_path in tiff_pages:
-                page_number += 1
-                self.process_page_file(document, tiff_orig_path, page_number)
-
-            logging.info(
-                'done. parsed tiffs for document %s by %s' % (
-                    document,
-                    document.owner))
-        except Exception, e:
-            logging.error(e)
-            return False
-        finally:
-            shutil.rmtree(page_dir)
-            
-        return True
+##############################################################################
