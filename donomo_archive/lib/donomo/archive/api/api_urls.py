@@ -17,35 +17,35 @@ __all__ = ( 'urlpatterns' )
 
 urlpatterns = patterns(
     '',
-    url( r'^documents/?$',
+    url( r'^documents/$',
          document_list,
          name = 'api_document_list' ),
 
-    url( r'^documents/(?P<pk>\d+)/?$',
+    url( r'^documents/(?P<pk>\d+)/$',
          document_info,
          name = 'api_document_info' ),
 
-    url( r'^documents/(?P<pk>\d+)/pdf/?$',
+    url( r'^documents/(?P<pk>\d+)/pdf/$',
          document_as_pdf,
          name = 'api_document_as_pdf' ),
 
-    url( r'^pages/(?P<pk>\d+)/?$',
+    url( r'^pages/(?P<pk>\d+)/$',
          page_info,
          name = 'api_page_info' ),
 
-    url( r'^pages/(?P<pk>\d+)/view/(?P<view_name>\w+)/?$',
+    url( r'^pages/(?P<pk>\d+)/view/(?P<view_name>\w+|[\-])/$',
          page_view,
          name = 'api_page_view' ),
 
-    url( r'^pages/(?P<pk>\d+)/pdf/?$',
+    url( r'^pages/(?P<pk>\d+)/pdf/$',
          page_as_pdf,
          name = 'api_page_as_pdf' ),
 
-    url( r'^tags/?$',
+    url( r'^tags/$',
          tag_list,
          name = 'api_tag_list' ),
 
-    url( r'^tags/(?P<label>[-a-zA-Z0-9_]+)/?$',
+    url( r'^tags/(?P<label>[-a-zA-Z0-9_]+)/$',
          tag_info,
          name = 'api_tag_info' ),
 )
