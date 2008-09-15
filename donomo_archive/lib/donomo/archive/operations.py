@@ -24,7 +24,7 @@ from __future__                         import with_statement
 from django.core.validators             import ValidationError
 from django.conf                        import settings
 from donomo.archive.models              import *
-from donomo.archive.utils               import s3, sqs
+from donomo.archive.utils               import s3, sqs, misc
 from platform                           import node
 from socket                             import gethostbyname, gaierror
 
@@ -234,7 +234,7 @@ def initialize_processor(
                 manager(AssetClass).get_or_create( name = value ) [0] )
 
         for value in default_accepted_mime_types or ():
-            extension = mimetypes.guess_extension(value)
+            extension = misc.guess_extension(value)
             process.mime_types.add(
                 manager(MimeType).get_or_create(
                     name = value,
@@ -291,7 +291,7 @@ def create_asset_from_file( file_name, **kwargs ):
 
     kwargs = kwargs.copy()
     kwargs.setdefault('orig_file_name', file_name)
-    kwargs.setdefault('mime_type', mimetypes.guess_type(file_name)[0])
+    kwargs.setdefault('mime_type', misc.guess_mime_type(file_name)[0])
 
     with open(file_name, 'rb') as data_stream:
         return create_asset_from_stream( data_stream, **kwargs )
