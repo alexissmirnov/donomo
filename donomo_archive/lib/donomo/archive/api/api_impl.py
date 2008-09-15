@@ -44,6 +44,10 @@ __all__ = (
 
 logging = logging.getLogger('web-api')
 
+
+DEFAULT_PAGE_VIEW_NAME = 'jpeg-thumbnail-200'
+
+
 ##############################################################################
 
 def _init_processor():
@@ -235,11 +239,15 @@ def get_document_list(request):
             start_index,
             num_rows)
     else:
-        # FIXME Return all documents in inverse order of their primary key. This is a hack
+        # Return all documents in inverse order of their primary key. 
+        # FIXME: This is a hack because the order should be specified 
+        # as part of the model
         all_docs = request.user.documents.all().order_by('-pk')
-        doc_list = all_docs [ start_index : num_rows ]
+        doc_list = all_docs [ start_index : start_index+num_rows ]
         return {
             'query' : query_string,
+            'start_index' : start_index,
+            'all_documents_count' : len(all_docs),
             'documents' : [ document_as_json_dict(
                       doc,
                       page_view_name, [1]) for doc in doc_list ],
