@@ -9,17 +9,30 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 		var Dom = YAHOO.util.Dom;
 		
 		var config = {
-			panelId: "panel", //TODO: remove built-in references to panel ID
-			idTagEditor: 'tageditor'
+			panelId: 'panel', //TODO: remove built-in references to panel ID
+			idTagEditor: 'tageditor',
+			panelScrollContainerId: 'panel-scroll-container', // dynamic scrolling impl
+			dynamicPaginationSize : 40, // how many documents to load in a single batch
 		};
 		
 		var panel =  new YAHOO.util.Element(config.panelId);
+		
+		// This variable maintains the index used to load the next batch of
+		// documents when the user scrolls to the end of the list
+		var currentDocumentIndex = 0;
+		
+		// This variable maintains the number of documents returned by the
+		// lastest request of the batch of documents. We know we hit the end
+		// of the document list when this variable is 0.
+		// The variable is set by renderDocumentJSON and is used by onScroll handler
+		var lastDocumentLoadCount = 0;
 		
 		var eventPageSelected = new YAHOO.util.CustomEvent("pageSelected", this);
 		var eventDocumentExpanded = new YAHOO.util.CustomEvent("documentExpanded", this);
 		var eventDocumentCollapsed = new YAHOO.util.CustomEvent("documentCollapsed", this);
 		var eventDocumentTagEditorOpen = new YAHOO.util.CustomEvent("documenttagEditorOpen", this);
 		var eventViewFullPage = new YAHOO.util.CustomEvent("viewFullPage", this);
+		var eventDocumentsLoaded = new YAHOO.util.CustomEvent("documentsLoaded", this);
 		
 		// Create the panel object
 		var onMouseOver = function(e){
@@ -158,7 +171,6 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 					try {
 						var processingContext = new JsEvalContext(eval('(' + o.responseText + ')'));
 						var template = jstGetTemplate('searchresults.template');
-						var panel = new YAHOO.util.Element('panel');
 						removeChildren(panel);
 						panel.appendChild(template);
 						jstProcess(processingContext, template);
@@ -192,25 +204,75 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 				YAHOO.donomo.Panel.renderSearchResults(postHashPathParts[2]);
 			}
 			else {
-				YAHOO.util.Connect.asyncRequest('GET', "/api/1.0/documents/?view_name=jpeg-thumbnail-200",
-				{ 	success : renderDocumentsJSON ,
-					faulure : onApiFailure
-				});		
+				loadDocuments(currentDocumentIndex);	
 			}
 			
 			// Assign event listeners to just the panel
 			Event.on(config.panelId, 'mouseover', onMouseOver);
 			Event.on(config.panelId, 'mouseout', onMouseOut);
 			Event.on(config.panelId, 'click', onClick);
+			Event.on(config.panelScrollContainerId, 'scroll', onScroll);
 			
 			YAHOO.donomo.TagEditorDialog.init();
 		};
 		
+		var loadDocuments = function(startIndex) {
+			if (startIndex > this.totalDocumentCount) {
+				return;
+			}
+			
+			YAHOO.util.Connect.asyncRequest(
+				'GET',
+				'/api/1.0/documents/?view_name=jpeg-thumbnail-200&start_index='
+					+startIndex
+					+'&num_rows='
+					+config.dynamicPaginationSize,
+				{ 	success : renderDocumentsJSON ,
+					faulure : onApiFailure
+				});
+		}
+		var onScroll = function(e) {
+			// The algorithm is based on
+			// http://www.developer.com/design/article.php/3681771
+			var scrollContainerPanel = new YAHOO.util.Element(config.panelScrollContainerId);
+			
+			// get the current height of a panel item. Sinse thumbnails can be resized, the height
+			// may be different every time onScroll is fired.
+			// Assumption: panel-items are children of panel
+			var panelItem = new YAHOO.util.Element(YAHOO.util.Dom.getFirstChild(config.panelId));
+			var panelItemHeigth = panelItem.get('clientHeight');
+			
+			var intElemScrollWidthOuter = scrollContainerPanel.get('clientWidth');
+			var intElemScrollHeightOuter = scrollContainerPanel.get('clientHeight');
+			var intElemScrollHeightInner = scrollContainerPanel.get('scrollHeight');
+			var intElemScrolled = scrollContainerPanel.get('scrollTop');
+			var height = intElemScrollHeightInner - intElemScrollHeightOuter;
+			
+			// Make sure we always have enough doduments in the scroll buffer to fill up
+			// twice the item heigth. This means we'll be loading new data when the user
+			// scrolls to the second last line.
+			// If the last attempt to load more documents returned 0, then don't try to 
+			// load any more
+			if (intElemScrolled >= height - 2*panelItemHeigth && lastDocumentLoadCount != 0) {
+				
+				// load documents
+				loadDocuments(currentDocumentIndex);
+				
+				// increase the document index to be used next time we load more documents
+				currentDocumentIndex += config.dynamicPaginationSize;
+			}
+		};
+		
 		var renderDocumentsJSON = function(response) {
-			var processingContext = new JsEvalContext(eval('('+response.responseText+')'));
+			var responseJson = eval('('+response.responseText+')');
+			
+			lastDocumentLoadCount = responseJson.documents.length;
+			
+			var processingContext = new JsEvalContext(responseJson);
 			var template = jstGetTemplate('document.template');
 			panel.appendChild(template);
 			jstProcess(processingContext, template);
+			eventDocumentsLoaded.fire(responseJson);
 		};
 		
 		return {
@@ -220,6 +282,7 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 			eventDocumentCollapsed: eventDocumentCollapsed,
 			eventViewFullPage: eventViewFullPage,
 			eventDocumentTagEditorOpen: eventDocumentTagEditorOpen,
+			eventDocumentsLoaded: eventDocumentsLoaded,
 			renderSearchResults: renderSearchResults,
 			onSeachStringChanged: onSeachStringChanged,
 			onTagSelected: onTagSelected
@@ -227,7 +290,6 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 }();}
 
 function onTagEditorOpen( type, args ) {
-	console.log("event " + type + ' with args ' + args[0]);
 	try {
 		var doc = args[0];
 		console.log(doc.id);

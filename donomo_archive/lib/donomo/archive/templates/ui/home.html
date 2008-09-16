@@ -48,7 +48,7 @@
                 { position: 'top', height: 30, body: 'hd' },
                 { position: 'left', width: 160, body: 'nav', grids: true, resize: true },
                 { position: 'bottom', height: 25, id: 'ft' },
-                { position: 'center', body: 'bd', grids: true, scroll: true }
+                { position: 'center', body: 'bd', grids: true, scroll: false }
             ]
         });
         layout.on('beforeResize', function() {
@@ -56,6 +56,9 @@
 			//a resize to overflowing the viewport
             Dom.setStyle('doc3', 'width', Dom.getClientWidth()-10 + 'px');
             Dom.setStyle('doc3', 'height', Dom.getClientHeight() + 'px');
+			
+			//FIXME: move to archive.panel.html
+			Dom.setStyle('panel-scroll-container', 'height', (Dom.getClientHeight()-55) + 'px');
         });
 
         layout.render();
