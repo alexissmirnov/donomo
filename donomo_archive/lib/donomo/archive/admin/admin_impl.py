@@ -34,8 +34,8 @@ def delete_all_queues(request = None):
     # TODO: delete_all_queues really shouldn't be exposed!
     logging.critical('Delete of all queues' % request.user)
     for queue in [ sqs._get_queue() ]:
-        queue.delete()
-
+        if queue is not None:
+            queue.delete()
     return HttpResponse('OK')
 
 ###############################################################################
@@ -96,27 +96,14 @@ def wipe_everything(request):
     manager(Tag).all().delete()
     manager(User).exclude(is_staff=True).exclude(is_superuser=True).delete()
 
-    delete_all_queues()
+    delete_all_queues(request)
     delete_search_index()
     delete_bucket_contents()
     return HttpResponse('everything deleted')
 
 
 ###############################################################################
-
-@staff_member_required
-def reset_search_index(request = None):
-    """
-    Reset the search index.
-    """
-    # TODO: implement reset_search_index
-    return HttpResponse('Not implemented', status=500)
-
-
-###############################################################################
-
-@staff_member_required
-def delete_search_index( request = None ):
+def delete_search_index():
     """
     Documentation goes here
 

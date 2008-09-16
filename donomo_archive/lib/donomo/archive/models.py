@@ -350,7 +350,8 @@ class AssetManager(models.Manager):
 
         mime_type = kwargs.get('mime_type')
         if isinstance( mime_type, str):
-            kwargs['mime_type'] = manager(MimeType).get(name = mime_type)
+            kwargs['mime_type'] = manager(MimeType).get_or_create(
+                                                        name = mime_type) [ 0 ]
 
         if 'file_name' in kwargs:
             kwargs.setdefault('orig_file_name', kwargs.pop('file_name'))

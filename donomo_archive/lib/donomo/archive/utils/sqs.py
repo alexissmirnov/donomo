@@ -37,7 +37,8 @@ def _get_queue():
     """
 
     queue = _get_connection().get_queue( settings.SQS_QUEUE_NAME )
-    queue.set_message_class(MHMessage)
+    if queue is not None:
+        queue.set_message_class(MHMessage)
     return queue
 
 ##############################################################################
@@ -124,6 +125,9 @@ def get_message(
     sleep_duration = 1
     sqs_queue      = _get_queue()
     start_time     = time()
+    
+    if sqs_queue is None:
+        return None
 
     while not is_interrupted():
 
