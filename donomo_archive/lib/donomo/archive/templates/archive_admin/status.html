@@ -10,7 +10,7 @@
 		        <caption>Queues</caption>
 				{% for q in queues %}
 	            <tr>            
-	                <th scope="row"><a href="/archiveadmin/queues{{q.id}}">{{q.id}}</a></th>
+	                <th scope="row"><a href="/archiveadmin/queues{{q.id}}/">{{q.id}}</a></th>
 	                <td>{{q.count}}</td>
 	                <td><a href="/archiveadmin/queues{{q.id}}/?_method=DELETE" class="deletelink">Delete</a></td>
 	            </tr>

@@ -36,7 +36,7 @@ def _get_queue():
             the application settings.
     """
 
-    queue = _get_connection().get_queue( settings.SQS_QUEUE_NAME )
+    queue = _get_connection().create_queue( settings.SQS_QUEUE_NAME )
     if queue is not None:
         queue.set_message_class(MHMessage)
     return queue

@@ -36,7 +36,7 @@ def main():
         '-d',
         '--delete',
         action  ='store_true',
-        default = 'False',
+        default = False,
         help    = 'Delete each input file after successfully queing it' )
 
     parser.add_option(
