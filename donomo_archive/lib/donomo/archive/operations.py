@@ -291,7 +291,7 @@ def create_asset_from_file( file_name, **kwargs ):
 
     kwargs = kwargs.copy()
     kwargs.setdefault('orig_file_name', file_name)
-    kwargs.setdefault('mime_type', misc.guess_mime_type(file_name)[0])
+    kwargs.setdefault('mime_type', misc.guess_mime_type(file_name))
 
     with open(file_name, 'rb') as data_stream:
         return create_asset_from_stream( data_stream, **kwargs )
