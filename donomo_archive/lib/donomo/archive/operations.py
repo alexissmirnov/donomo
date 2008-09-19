@@ -366,7 +366,7 @@ def retrieve_work_item(
 
 ###############################################################################
 
-def close_work_item(processor, work_item, delete_from_queue):
+def close_work_item(work_item, delete_from_queue):
 
     """
     Finish handling the given work_item, deleting it from the input
@@ -375,8 +375,7 @@ def close_work_item(processor, work_item, delete_from_queue):
     """
 
     logging.info(
-        "%s %s %r" % (
-            processor,
+        "%s %r" % (
             (delete_from_queue and ' closing ' or ' aborting '),
             work_item['Asset-Instance'] ))
 

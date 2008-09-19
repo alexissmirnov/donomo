@@ -166,7 +166,7 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 			}			
 		}
 		var renderSearchResults = function(query){
-			YAHOO.util.Connect.asyncRequest('GET', "/api/1.0/search/?view_name=jpeg-thumbnail-200&q=" + query, {
+			YAHOO.util.Connect.asyncRequest('GET', "/api/1.0/search/?view_name=thumbnail&q=" + query, {
 				success: function(o){
 					try {
 						var processingContext = new JsEvalContext(eval('(' + o.responseText + ')'));
@@ -191,7 +191,7 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 			var tagName = args[0].getAttribute('name');
 			removeChildren(panel);
 			
-			YAHOO.util.Connect.asyncRequest('GET', '/api/1.0/tags/' + tagName + '/?view_name=jpeg-thumbnail-200',
+			YAHOO.util.Connect.asyncRequest('GET', '/api/1.0/tags/' + tagName + '/?view_name=thumbnail',
 			{ 	success : renderDocumentsJSON,
 				faulure : onApiFailure
 			});		
@@ -223,7 +223,7 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 			
 			YAHOO.util.Connect.asyncRequest(
 				'GET',
-				'/api/1.0/documents/?view_name=jpeg-thumbnail-200&start_index='
+				'/api/1.0/documents/?view_name=thumbnail&start_index='
 					+startIndex
 					+'&num_rows='
 					+config.dynamicPaginationSize,
@@ -317,7 +317,7 @@ YAHOO.util.Event.onContentReady("panel", function () {
 function onDocumentExpanded( type, args ) {
 	var doc = args[0];
 	var id = doc.id;
-	YAHOO.util.Connect.asyncRequest('GET', doc.id + "?view_name=jpeg-thumbnail-200",
+	YAHOO.util.Connect.asyncRequest('GET', doc.id + "?view_name=thumbnail",
 	{ argument : doc,
 	  success : function(o) {
 		  	var doc = o.argument;
@@ -373,7 +373,7 @@ function onViewFullPage( type, args ) {
 		var panel = document.getElementById('panel');
 		new YAHOO.util.Element(panel).setStyle('display', 'none');
 		
-		YAHOO.util.Connect.asyncRequest('GET', docid + '?view_name=jpeg-original', {
+		YAHOO.util.Connect.asyncRequest('GET', docid + '?view_name=image', {
 				argument: page,
 				success: function(o) {
 					var page = o.argument;

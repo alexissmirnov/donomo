@@ -68,25 +68,24 @@ def handle_work_item(processor, item):
 
     """
 
-    index_page_from_file(
-        processor,
+    _index_page_from_file(
         item['Asset-Instance'].related_page,
         item['Local-Path'] )
 
 ##############################################################################
 
-def index_page_from_file( processor, page, local_path ):
+def _index_page_from_file(page, local_path ):
     """
     Update the full-text index for the given page.  The textual
     content of the page is in the file referenced by file_path.
 
     """
     with open(local_path, 'r') as text_file:
-        index_page_from_string(processor, page, text_file.read())
+        _index_page_from_string(page, text_file.read())
 
 ##############################################################################
 
-def index_page_from_string( page, text ):
+def _index_page_from_string( page, text ):
     """
     Update the full-text index for the given page.  The textual
     content of the page the string 'text'.

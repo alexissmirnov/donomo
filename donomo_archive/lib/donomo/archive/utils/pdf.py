@@ -29,7 +29,7 @@ def _draw_page_list(page_list, output_buffer = None, view_type = None):
         output_buffer = StringIO()
 
     if view_type is None:
-        view_type = 'jpeg-original'
+        view_type = 'image'
 
     canvas = Canvas(output_buffer)
 

@@ -5,7 +5,8 @@ from django.conf          import settings
 from boto.sqs.connection  import SQSConnection
 from boto.sqs.message     import MHMessage
 from time                 import time, sleep
-
+import logging
+logging    = logging.getLogger('sqs')
 ##############################################################################
 
 def _get_connection():
@@ -65,9 +66,11 @@ def post_message_list( msg_list ):
         @returns: None
 
     """
-
+    logging.info(msg_list)
+    
     queue = _get_queue()
     for msg in msg_list:
+        logging.info('writing %s into queue %s' % (msg, settings.SQS_QUEUE_NAME))
         queue.write(queue.new_message(body = msg))
 
 ##############################################################################
@@ -175,6 +178,6 @@ def clear_all_messages():
     import logging
 
     queue = _get_queue()
-    logging.getLogger('sqs').critical('Clearing messages from %s' % queue.url)
+    logging.critical('Clearing messages from %s' % queue.url)
     queue.clear()
 

@@ -58,6 +58,10 @@ class FaxNumber(models.Model):
     __str__ = lambda self : self.number
 
     __unicode__ = __str__
+    
+    class Admin:
+        pass
+
 
 ###############################################################################
 
@@ -95,6 +99,9 @@ class MimeType(models.Model):
 
     __unicode__ = __str__
 
+    class Admin:
+        pass
+
 ###############################################################################
 
 class Process(models.Model):
@@ -126,6 +133,9 @@ class Process(models.Model):
 
     __unicode__ = __str__
 
+    class Admin:
+        pass
+
 ###############################################################################
 
 class Node(models.Model):
@@ -138,6 +148,9 @@ class Node(models.Model):
     __str__ = lambda self : self.address
 
     __unicode__ = __str__
+
+    class Admin:
+        pass
 
 ###############################################################################
 
@@ -167,6 +180,9 @@ class Processor(models.Model):
     __str__ = lambda self : self.name
 
     __unicode__ = __str__
+
+    class Admin:
+        pass
 
 ###############################################################################
 
@@ -221,6 +237,9 @@ class Tag(models.Model):
         """ Constraints """
         unique_together = ( 'owner', 'label' )
 
+    class Admin:
+        pass
+
 ###############################################################################
 
 class Document(models.Model):
@@ -252,7 +271,9 @@ class Document(models.Model):
     get_absolute_url = permalink(
         lambda self : ('document_info', (),  { 'id' : self.pk }))
 
-
+    class Admin:
+        pass
+    
 ###############################################################################
 
 class Page(models.Model):
@@ -294,6 +315,9 @@ class Page(models.Model):
             return self.assets.get(name = asset_class)
 
         # pylint: enable-msg=E1101
+        
+    class Admin:
+        pass
 
 
 ###############################################################################
@@ -336,6 +360,9 @@ class AssetClass(models.Model):
         suffix = isinstance(mime_type, MimeType) and '' or '__name'
         return 0 != self.consumers.filter(
             ** { 'mime_type%s' % suffix : mime_type } ).count()
+
+    class Admin:
+        pass
 
 ###############################################################################
 
@@ -441,6 +468,9 @@ class Asset(models.Model):
         self.producer,
         self.asset_class,
         self.mime_type )
+        
+    class Admin:
+        pass
 
 ###############################################################################
 
@@ -468,4 +498,6 @@ class Query(models.Model):
         max_length = 255,
         db_index   = True)
 
+    class Admin:
+        pass
 ###############################################################################

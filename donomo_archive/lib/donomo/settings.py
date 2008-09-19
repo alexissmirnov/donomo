@@ -83,7 +83,7 @@ S3_ACCESS_WINDOW      = 300
 SQS_MAX_BACKOFF       = int(os.environ.get('SQS_MAX_BACKOFF', 300))
 
 # Thumbnail settings
-THUMBNAIL_SIZE        = ( 170, 220 ) # 8.5" x 11.0" scaled to 20 ppi
+THUMBNAIL_SIZE        = ( 340, 440 ) # 8.5" x 11.0" scaled to 40 ppi
 
 ##############################################################################
 #
@@ -97,7 +97,7 @@ LOGGING_PARAMS = {
 if DEVELOPMENT_MODE:
     LOGGING_PARAMS.update( {
             'stream'   : sys.stderr,
-            'level'    : logging.INFO,
+            'level'    : logging.DEBUG,
             })
 else:
     LOGGING_PARAMS.update( {

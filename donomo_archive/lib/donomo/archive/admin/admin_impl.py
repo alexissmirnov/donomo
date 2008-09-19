@@ -66,7 +66,7 @@ def delete_queue(request, queue_name):
         '%s requesting delete of %s' % (
             request.user,
             queue_name))
-    queue = sqs._get_queue(queue_name)
+    queue = sqs._get_queue()
     count = queue.count()
     queue.delete()
     return HttpResponse(

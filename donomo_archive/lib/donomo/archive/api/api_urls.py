@@ -33,7 +33,7 @@ urlpatterns = patterns(
          page_info,
          name = 'api_page_info' ),
 
-    url( r'^pages/(?P<pk>\d+)/view/(?P<view_name>\w+|[\-])/$',
+    url( r'^pages/(?P<pk>\d+)/view/(?P<view_name>[-a-zA-Z0-9_]+)/$',
          page_view,
          name = 'api_page_view' ),
 

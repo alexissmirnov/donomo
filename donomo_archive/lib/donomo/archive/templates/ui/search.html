@@ -126,8 +126,8 @@
 					<div id = "{{id}}.container-page" class="yui-gc">
 					    <div class="yui-u first">
 			                <div>
-								{% page_url id jpeg-thumbnail-200 as page_thumb %}
-								{% page_url id jpeg-original as page_image %}
+								{% page_url id thumbnail as page_thumb %}
+								{% page_url id image as page_image %}
 								<img src="{{page_image}}" width="100%" onmouseover="TJPzoom(this);"/>
 			                </div>
 					    </div>

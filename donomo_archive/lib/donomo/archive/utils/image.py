@@ -2,7 +2,7 @@
 Heper utility to generate thumbnail images
 """
 
-from PIL import Image, ImageFilter, ImageChops
+from PIL import Image, ImageFilter, ImageChops, ImageColor
 
 from django.conf import settings
 
@@ -72,9 +72,13 @@ def thumbnail( image, size ):
         ( int(width * ratio), int(height * ratio) ),
         resample = Image.ANTIALIAS)
 
+    
     # Apply light sharpening to bring out the details
     image = image.filter(ImageFilter.DETAIL)
 
-    return image
+    white = Image.new(image.mode, size, ImageColor.getcolor('white', image.mode))
+    white.paste(image, ((size[0]-image.size[0])/2, (size[1]-image.size[1])/2))
+    
+    return white
 
 ##############################################################################

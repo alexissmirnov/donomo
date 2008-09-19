@@ -45,7 +45,7 @@ __all__ = (
 logging = logging.getLogger('web-api')
 
 
-DEFAULT_PAGE_VIEW_NAME = 'jpeg-thumbnail-200'
+DEFAULT_PAGE_VIEW_NAME = 'thumbnail'
 
 
 ##############################################################################
@@ -402,10 +402,10 @@ def get_page_info(request, pk):
     Retrieve a page
 
     """
-    view_name = request.GET.get('view_name', 'jpeg-original')
+    view_name = request.GET.get('view_name', 'image')
     return {
         'page' : page_as_json_dict(
-                                   request.user.pages.get( pk = pk ),
+                                   request.user.pages.get( pk = int(pk) ),
                                    view_name),
         }
 
@@ -416,11 +416,11 @@ def get_page_view(request, pk, view_name):
     Retrieve a view (asset) for a page
 
     """
-    page = request.user.pages.get(pk = pk)
+    page = request.user.pages.get(pk = int(pk))
 
     return HttpResponseRedirect(
         s3.generate_url(
-            page.assets.get(asset_class__name == view_name).s3_key,
+            page.assets.get(asset_class__name = view_name).s3_key,
             expires_in = settings.S3_ACCESS_WINDOW ))
 
 ##############################################################################

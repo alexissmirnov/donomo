@@ -83,9 +83,12 @@ def load_modules( name_list ):
 def handle_work_item( options, work_item ):
     """ Transactionally handle work item """
     module = options.process[ work_item['Process-Name'] ]
-    module.handle_work_item(
-        init_processor(module),
-        work_item )
+    try:
+        success = False
+        module.handle_work_item( init_processor(module), work_item )
+        success = True
+    finally:
+        operations.close_work_item( work_item, success)
 
 ##############################################################################
 
