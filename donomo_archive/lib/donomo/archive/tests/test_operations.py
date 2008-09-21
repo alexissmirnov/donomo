@@ -85,7 +85,6 @@ class DocumentOperations(unittest.TestCase):
         self.assert_( open(work_item['Local-Path']).read() == content )
 
         operations.close_work_item(
-            processor         = self.consumer,
             work_item         = work_item,
             delete_from_queue = True )
 
