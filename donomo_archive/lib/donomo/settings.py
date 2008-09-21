@@ -117,18 +117,15 @@ logging.getLogger('boto').setLevel(logging.INFO)
 # [ Database, Cache, etc. ]
 #
 
+DATABASE_ENGINE    = 'mysql'
+DATABASE_NAME      = 'donomo'
+DATABASE_USER      = 'donomo'
+DATABASE_PASSWORD  = os.environ.get('DATABASE_PASSWORD', '8d85bcc668074be7ae4be08deae11705')
+
 if DEVELOPMENT_MODE or TEST_MODE:
-    DATABASE_ENGINE    = 'sqlite3'
-    DATABASE_NAME      = join_and_normalize(DONOMO_PATH, 'donomo.db')
-    DATABASE_USER      = None
-    DATABASE_PASSWORD  = None
     MEDIA_ROOT         = join_and_normalize(DONOMO_PATH, 'archive', 'media/')
     ADMIN_MEDIA_PREFIX = '/admin_media/'
 else:
-    DATABASE_ENGINE    = 'mysql'
-    DATABASE_NAME      = 'donomo'
-    DATABASE_USER      = 'donomo'
-    DATABASE_PASSWORD  = '8d85bcc668074be7ae4be08deae11705'
     MEDIA_ROOT         = '~/webapps/static/media/'
     ADMIN_MEDIA_PREFIX = 'http://smirnov.ca/media/'
     CACHE_BACKEND                   = "file://%s" % CACHE_PATH
