@@ -18,7 +18,7 @@ from urllib import urlopen
 
 
 
-ALL_PACKAGES = ['jpeg', 'zlip', 'pil', 'tiff', 'yadis', 'urljr', 'openid', 'elementtree', 'libpng', 'pypdf']
+ALL_PACKAGES = ['recaptcha', 'jpeg', 'zlip', 'pil', 'tiff', 'elementtree', 'libpng', 'pypdf']
 
 ###############################################################################
 # Package descriptions
@@ -31,6 +31,18 @@ pysqllite = {
     "install": """\
     """
 }
+
+recaptcha = {
+    "name":     "recaptcha client",
+    "homepage": "http://recaptcha.net/",
+    "download": "http://pypi.python.org/packages/source/r/recaptcha-client/recaptcha-client-1.0.2.tar.gz",
+    "install": """\
+tar xfz recaptcha-client-1.0.2.tar.gz
+cd ecaptcha-client-1.0.2
+sudo python setup.py install
+"""}
+
+
 jpeg = {
     "name":     "JPEG Support for PIL",
     "homepage": "http://www.ijg.org",
@@ -84,36 +96,6 @@ cd tiff-3.8.2
 ./configure -with-ZIP
 make
 sudo make install
-"""}
-
-yadis = {
-    "name":     "Yadis for OpenID support",
-    "homepage": "http://www.openid.org",
-    "download": "http://openidenabled.com/files/python-openid/files/python-yadis-1.1.0.tar.gz",
-    "install": """\
-tar xfz python-yadis-1.1.0.tar.gz
-cd python-yadis-1.1.0
-sudo python setup.py install
-"""}
-
-urljr = {
-    "name":     "Urljr for OpenID support",
-    "homepage": "http://www.openid.org",
-    "download": "http://openidenabled.com/files/python-openid/files/python-urljr-1.0.1.tar.gz",
-    "install": """\
-tar xfz python-urljr-1.0.1.tar.gz
-cd python-urljr-1.0.1
-sudo python setup.py install
-"""}
-
-openid = {
-    "name":     "OpenID support",
-    "homepage": "http://www.openid.org",
-    "download": "http://openidenabled.com/files/python-openid/packages/python-openid-1.2.0.tar.gz",
-    "install": """\
-tar xfz python-openid-1.2.0.tar.gz
-cd python-openid-1.2.0
-sudo python setup.py install
 """}
 
 libpng = {
