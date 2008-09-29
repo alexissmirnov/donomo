@@ -10,11 +10,13 @@
 		</div>
 	</div>
 	<div class="yui-g">
-		<p>New user? <a href="http://myopenid.com" title="Sign_Up.html">Sign Up for an OpenID</a>
+		<p>New user? <a href="/account/register/">Sign Up</a>
 		</p>
-        <p>Already have an OpenID?
-        <form action="/account/signin/?next=/" method="post">
-        	<input class="openid" type="text" name="openid_url"> <input type="submit" value="Sign in">
+        <p>Already a user? Signin here:
+        <form action="/account/login/?next=/" method="post">
+        	email: <input class="username" type="text" name="username"><br/>
+			password: <input class="password" type='password' name='password'><br/>
+			<input type="submit" value="Sign in">
         </form>
 	</div>
 	</div>

@@ -1,28 +1,53 @@
 from django.conf.urls.defaults                  import patterns, url
-from donomo.archive.account.account_views       import on_openid_signin
+
+from django.conf.urls.defaults import *
+from django.views.generic.simple import direct_to_template
+from django.contrib.auth import views as auth_views
+
+from registration.views import activate
+from donomo.archive.account.account_views import register
+
 
 urlpatterns = patterns('',
-    url(r'^signin/$', 
-        'django_openidconsumer.views.begin',     
-        {'sreg': 'email,nickname'},
-        name='signin',
-        ),
-    
-    url(r'^signin/complete/$', 
-        'django_openidconsumer.views.complete', 
-        {'on_success': on_openid_signin},
-        name='signin-complete',
-        ),
-    
-    url(r'^signout/$', 
-        'donomo.archive.account.account_views.signout',
-        name='signout'),
-    
-    url(r'^delete/$', 
-        'donomo.archive.account.account_views.delete',
-        name='account-delete'),
-        
-    url(r'^(?P<username>\w+)/$', 
-        'donomo.archive.account.account_views.account_detail',
-        name='account-detail'),
-)
+                       # Activation keys get matched by \w+ instead of the more specific
+                       # [a-fA-F0-9]{40} because a bad activation key should still get to the view;
+                       # that way it can return a sensible "invalid key" message instead of a
+                       # confusing 404.
+                       url(r'^activate/(?P<activation_key>\w+)/$',
+                           activate,
+                           {'template_name': 'registration/registration_complete.html'},
+                           name='registration_activate'),
+                       url(r'^login/$',
+                           auth_views.login,
+                           {'template_name': 'registration/login.html'},
+                           name='auth_login'),
+                       url(r'^logout/$',
+                           auth_views.logout,
+                           {'template_name': 'registration/logout.html'},
+                           name='auth_logout'),
+                       url(r'^password/change/$',
+                           auth_views.password_change,
+                           name='auth_password_change'),
+                       url(r'^password/change/done/$',
+                           auth_views.password_change_done,
+                           name='auth_password_change_done'),
+                       url(r'^password/reset/$',
+                           auth_views.password_reset,
+                           name='auth_password_reset'),
+                       url(r'^password/reset/done/$',
+                           auth_views.password_reset_done,
+                           name='auth_password_reset_done'),
+                       url(r'^register/$',
+                           register,
+                           name='registration_register'),
+                       url(r'^register/complete/$',
+                           direct_to_template,
+                           {'template': 'registration/activate.html'},
+                           name='registration_complete'),
+                       url(r'^delete/$', 
+                            'donomo.archive.account.account_views.account_delete',
+                            name='account-delete'),
+                       url(r'^(?P<username>\w+)/$', 
+                            'donomo.archive.account.account_views.account_detail',
+                            name='account-detail'),
+                       )

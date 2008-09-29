@@ -1,0 +1,12 @@
+{% extends "ui/base.html"  %}
+   
+{% block body %}
+<h1>Registration Complete</h1>
+Sign in:
+       <form action="{%url auth_login%}?next=/" method="post">
+        	email: <input class="username" type="text" name="username" value="{{account}}"><br/>
+			password: <input class="password" type='password' name='password'><br/>
+			<input type="submit" value="Sign in">
+        </form>
+
+{% endblock %}
