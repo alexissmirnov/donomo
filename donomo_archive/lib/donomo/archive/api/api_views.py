@@ -30,13 +30,13 @@ __all__ = (
 @http_method_dispatcher
 def document_list():
     """
-    Dispatch map for HTTP opoerations on the document list.
+    Dispatch map for HTTP operations on the document list.
 
     """
     update_map = {
         'upload' : upload_document,
         'split'  : split_document,
-        'merge'  : merge_documents,
+        'merge'  : merge_documents, # default
     }
 
     def apply_update_map(request):
@@ -44,12 +44,11 @@ def document_list():
         Dispatch map for update operations on a document.
 
         """
-        return update_map[request['op'].strip().lower()](request)
+        return update_map[request.GET.get('op', 'upload').strip().lower()](request)
 
     return {
         'GET'   : get_document_list,
         'POST'  : apply_update_map
-
         }
 
 ###############################################################################

@@ -19,7 +19,6 @@ from donomo.archive.service          import indexer
 from donomo.archive.utils            import pdf, s3
 from donomo.archive.utils.middleware import json_view
 from donomo.archive.utils.misc       import get_url, param_is_true
-
 import logging
 
 __all__ = (
@@ -261,26 +260,25 @@ def upload_document(request):
     Upload a new document.
 
     """
-
-    gateway      = _get_processor()
+    gateway      = _init_processor()[0]
     the_file     = request.FILES['file']
-    content_type = the_file['content-type']
-    asset_class  = manager(AssetClass).get(name = AssetClass.UPLOAD)
+    content_type = the_file.content_type
+    asset_class  = models.manager(models.AssetClass).get(name = models.AssetClass.UPLOAD)
 
-    if not asset_class.has_consumer(content_type):
+    if not asset_class.has_consumers(content_type):
         raise ValidationError(
             'Unsupported content type: %s' % content_type)
 
     upload = operations.create_asset_from_stream(
-        data_stream = StringIO( the_file['content'] ),
+        data_stream = StringIO(the_file.read()),
         owner       = request.user,
         producer    = gateway,
-        asset_class = AssetClass.UPLOAD,
-        file_name   = the_file['filename'],
-        mime_type   = content_type)
+        asset_class = models.AssetClass.UPLOAD,
+        file_name   = the_file.name,
+        mime_type  = content_type)
 
     operations.publish_work_item(upload)
-
+    
     return {
         'status'   : 202,
         # 'location' : upload.get_absolute_url(),
@@ -354,7 +352,7 @@ def get_document_pdf(request, pk):
 
     document = request.user.documents.get(pk = pk)
     return HttpResponse(
-        content = pdf_utils.render_document(document),
+        content = pdf.render_document(document),
         content_type = 'application/pdf' )
 
 ##############################################################################

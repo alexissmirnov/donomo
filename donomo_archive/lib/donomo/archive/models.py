@@ -359,7 +359,7 @@ class AssetClass(models.Model):
         """ True if there is a consumer for assets of the given mime type """
         suffix = isinstance(mime_type, MimeType) and '' or '__name'
         return 0 != self.consumers.filter(
-            ** { 'mime_type%s' % suffix : mime_type } ).count()
+            ** { 'mime_types%s' % suffix : mime_type } ).count()
 
     class Admin:
         pass
