@@ -18,7 +18,7 @@ from donomo.archive                  import models, operations
 from donomo.archive.service          import indexer
 from donomo.archive.utils            import pdf, s3
 from donomo.archive.utils.middleware import json_view
-from donomo.archive.utils.misc       import get_url, param_is_true
+from donomo.archive.utils.misc       import get_url, param_is_true, guess_mime_type
 import logging
 
 __all__ = (
@@ -263,6 +263,10 @@ def upload_document(request):
     gateway      = _init_processor()[0]
     the_file     = request.FILES['file']
     content_type = the_file.content_type
+    
+    if content_type == 'application/octet-stream':
+        content_type = guess_mime_type(the_file.name)
+        
     asset_class  = models.manager(models.AssetClass).get(name = models.AssetClass.UPLOAD)
 
     if not asset_class.has_consumers(content_type):
