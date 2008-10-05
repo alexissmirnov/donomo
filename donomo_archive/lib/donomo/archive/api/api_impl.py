@@ -261,33 +261,37 @@ def upload_document(request):
 
     """
     gateway      = _init_processor()[0]
-    the_file     = request.FILES['file']
-    content_type = the_file.content_type
-    
-    if content_type == 'application/octet-stream':
-        content_type = guess_mime_type(the_file.name)
+
+    # pick all files that are send in this API
+    # support sending multiple files in a single request
+    for key, the_file in request.FILES.iteritems():
+        the_file = the_file[0]
+        content_type = the_file.content_type
         
-    asset_class  = models.manager(models.AssetClass).get(name = models.AssetClass.UPLOAD)
-
-    if not asset_class.has_consumers(content_type):
-        raise ValidationError(
-            'Unsupported content type: %s' % content_type)
-
-    upload = operations.create_asset_from_stream(
-        data_stream = StringIO(the_file.read()),
-        owner       = request.user,
-        producer    = gateway,
-        asset_class = models.AssetClass.UPLOAD,
-        file_name   = the_file.name,
-        mime_type  = content_type)
-
-    operations.publish_work_item(upload)
+        if content_type == 'application/octet-stream':
+            content_type = guess_mime_type(the_file.name)
+            
+        asset_class  = models.manager(models.AssetClass).get(name = models.AssetClass.UPLOAD)
+    
+        if not asset_class.has_consumers(content_type):
+            raise ValidationError(
+                'Unsupported content type: %s' % content_type)
+    
+        upload = operations.create_asset_from_stream(
+            data_stream = StringIO(the_file.read()),
+            owner       = request.user,
+            producer    = gateway,
+            asset_class = models.AssetClass.UPLOAD,
+            file_name   = the_file.name,
+            mime_type  = content_type)
+    
+        operations.publish_work_item(upload)
     
     return {
         'status'   : 202,
         # 'location' : upload.get_absolute_url(),
         }
-
+    
 ##############################################################################
 
 @json_view
