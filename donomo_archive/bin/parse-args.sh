@@ -10,12 +10,13 @@ Usage: $1 [-a] [-d] [-p] [-s] [-x] [-e] [-v FILE] [-m PATH]
     -y        install python and tools (implied by -a and -p)
     -x        install development tools
     -e        install ec2 tools and credentials
+    -o PATH   the output path in which to create the ami bundle
     -v FILE   create the volume file at the path given by FILE
     -m PATH   mount the volume file (specified with -v) at PATH
 EOF
 }
 
-while getopts 'adpsxev:m:' flag
+while getopts 'adpsyxeo:v:m:' flag
 do
     case $flag in
         a)
@@ -45,13 +46,15 @@ do
         m)
             mount_point=$OPTARG
             ;;
+        o)
+            output_dir=$OPTARG
+            ;;
         *)
             show_usage $(basename $0)
             exit 1
     esac
 done
 
-aws_dir=../../aws
 fedora_version=8
 aki=aki-9b00e5f2
 ari=ari-a51cf9cc

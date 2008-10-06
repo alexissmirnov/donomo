@@ -4,6 +4,9 @@ set -x
 
 source ./parse-args.sh
 
+aws_dir=$(dirname $0)/../../aws
+ssh_dir=$(dirname $0)/../../ssh
+
 #if [[ $(( processors + database + application )) -eq 0 ]]
 #then
 #    echo "At least one image type must be specified"
@@ -31,7 +34,7 @@ UPDATES=${mount_point}/tmp/updates
 echo "---- Initializating AMI Filesystem --------------------------------"
 
 echo "Creating volume file (${volume_file}) ..."
-dd if=/dev/zero of=${volume_file} bs=1M count=10240
+dd if=/dev/zero of=${volume_file} bs=1M count=2048
 
 echo "Initializing file system ..."
 mke2fs -F -j ${volume_file}
@@ -183,8 +186,8 @@ then
     ${YUM} install python-simplejson
     ${YUM} --enablerepo=updates-testing install MySQL-python
     ${YUM} install libtiff
-    wget -N -0 $UPDATES/pyPdf-1.11-1.fc10.noarch.rpm 'http://download.fedora.redhat.com/pub/fedora/linux/development/i386/os/Packages/pyPdf-1.11-1.fc10.noarch.rpm'
-    ${CHROOT} rpm -i /tmp/updates/pyPdf-1.11-1.fc10.noarch.rpm
+    wget -N -O $UPDATES/pyPdf-1.12-1.fc10.noarch.rpm 'http://download.fedora.redhat.com/pub/fedora/linux/development/i386/os/Packages/pyPdf-1.12-1.fc10.noarch.rpm'
+    ${CHROOT} rpm -i /tmp/updates/pyPdf-1.12-1.fc10.noarch.rpm
 fi
 
 #
@@ -194,7 +197,7 @@ fi
 if [[ $(( processors + application )) -gt 0 ]]
 then
     (cd $UPDATES && svn export --non-interactive http://svn2.assembla.com/svn/vaultit/trunk/donomo_archive)
-    cp $aws_dir/ec2.sh $UPDATES/aws.sh
+    /bin/cp -f $aws_dir/ec2.sh $UPDATES/aws.sh
 fi
 
 #
@@ -206,10 +209,12 @@ then
     ${YUM} install nginx
 fi
 
-cp config-image.sh $UPDATES/install-script
-chmod +x $UPDATES/install-script
-${CHROOT} ${mount_point} /tmp/updates/install-script "$@"
-rm -rf $UPDATES
+cat $ssh_dir/* > $UPDATES/authorized_keys
+
+/bin/cp -f config-image.sh parse-args.sh $UPDATES/
+chmod +x $UPDATES/config-image.sh
+${CHROOT} ${mount_point} /tmp/updates/config-image.sh "$@"
+#rm -rf $UPDATES
 
 umount ${mount_point}/proc
 umount ${mount_point}
@@ -217,8 +222,7 @@ umount ${mount_point}
 mkdir -p ${output_dir}
 
 source $aws_dir/ec2.sh
-
-manifest=f${fedora_version}-ami_v1_0_$(date '+%Y%m%d%H%M').manifest.xml
-ec2-bundle-image -i ${volume_file} -c $aws_dir/cert-*.pem -k $aws_dir/pk-*.pem -u $AWS_ACCOUNT_NUMBER -d ${output_dir} --kernel $aki --ramdisk $ari
-ec2-upload-bundle -b ami.donomo.com -m ${output_dir}/$manifest -a $AWS_ACCESS_KEY_ID -s $AWS_SECRET_ACCESS_KEY
+prefix=donomo-f${fedora_version}-ami_v1_0-$(date '+%Y%m%d%H%M')
+ec2-bundle-image -i ${volume_file} -c $aws_dir/cert-*.pem -k $aws_dir/pk-*.pem -u $AWS_ACCOUNT_NUMBER -d ${output_dir} --kernel $aki --ramdisk $ari -p $prefix
+ec2-upload-bundle -b ami.donomo.com -m ${output_dir}/${prefix}.manifest.xml -a $AWS_ACCESS_KEY_ID -s $AWS_SECRET_ACCESS_KEY
 ec2-register ami.donomo.com/$manifest

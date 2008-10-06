@@ -1,6 +1,8 @@
-#!/bin/sh
+#!/bin/sh -e
 
 set -x
+
+source $(dirname $0)/parse-args.sh "$@"
 
 #
 # Check consistency of passwd and group files and make appropriate corrections
@@ -19,12 +21,12 @@ grpconv
 #
 passwd root
 
-cat <<EOF > ${mount_point}/etc/sysconfig/network
+cat <<EOF > /etc/sysconfig/network
 NETWORKING=yes
 HOSTNAME=localhost.localdomain
 EOF
 
-cat <<EOF > ${mount_point}/etc/sysconfig/network-scripts/ifcfg-eth0
+cat <<EOF > /etc/sysconfig/network-scripts/ifcfg-eth0
 DEVICE=eth0
 BOOTPROTO=dhcp
 ONBOOT=yes
@@ -49,7 +51,7 @@ sed -i 's/^#?ClientAliveCountMax\s+\d+/ClientAliveCountMax 240/' /etc/ssh/sshd_c
 
 # Create and populate /root/.ssh directory
 #
-mkdir /root/.ssh
+mkdir -p /root/.ssh
 if [[ -f /tmp/updates/authorized_keys ]]
 then
     cp /tmp/updates/authorized_keys /root/.ssh/
@@ -174,16 +176,16 @@ EOF
 # Change local time to GMT
 #
 mv /etc/localtime /etc/localtime.orig
-ln -s /usr/share/zoneinfo/GMT0 /etc/localtime
+ln -sf /usr/share/zoneinfo/GMT0 /etc/localtime
 
 #
 # Boot environment
 #
+set +e
 
 chkconfig haldaemon on
 chkconfig iptables on
 chkconfig network on
-chkconfig ntpd on
 chkconfig sshd on
 chkconfig syslog on
 chkconfig sysstat on
@@ -196,16 +198,10 @@ else
     chkconfig irqbalance off
 fi
 
-if [[ $appication -eq 1 ]]
-then
-    chkconfig httpd on
-else
-    chkconfig httpd off
-fi
-
-
+#
 # Disable unnecesary startup daemons
 #
+
 chkconfig ConsoleKit off
 chkconfig NetworkManager off
 chkconfig NetworkManagerDispatcher off
@@ -230,6 +226,7 @@ chkconfig dund off
 chkconfig firstboot off
 chkconfig gpm off
 chkconfig hidd off
+chkconfig httpd off
 chkconfig ip6tables off
 chkconfig irda off
 chkconfig jexec off
@@ -251,6 +248,7 @@ chkconfig nfs off
 chkconfig nfslock off
 chkconfig nrpe off
 chkconfig nscd off
+chkconfig ntpd off
 chkconfig pand off
 chkconfig pcscd off
 chkconfig portmap off
@@ -279,16 +277,18 @@ chkconfig xfs off
 chkconfig ypbind off
 chkconfig yum-updatesd off
 
+#set -e
+
 #
 # Disable SELinux
 #
-
+mkdir -p /etc/selinux
 cat > /etc/selinux/config <<EOF
 SELINUX=disabled
 SELINUXTYPE=targeted
 EOF
 
-ln -s /etc/selinux/config /etc/sysconfig/selinux
+ln -sf /etc/selinux/config /etc/sysconfig/selinux
 
 
 #
@@ -368,6 +368,7 @@ chmod 644 /etc/sysconfig/system-config-securitylevel
 if [[ $(( application + processors )) -gt 0 ]]
 then
     useradd donomo
+
     mv /tmp/updates/donomo_archive/* /home/donomo/
     mv /tmp/updates/aws.sh /home/donomo/.awsrc
     chown -R donomo:donomo /home/donomo
@@ -379,7 +380,7 @@ fi
 
 if [[ $application -eq 1 ]]
 then
-    cat /etc/init.d/donomo-app <<EOF
+    cat > /etc/init.d/donomo-app <<"EOF"
 #!/bin/sh -e
 
 workdir=/home/donomo
@@ -394,10 +395,7 @@ function start
         exit 1
     fi
 
-    export PYTHONPATH=$workdir/lib:$PYTHONPATH
-./manage.py runfcgi method=prefork socket=/home/user/mysite.sock pidfile=django.pid
-./manage.py runfcgi daemonize=false socket=/tmp/mysite.sock maxrequests=1
-
+    export PYTHONPATH=$workdir/deps:$workdir/lib:$PYTHONPATH
     su donomo -c "$workdir/bin/application runfcgi protocol=fcgi method=prefok daemonize=true pidfild=$pidfile host=127.0.0.1 port=8081 workdir=$workdir out_log=$logfile err_log=$logfile"
 }
 
@@ -426,12 +424,12 @@ case ${1:?} in
 esac
 EOF
     chmod 700 /etc/init.d/donomo-app
-    ln -s /etc/init.d/donomo-procs /etc/rc.d/rc3.d/S98domono-app
+    ln -sf /etc/init.d/donomo-procs /etc/rc.d/rc3.d/S98domono-app
 fi
 
 if [[ $processors -eq 1 ]]
 then
-    cat /etc/init.d/donomo-procs <<EOF
+    cat > /etc/init.d/donomo-procs <<"EOF"
 #!/bin/sh -e
 
 workdir=/home/donomo
@@ -446,7 +444,7 @@ function start
         exit 1
     fi
 
-    export PYTHONPATH=$workdir/lib:$PYTHONPATH
+    export PYTHONPATH=$workdir/deps:$workdir/lib:$PYTHONPATH
     su donomo -c "$workdir/bin/processors --daemonize --pidfild=$pidfile --workdir=$workdir --logfile=$logfile"
 }
 
@@ -475,7 +473,7 @@ case ${1:?} in
 esac
 EOF
     chmod 700 /etc/init.d/donomo-procs
-    ln -s /etc/init.d/donomo-procs /etc/rc.d/rc3.d/S98domono-procs
+    ln -sf /etc/init.d/donomo-procs /etc/rc.d/rc3.d/S98domono-procs
 fi
 
 
@@ -483,7 +481,5 @@ fi
 #
 # Clean the /root directory and your shell history and exit from the image
 #
-rm -fr /root/*
+rm -rf /root/*
 echo -n '' > /root/.bash_history
-
-umount /proc/sys/fs/binfmt_misc
