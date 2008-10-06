@@ -25,7 +25,7 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 		// lastest request of the batch of documents. We know we hit the end
 		// of the document list when this variable is 0.
 		// The variable is set by renderDocumentJSON and is used by onScroll handler
-		var lastDocumentLoadCount = 0;
+		var lastDocumentLoadCount = -1;
 		
 		var eventPageSelected = new YAHOO.util.CustomEvent("pageSelected", this);
 		var eventDocumentExpanded = new YAHOO.util.CustomEvent("documentExpanded", this);
@@ -92,8 +92,7 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 			}
 			return null;
 		}
-		
-		
+				
 		var splitDocument = function(elSeparator){
 			Dom.removeClass(elSeparator, 'page-separator-over');
 			Dom.removeClass(elSeparator, 'page-separator');
@@ -160,31 +159,46 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 										}
 			}
 		};
+
 		var removeChildren = function(el) {
 			while (el.get('childNodes').length) {
 				el.removeChild(el.get('childNodes')[0]);
 			}			
 		}
-		var renderSearchResults = function(query){
-			YAHOO.util.Connect.asyncRequest('GET', "/api/1.0/search/?view_name=thumbnail&q=" + query, {
-				success: function(o){
-					try {
-						var processingContext = new JsEvalContext(eval('(' + o.responseText + ')'));
-						var template = jstGetTemplate('searchresults.template');
-						removeChildren(panel);
-						panel.appendChild(template);
-						jstProcess(processingContext, template);
-					} 
-					catch (e) {
-						console.log(e);
-					}
-				},
+		
+		var loadSearchResults = function(query, startIndex){
+			YAHOO.util.Connect.asyncRequest(
+				'GET', 
+				"/api/1.0/search/?view_name=thumbnail&q=" + query
+				+ '&start_index='
+				+ startIndex
+				+ '&num_rows='
+				+ config.dynamicPaginationSize, {
+				success: renderSearchResultsJSON,
 				faulure: onApiFailure
 			});
 		};
 		
+		var renderSearchResultsJSON = function(response) {
+			try {
+				responseJSON = eval('(' + response.responseText + ')');
+				lastDocumentLoadCount = responseJSON.pages.length;
+				
+				var processingContext = new JsEvalContext(responseJSON);
+				var template = jstGetTemplate('searchresults.template');
+				
+				panel.appendChild(template);
+				jstProcess(processingContext, template);
+			} 
+			catch (e) {
+				console.log(e);
+			}			
+		}
+		
 		var onSeachStringChanged = function(type, args){
-			renderSearchResults(args[0].value);
+			currentDocumentIndex = 0;
+			removeChildren(panel);
+			loadPanelContents(currentDocumentIndex);
 		};
 		
 		var onTagSelected = function(type, args) {
@@ -197,30 +211,26 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 			});		
 		};
 		
-		var init = function(){
+		
+		var loadPanelContents = function(startIndex) {
+			if (lastDocumentLoadCount == 0) {
+				return;
+			}
+
 			var postHashPathParts = location.hash.toString().split('/');
 			
 			if (postHashPathParts.length >= 3 && postHashPathParts[1] == 'search') {
-				YAHOO.donomo.Panel.renderSearchResults(postHashPathParts[2]);
+				loadSearchResults(postHashPathParts[2], startIndex);
 			}
 			else {
-				loadDocuments(currentDocumentIndex);	
+				loadDocuments(startIndex);
 			}
-			
-			// Assign event listeners to just the panel
-			Event.on(config.panelId, 'mouseover', onMouseOver);
-			Event.on(config.panelId, 'mouseout', onMouseOut);
-			Event.on(config.panelId, 'click', onClick);
-			Event.on(config.panelScrollContainerId, 'scroll', onScroll);
-			
-			YAHOO.donomo.TagEditorDialog.init();
+
+			// increase the document index to be used next time we load more documents
+			currentDocumentIndex = startIndex + config.dynamicPaginationSize;
 		};
 		
 		var loadDocuments = function(startIndex) {
-			if (startIndex > this.totalDocumentCount) {
-				return;
-			}
-			
 			YAHOO.util.Connect.asyncRequest(
 				'GET',
 				'/api/1.0/documents/?view_name=thumbnail&start_index='
@@ -231,6 +241,19 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 					faulure : onApiFailure
 				});
 		}
+		
+		var renderDocumentsJSON = function(response) {
+			var responseJson = eval('('+response.responseText+')');
+			
+			lastDocumentLoadCount = responseJson.documents.length;
+			
+			var processingContext = new JsEvalContext(responseJson);
+			var template = jstGetTemplate('document.template');
+			panel.appendChild(template);
+			jstProcess(processingContext, template);
+			eventDocumentsLoaded.fire(responseJson);
+		};
+
 		var onScroll = function(e) {
 			// The algorithm is based on
 			// http://www.developer.com/design/article.php/3681771
@@ -256,25 +279,22 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 			if (intElemScrolled >= height - 2*panelItemHeigth && lastDocumentLoadCount != 0) {
 				
 				// load documents
-				loadDocuments(currentDocumentIndex);
-				
-				// increase the document index to be used next time we load more documents
-				currentDocumentIndex += config.dynamicPaginationSize;
+				loadPanelContents(currentDocumentIndex);
 			}
-		};
+		};		
 		
-		var renderDocumentsJSON = function(response) {
-			var responseJson = eval('('+response.responseText+')');
+		var init = function(){
+			loadPanelContents(currentDocumentIndex);
 			
-			lastDocumentLoadCount = responseJson.documents.length;
+			// Assign event listeners to just the panel
+			Event.on(config.panelId, 'mouseover', onMouseOver);
+			Event.on(config.panelId, 'mouseout', onMouseOut);
+			Event.on(config.panelId, 'click', onClick);
+			Event.on(config.panelScrollContainerId, 'scroll', onScroll);
 			
-			var processingContext = new JsEvalContext(responseJson);
-			var template = jstGetTemplate('document.template');
-			panel.appendChild(template);
-			jstProcess(processingContext, template);
-			eventDocumentsLoaded.fire(responseJson);
+			YAHOO.donomo.TagEditorDialog.init();
 		};
-		
+
 		return {
 			init: init,
 			eventPageSelected: eventPageSelected,
@@ -283,7 +303,7 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 			eventViewFullPage: eventViewFullPage,
 			eventDocumentTagEditorOpen: eventDocumentTagEditorOpen,
 			eventDocumentsLoaded: eventDocumentsLoaded,
-			renderSearchResults: renderSearchResults,
+			renderSearchResultsJSON: renderSearchResultsJSON,
 			onSeachStringChanged: onSeachStringChanged,
 			onTagSelected: onTagSelected
 		};
