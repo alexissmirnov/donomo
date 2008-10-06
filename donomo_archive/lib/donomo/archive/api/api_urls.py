@@ -48,5 +48,9 @@ urlpatterns = patterns(
     url( r'^tags/(?P<label>[-a-zA-Z0-9_]+)/$',
          tag_info,
          name = 'api_tag_info' ),
+         
+    url( r'^search/$',
+         search,
+         name = 'api_search'),
 )
 

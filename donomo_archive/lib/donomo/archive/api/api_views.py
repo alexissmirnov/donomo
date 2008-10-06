@@ -12,7 +12,7 @@ AJAX API Views.
 from django.contrib.auth.decorators  import login_required
 from donomo.archive.utils.http       import http_method_dispatcher
 from donomo.archive.api.api_impl     import *
-from donomo.archive.utils.basic_auth         import logged_in_or_basicauth
+from donomo.archive.utils.basic_auth import logged_in_or_basicauth
 __all__ = (
     'document_list',
     'document_info',
@@ -22,6 +22,7 @@ __all__ = (
     'page_as_pdf',
     'tag_list',
     'tag_info',
+    'search'
     )
 
 ###############################################################################
@@ -146,5 +147,19 @@ def tag_info():
         }
 
 ###############################################################################
+
+@login_required
+@http_method_dispatcher
+def search():
+    """
+    Dispatch map for HTTP operations on search
+
+    """
+    return {
+        'GET'  : get_search,
+        }
+
+###############################################################################
+
 
 

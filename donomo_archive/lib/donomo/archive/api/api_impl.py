@@ -39,6 +39,7 @@ __all__ = (
     'tag_documents',
     'get_document_pdf',
     'get_page_pdf',
+    'get_search',
     )
 
 logging = logging.getLogger('web-api')
@@ -226,31 +227,22 @@ def get_document_list(request):
 
     # TODO: take num_rows from user preferences
 
-    query_string = extract_query_string(request)
     start_index  = int(request.GET.get('start_index', 0))
     num_rows     = int(request.GET.get('num_rows', 250))
     page_view_name = request.GET.get('view_name', DEFAULT_PAGE_VIEW_NAME)
 
-    if query_string is not None:
-        return indexer.query(
-            request.user,
-            query_string,
-            start_index,
-            num_rows)
-    else:
-        # Return all documents in inverse order of their primary key. 
-        # FIXME: This is a hack because the order should be specified 
-        # as part of the model
-        all_docs = request.user.documents.all().order_by('-pk')
-        doc_list = all_docs [ start_index : start_index+num_rows ]
-        return {
-            'query' : query_string,
-            'start_index' : start_index,
-            'all_documents_count' : len(all_docs),
-            'documents' : [ document_as_json_dict(
-                      doc,
-                      page_view_name, [1]) for doc in doc_list ],
-            }
+    # Return all documents in inverse order of their primary key. 
+    # FIXME: This is a hack because the order should be specified 
+    # as part of the model
+    all_docs = request.user.documents.all().order_by('-pk')
+    doc_list = all_docs [ start_index : start_index+num_rows ]
+    return {
+        'start_index' : start_index,
+        'all_documents_count' : len(all_docs),
+        'documents' : [ document_as_json_dict(
+                  doc,
+                  page_view_name, [1]) for doc in doc_list ],
+        }
 
 ##############################################################################
 
@@ -527,6 +519,7 @@ def get_tag_info(request, label):
         show_documents = True,
         show_url       = param_is_true(request.GET.get('show_url', 'false')))
 
+
 ##############################################################################
 
 @json_view
@@ -539,5 +532,32 @@ def delete_tag(request, label):
     request.user.tags.get(label = label.rstrip().lower()).delete()
     return {}
 
-
 ##############################################################################
+
+@json_view
+def get_search(request):
+    """
+    Returns the search results.
+    """
+    query_string = extract_query_string(request)
+    start_index  = int(request.GET.get('start_index', 0))
+    num_rows     = int(request.GET.get('num_rows', 250))
+    page_view_name = request.GET.get('view_name', DEFAULT_PAGE_VIEW_NAME)
+    search_results = indexer.query(
+            request.user,
+            query_string,
+            start_index,
+            num_rows)
+    
+    search_results['pages'] = []
+
+    for d in search_results['results']['docs']:
+        page = models.Page.objects.get(pk = d['page_id'])
+        search_results['pages'].append(page_as_json_dict(page, page_view_name))
+        
+    return search_results
+        
+
+
+
+    
