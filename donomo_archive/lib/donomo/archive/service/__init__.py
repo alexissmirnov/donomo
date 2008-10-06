@@ -127,7 +127,38 @@ def main():
         default = 1,
         type    = 'int')
 
+    parser.add_option(
+        '--daemonize',
+        action  = 'set_true',
+        default = False )
+
+    parser.add_option('--work-dir')
+    parser.add_option('--stdout')
+    parser.add_option('--stderr')
+    parser.add_option('--umask', type='int')
+    parser.add_option('--pidfile')
+
     options, process_names = parser.parse_args()
+
+    if options.daemonize:
+        from django.utils.daemonize import become_daemon
+        daemon_kwargs = {}
+        if options.work_dir:
+            daemon_kwargs['out_home_dir'] = options.work_dir
+        if options.stdout:
+            daemon_kwargs['out_log'] = options.stdout
+        if options.stderr:
+            daemon_kwargs['err_log'] = options.stderr
+        if options.umask:
+            daemon_kwargs['umask'] = options.umask
+        become_daemon( **daemon_kwargs)
+
+    if options.pidfile:
+        pidfile = open(options.pidfile, 'w')
+        try:
+            pidfile.write('%d\n' % os.getpid())
+        finally:
+            pidfile.close()
 
     if len(process_names) == 0:
         process_names = DEFAULT_PROCESSORS
