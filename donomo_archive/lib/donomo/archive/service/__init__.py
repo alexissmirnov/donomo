@@ -132,9 +132,8 @@ def main():
         action  = 'set_true',
         default = False )
 
-    parser.add_option('--work-dir')
-    parser.add_option('--stdout')
-    parser.add_option('--stderr')
+    parser.add_option('--workdir')
+    parser.add_option('--logfile')
     parser.add_option('--umask', type='int')
     parser.add_option('--pidfile')
 
@@ -143,12 +142,11 @@ def main():
     if options.daemonize:
         from django.utils.daemonize import become_daemon
         daemon_kwargs = {}
-        if options.work_dir:
-            daemon_kwargs['out_home_dir'] = options.work_dir
-        if options.stdout:
-            daemon_kwargs['out_log'] = options.stdout
-        if options.stderr:
-            daemon_kwargs['err_log'] = options.stderr
+        if options.workdir:
+            daemon_kwargs['our_home_dir'] = options.work_dir
+        if options.logfile:
+            daemon_kwargs['out_log'] = options.logfile
+            daemon_kwargs['err_log'] = options.logfile
         if options.umask:
             daemon_kwargs['umask'] = options.umask
         become_daemon( **daemon_kwargs)
