@@ -425,7 +425,8 @@ case ${1:?} in
         exit 1
 esac
 EOF
-    chmod 700 /etc/init.d/donomo-procs
+    chmod 700 /etc/init.d/donomo-app
+    ln -s /etc/init.d/donomo-procs /etc/rc.d/rc3.d/S98domono-app
 fi
 
 if [[ $processors -eq 1 ]]
@@ -474,6 +475,7 @@ case ${1:?} in
 esac
 EOF
     chmod 700 /etc/init.d/donomo-procs
+    ln -s /etc/init.d/donomo-procs /etc/rc.d/rc3.d/S98domono-procs
 fi
 
 
