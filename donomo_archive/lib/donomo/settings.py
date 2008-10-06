@@ -187,7 +187,6 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
 #    'django.middleware.cache.CacheMiddleware',
-    'django_openidconsumer.middleware.OpenIDMiddleware',
     'donomo.archive.utils.middleware.AjaxErrorHandlingMiddleware',
     'donomo.archive.utils.yui.middleware.YUIIncludeMiddleware',
 )
