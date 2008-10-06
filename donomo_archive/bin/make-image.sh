@@ -194,6 +194,7 @@ fi
 if [[ $(( processors + application )) -gt 0 ]]
 then
     (cd $UPDATES && svn export --non-interactive http://svn2.assembla.com/svn/vaultit/trunk/donomo_archive)
+    cp $aws_dir/ec2.sh $UPDATES/aws.sh
 fi
 
 #

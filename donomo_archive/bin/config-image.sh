@@ -50,7 +50,10 @@ sed -i 's/^#?ClientAliveCountMax\s+\d+/ClientAliveCountMax 240/' /etc/ssh/sshd_c
 # Create and populate /root/.ssh directory
 #
 mkdir /root/.ssh
-touch /root/.ssh/authorized_keys2
+if [[ -f /tmp/updates/authorized_keys ]]
+then
+    cp /tmp/updates/authorized_keys /root/.ssh/
+fi
 touch /root/.ssh/authorized_keys
 chmod 700 /root/.ssh
 chmod 600 /root/.ssh/*
@@ -362,9 +365,118 @@ fi
 
 chmod 644 /etc/sysconfig/system-config-securitylevel
 
+if [[ $(( application + processors )) -gt 0 ]]
+then
+    useradd donomo
+    mv /tmp/updates/donomo_archive/* /home/donomo/
+    mv /tmp/updates/aws.sh /home/donomo/.awsrc
+    chown -R donomo:donomo /home/donomo
+    chown -R donomo:donomo /home/donomo/.*
+    find /home/donomo -type d -print0 | xargs -0 chmod 750
+    find /home/donomo -type f -print0 | xargs -0 chmod 640
+    chmod 750 /home/donomo/bin/*
+fi
 
-useradd donomo
-mv /tmp/updates/donomo_archive/* /home/donomo/
+if [[ $application -eq 1 ]]
+then
+    cat /etc/init.d/donomo-app <<EOF
+#!/bin/sh -e
+
+workdir=/home/donomo
+pidfile=$workdir/logs/application.pid
+logfile=$workdir/logs/application.log
+
+function start
+{
+    if [-e $pidfile ]
+    then
+        echo >2 "Donomo Processing Pipeline is already running (pid=$(cat $pidfile))"
+        exit 1
+    fi
+
+    export PYTHONPATH=$workdir/lib:$PYTHONPATH
+./manage.py runfcgi method=prefork socket=/home/user/mysite.sock pidfile=django.pid
+./manage.py runfcgi daemonize=false socket=/tmp/mysite.sock maxrequests=1
+
+    su donomo -c "$workdir/bin/application runfcgi protocol=fcgi method=prefok daemonize=true pidfild=$pidfile host=127.0.0.1 port=8081 workdir=$workdir out_log=$logfile err_log=$logfile"
+}
+
+function stop
+{
+    if [ -e $pidfile ]
+    then
+        kill $(cat pidfile)
+        rm $pidfile
+    fi
+}
+
+case ${1:?} in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        stop
+        start
+    *)
+        echo >2 "I don't know how to $1"
+        exit 1
+esac
+EOF
+    chmod 700 /etc/init.d/donomo-procs
+fi
+
+if [[ $processors -eq 1 ]]
+then
+    cat /etc/init.d/donomo-procs <<EOF
+#!/bin/sh -e
+
+workdir=/home/donomo
+pidfile=$workdir/logs/processors.pid
+logfile=$workdir/logs/processors.log
+
+function start
+{
+    if [-e $pidfile ]
+    then
+        echo >2 "Donomo Processing Pipeline is already running (pid=$(cat $pidfile))"
+        exit 1
+    fi
+
+    export PYTHONPATH=$workdir/lib:$PYTHONPATH
+    su donomo -c "$workdir/bin/processors --daemonize --pidfild=$pidfile --workdir=$workdir --logfile=$logfile"
+}
+
+function stop
+{
+    if [ -e $pidfile ]
+    then
+        kill $(cat pidfile)
+        rm $pidfile
+    fi
+}
+
+case ${1:?} in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        stop
+        start
+    *)
+        echo >2 "I don't know how to $1"
+        exit 1
+esac
+EOF
+    chmod 700 /etc/init.d/donomo-procs
+fi
+
+
 
 #
 # Clean the /root directory and your shell history and exit from the image
