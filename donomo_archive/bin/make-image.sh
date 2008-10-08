@@ -171,18 +171,6 @@ then
 fi
 
 #
-# Development Tools and libraries
-#
-
-if [[ $development -eq 1 ]]
-then
-    ${YUM} groupinstall "Development Tools"
-    ${YUM} install httpd-devel apr-devel apr-util-devel libapreq2-devel openssl-devel curl-devel expat-devel libetpan-devel createrepo
-    ${YUM} install boost-devel ImageMagick-devel ImageMagick-c++-devel
-fi
-
-
-#
 # Python
 #
 
@@ -203,10 +191,23 @@ then
     ${YUM} install python-simplejson
     ${YUM} --enablerepo=updates-testing --enablerepo=updates-testing-newkey install MySQL-python
     ${YUM} install libtiff
+    ${YUM} install ImageMagick
     wget -N -O $UPDATES/pyPdf-1.12-1.fc10.noarch.rpm \
         'http://download.fedora.redhat.com/pub/fedora/linux/development/i386/os/Packages/pyPdf-1.12-1.fc10.noarch.rpm'
     ${CHROOT} rpm -i /tmp/updates/pyPdf-1.12-1.fc10.noarch.rpm
 fi
+
+#
+# Development Tools and libraries
+#
+
+if [[ $development -eq 1 ]]
+then
+    ${YUM} groupinstall "Development Tools"
+    ${YUM} install httpd-devel apr-devel apr-util-devel libapreq2-devel openssl-devel curl-devel expat-devel libetpan-devel createrepo
+    ${YUM} install boost-devel ImageMagick-devel ImageMagick-c++-devel
+fi
+
 
 #
 # Donomo bits
