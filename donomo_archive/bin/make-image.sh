@@ -84,6 +84,9 @@ mount -t proc none ${mount_point}/proc
 
 echo "Configuring yum for Fedora ${fedora_version} ..."
 
+basearch=i386
+releasever=${fedora_version]
+
 cat > $YUM_CONF <<EOF
 [main]
 cachedir=/var/cache/yum
@@ -103,19 +106,33 @@ reposdir=/dev/null
 tolerant=1
 
 [core]
-name=Fedora ${fedora_version} - i386
-baseurl=http://download.fedora.redhat.com/pub/fedora/linux/releases/${fedora_version}/Everything/i386/os/
+name=Fedora $releasever - i386
+#baseurl=http://download.fedora.redhat.com/pub/fedora/linux/releases/$releasever/Everything/$basearch/os/
+mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-$releasever&arch=$basearch
 enabled=1
 
-
 [updates]
-name=Fedora ${fedora_version} - i386 - updates
-baseurl=http://download.fedora.redhat.com/pub/fedora/linux/updates/${fedora_version}/i386/
+name=Fedora $releasever - i386 - updates
+#baseurl=http://download.fedora.redhat.com/pub/fedora/linux/updates/$releasever/i386/
+mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f$releasever&arch=$basearch
+enabled=1
+
+[updates-new-key]
+name=Fedora $releasever - i386 - updates (new key)
+#baseurl=http://download.fedora.redhat.com/pub/fedora/linux/updates/$releasever/$basearch.newkey/
+mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f$releasever.newkey&arch=$basearch
 enabled=1
 
 [updates-testing]
-name=Fedora ${fedora_version} - i386 - Test Updates
-baseurl=http://download.fedora.redhat.com/pub/fedora/linux/updates/testing/${fedora_version}/i386/
+name=Fedora $releasever - i386 - Test Updates
+#baseurl=http://download.fedora.redhat.com/pub/fedora/linux/updates/testing/$releasever/$basearch/
+mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-testing-f$releasever&arch=$basearch
+enabled=0
+
+[updates-testing-newkey]
+name=Fedora $releasever - i386 - Test Updates - New Key
+#baseurl=http://download.fedora.redhat.com/pub/fedora/linux/updates/testing/$releasever/$basearch.newkey/
+mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-testing-f$releasever.newkey&arch=$basearch
 enabled=0
 EOF
 
@@ -184,9 +201,10 @@ then
     ${YUM} install python-flup
     ${YUM} install python-httplib2
     ${YUM} install python-simplejson
-    ${YUM} --enablerepo=updates-testing install MySQL-python
+    ${YUM} --enablerepo=updates-testing --enablerepo=updates-testing-newkey install MySQL-python
     ${YUM} install libtiff
-    wget -N -O $UPDATES/pyPdf-1.12-1.fc10.noarch.rpm 'http://download.fedora.redhat.com/pub/fedora/linux/development/i386/os/Packages/pyPdf-1.12-1.fc10.noarch.rpm'
+    wget -N -O $UPDATES/pyPdf-1.12-1.fc10.noarch.rpm \
+        'http://download.fedora.redhat.com/pub/fedora/linux/development/i386/os/Packages/pyPdf-1.12-1.fc10.noarch.rpm'
     ${CHROOT} rpm -i /tmp/updates/pyPdf-1.12-1.fc10.noarch.rpm
 fi
 

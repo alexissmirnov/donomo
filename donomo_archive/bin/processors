@@ -1,7 +1,6 @@
 #!/bin/sh -e
 
-export DJANGO_SETTINGS_MODULE=donomo.settings
+source $(dirname $0)/env.sh
 
-python -m donomo.manage syncdb
 exec python -m donomo.archive.service "$@"
 

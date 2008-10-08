@@ -1,0 +1,75 @@
+#!/bin/bash
+
+touch /var/lock/subsys/local
+
+EC2_PARAM_URL=http://169.254.169.254/latest
+META_DATA_URL=$EC2_PARAM_URL/meta-data
+USER_DATA_URL=$EC2_PARAM_URL/user-data
+EC2_INFO_DIR=/etc/ec2info
+SUMMARY=${EC2INFO}/summary.txt
+
+#
+# Fetch public key using HTTP (if one was supplied at launch)
+#
+
+curl -f "$META_DATA_URL/public-keys/0/openssh-key" > /tmp/my-key
+if [ $? -eq 0 ] ;
+then
+    cat /tmp/my-key >> /root/.ssh/authorized_keys
+    rm -f /tmp/my-key
+    sort -u /root/.ssh/authorized_keys > /root/.ssh/new_authorized_keys
+    mv /root/.ssh/new_authorized_keys /root/.ssh/authorized_keys
+    chmod 600 /root/.ssh/authorized_keys
+fi
+
+#
+# Grab instance parameters
+#
+
+
+rm -fr $EC2_INFO_DIR
+mkdir -p $EC2_INFO_DIR
+touch $SUMMARY
+
+#
+# Download instance meta data
+#
+
+echo -e \
+    "--- Instance Meta-Data -----------------------------------------\n" \
+    >> $SUMMARY
+
+for i in $(curl -f "$META_DATA_URL"); do
+    curl "$META_DATA_URL/$i"> ${EC2_INFO_DIR}/$i;
+    echo "  $i : $(cat ${EC2_INFO_DIR}/$i)" >> $SUMMARY;
+done
+
+#
+# Download instance user data
+#
+
+echo -e \
+    "\n--- Instance Parameters -----------------------------------------\n" \
+    >> $SUMMARY
+
+USER_DATA_TEMP=/tmp/user-data
+mkdir -p $USER_DATA_TEMP
+curl -f $INFOURL/user-data > $USER_DATA_TEMP/user-data.tgz
+if [[ $? -ne 0 ]]
+then
+    echo " * None * "
+else
+    tar -C $USER_DATA_TEMP -xvzf $USER_DATA_TEMP/userdata.tgz
+    rm $USER_DATA_TEMP/userdata.tgz
+
+    for i in $(ls -1 $USER_DATA_TEMP)
+    do
+        if [[ "$i" =~ "private|secret|password" ]]; then continue; fi
+
+        echo "  $i : $(cat ${USER_DATA_TEMP}/$i)" >> $SUMMARY
+        cp ${USER_DATA_TEMP}/$i ${EC2_INFO_DIR}/
+    done
+
+    echo "" >> $SUMMARY
+fi
+rm -rf $USER_DATA_TEMP

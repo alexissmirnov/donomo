@@ -43,18 +43,18 @@ EOF
 # Allow only key-based root logins and don't attempt reverse DNS lookups upon
 # connections.
 #
-sed -i 's/^#?PermitRootLogin\s+\w+/PermitRootLogin without-password/' /etc/ssh/sshd_config
-sed -i 's/^#?PasswordAuthentication\s+\w+/PasswordAuthentication no/' /etc/ssh/sshd_config
-sed -i 's/^#?UseDNS\s+\w+/UseDNS no/' /etc/ssh/sshd_config
-sed -i 's/^#?ClientAliveInterval\s+\d+/ClientAliveInterval 60/' /etc/ssh/sshd_config
-sed -i 's/^#?ClientAliveCountMax\s+\d+/ClientAliveCountMax 240/' /etc/ssh/sshd_config
+sed -r -i 's/^PermitRootLogin\s+[a-zA-Z\-\_]+/PermitRootLogin without-password/g' /etc/ssh/sshd_config
+sed -r -i 's/^PasswordAuthentication\s+[a-zA-Z\-\_]+/PasswordAuthentication no/g' /etc/ssh/sshd_config
+sed -r -i 's/^.*UseDNS\s+[a-zA-Z\-\_]+/UseDNS no/g' /etc/ssh/sshd_config
+sed -r -i 's/^.*ClientAliveInterval\s+[0-9]+/ClientAliveInterval 60/g' /etc/ssh/sshd_config
+sed -r -i 's/^.*ClientAliveCountMax\s+[0-9]+/ClientAliveCountMax 240/g' /etc/ssh/sshd_config
 
 # Create and populate /root/.ssh directory
 #
 mkdir -p /root/.ssh
 if [[ -f /tmp/updates/authorized_keys ]]
 then
-    cp /tmp/updates/authorized_keys /root/.ssh/
+    /bin/cp -f /tmp/updates/authorized_keys /root/.ssh/
 fi
 touch /root/.ssh/authorized_keys
 chmod 700 /root/.ssh
@@ -90,88 +90,7 @@ SHELL=/bin/sh
 MAILTO=root
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin:/usr/local/pi/bin
 HOME=/root
-#
-#
 EOF
-
-cat >> /etc/init.d/rc.local <<'EOF'
-#!/bin/bash
-
-touch /var/lock/subsys/local
-
-
-#
-# Fetch public key using HTTP (if one was supplied at launch)
-#
-
-curl -f http://169.254.169.254/latest/meta-data/public-keys/0/openssh-key > /tmp/my-key
-if [ $? -eq 0 ] ;
-then
-    cat /tmp/my-key >> /root/.ssh/authorized_keys
-    rm -f /tmp/my-key
-    sort -u /root/.ssh/authorized_keys > /root/.ssh/new_authorized_keys
-    mv /root/.ssh/new_authorized_keys /root/.ssh/authorized_keys
-    chmod 600 /root/.ssh/authorized_keys
-fi
-
-#
-# Grab instance parameters
-#
-
-EC2_PARAM_URL=http://169.254.169.254/latest
-META_DATA_URL=$EC2_PARAM_URL/meta-data
-USER_DATA_URL=$EC2_PARAM_URL/user-data
-EC2_INFO_DIR=/etc/ec2info
-SUMMARY=${EC2INFO}/summary.txt
-
-rm -fr $EC2_INFO_DIR
-mkdir -p $EC2_INFO_DIR
-touch $SUMMARY
-
-#
-# Download instance meta data
-#
-
-echo -e \
-    "--- Instance Meta-Data -----------------------------------------\n" \
-    >> $SUMMARY
-
-for i in $(curl "$META_DATA_URL"); do
-    curl "$META_DATA_URL/$i"> ${EC2_INFO_DIR}/$i;
-    echo "  $i : $(cat ${EC2_INFO_DIR}/$i)" >> $SUMMARY;
-done
-
-#
-# Download instance user data
-#
-
-echo -e \
-    "\n--- Instance Parameters -----------------------------------------\n" \
-    >> $SUMMARY
-
-USER_DATA_TEMP=/tmp/user-data
-mkdir -p $USER_DATA_TEMP
-curl -f $INFOURL/user-data > $USER_DATA_TEMP/user-data.tgz
-if [[ $? -ne 0 ]]
-then
-    echo " * None * "
-else
-    tar -C $USER_DATA_TEMP -xvzf $USER_DATA_TEMP/userdata.tgz
-    rm $USER_DATA_TEMP/userdata.tgz
-
-    for i in $(ls -1 $USER_DATA_TEMP)
-    do
-        if [[ "$i" =~ "private|secret|password" ]]; then continue; fi
-
-        echo "  $i : $(cat ${USER_DATA_TEMP}/$i)" >> $SUMMARY
-        cp ${USER_DATA_TEMP}/$i ${EC2_INFO_DIR}/
-    done
-
-    echo "" >> $SUMMARY
-fi
-rm -rf $USER_DATA_TEMP
-EOF
-
 
 # Change local time to GMT
 #
@@ -277,7 +196,7 @@ chkconfig xfs off
 chkconfig ypbind off
 chkconfig yum-updatesd off
 
-#set -e
+set -e
 
 #
 # Disable SELinux
@@ -302,7 +221,7 @@ EOF
 ldconfig
 
 #
-# Set up iptables
+# Start setting up iptables
 #
 
 cat > /etc/sysconfig/iptables << EOF
@@ -315,31 +234,9 @@ cat > /etc/sysconfig/iptables << EOF
 -A INPUT -m state --state NEW -m tcp -p tcp --dport 22 -j ACCEPT
 EOF
 
-if [[ $application -eq 1 ]]
-then
-    cat >> /etc/sysconfig/iptables << EOF
--A INPUT -m state --state NEW -m tcp -p tcp --dport 80 -j ACCEPT
--A INPUT -m state --state NEW -m tcp -p tcp --dport 443 -j ACCEPT
-EOF
-fi
-
-if [[ $solr -eq 1 ]]
-then
-    cat >> /etc/sysconfig/iptables << EOF
--A INPUT -m state --state NEW -m tcp -p tcp --dport 8983 -j ACCEPT
-EOF
-fi
-
-cat >> /etc/sysconfig/iptables << EOF
--A INPUT -j REJECT --reject-with icmp-host-prohibited
--A FORWARD -j REJECT --reject-with icmp-host-prohibited
-COMMIT
-EOF
-
-chmod 600 /etc/sysconfig/iptables
 
 #
-# Set up securitylevel
+# Start setting up SELinux
 #
 
 cat > /etc/sysconfig/system-config-securitylevel << EOF
@@ -348,138 +245,150 @@ cat > /etc/sysconfig/system-config-securitylevel << EOF
 --port=22:tcp
 EOF
 
-if [[ $application -eq 1 ]]
-then
-    cat >> /etc/sysconfig/system-config-securitylevel << EOF
---port=80
---port=443
-EOF
-fi
-
-if [[ $solr -eq 1 ]]
-then
-    cat >> /etc/sysconfig/system-config-securitylevel << EOF
---port=8983
-EOF
-fi
-
-chmod 644 /etc/sysconfig/system-config-securitylevel
-
-if [[ $(( application + processors )) -gt 0 ]]
+if [[ $(( database + application + processors )) -gt 0 ]]
 then
     useradd donomo
 
     mv /tmp/updates/donomo_archive/* /home/donomo/
-    mv /tmp/updates/aws.sh /home/donomo/.awsrc
     chown -R donomo:donomo /home/donomo
     chown -R donomo:donomo /home/donomo/.*
     find /home/donomo -type d -print0 | xargs -0 chmod 750
     find /home/donomo -type f -print0 | xargs -0 chmod 640
     chmod 750 /home/donomo/bin/*
+    mkdir -p /var/lib/donomo/cache
+    mkdir -p /var/log/donomo
+    mkdir -p /var/run/donomo
+    chown -R donomo:donomo /var/lib/donomo
+    chown -R donomo:donomo /var/log/donomo
+    chown -R donomo:donomo /var/run/donomo
+
+    mkdir -p /root/.donomo
+    /bin/cp -f /tmp/updates/aws.sh /root/.donomo/aws.sh
+    cat > /root/.donomo/db_pwd_donomo.sh <<EOF
+export DATABASE_PASSWORD=310711f3249542dfa52d9737533771b9
+EOF
+fi
+
+if [[ $database -eq 1 ]]
+then
+
+    # --- IP Tables ---
+    cat >> /etc/sysconfig/iptables << EOF
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 3306 -j ACCEPT
+EOF
+
+    # --- SE Linus ---
+    cat >> /etc/sysconfig/system-config-securitylevel << EOF
+--port=3306
+EOF
+
+    # --- Root's DB Password ---
+    cat > /root/.donomo/db_pwd_root.sh <<EOF
+export ROOT_PASSWORD=259053d112344fb09b4e8ddb83779803
+EOF
+
+    # --- Use Transactional Tables ---
+    /bin/cp -f /home/donomo/mysqld/my.cnf /etc/my.cnf
+    chown root:root /etc/my.cnf
+    chmod 644 /etc/my.cnf
+
+    # --- Init Script ---
+    /bin/cp -f /home/donomo/init.d/donomo-dbinit /etc/init.d/
+    chown root:root /etc/init.d/donomo-dbinit
+    chmod 750 /etc/init.d/donomo-dbinit
+
+    # --- Start services automatically ---
+    touch /etc/sysconfig/donomo.db
+    chkconfig mysqld on
+    chkconfig donomo-dbinit on
 fi
 
 if [[ $application -eq 1 ]]
 then
-    cat > /etc/init.d/donomo-app <<"EOF"
-#!/bin/sh -e
-
-workdir=/home/donomo
-pidfile=$workdir/logs/application.pid
-logfile=$workdir/logs/application.log
-
-function start
-{
-    if [-e $pidfile ]
-    then
-        echo >2 "Donomo Processing Pipeline is already running (pid=$(cat $pidfile))"
-        exit 1
-    fi
-
-    export PYTHONPATH=$workdir/deps:$workdir/lib:$PYTHONPATH
-    su donomo -c "$workdir/bin/application runfcgi protocol=fcgi method=prefok daemonize=true pidfild=$pidfile host=127.0.0.1 port=8081 workdir=$workdir out_log=$logfile err_log=$logfile"
-}
-
-function stop
-{
-    if [ -e $pidfile ]
-    then
-        kill $(cat pidfile)
-        rm $pidfile
-    fi
-}
-
-case ${1:?} in
-    start)
-        start
-        ;;
-    stop)
-        stop
-        ;;
-    restart)
-        stop
-        start
-    *)
-        echo >2 "I don't know how to $1"
-        exit 1
-esac
+    # --- IP Tables ---
+    cat >> /etc/sysconfig/iptables << EOF
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 80 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 443 -j ACCEPT
 EOF
-    chmod 700 /etc/init.d/donomo-app
-    ln -sf /etc/init.d/donomo-procs /etc/rc.d/rc3.d/S98domono-app
+
+    # --- SE Linux ---
+    cat >> /etc/sysconfig/system-config-securitylevel << EOF
+--port=80
+--port=443
+EOF
+
+    # --- Init Script ---
+    /bin/cp -f /home/donomo/init.d/donomo-app /etc/init.d/
+    chown root:root /etc/init.d/donomo-app
+    chmod 750 /etc/init.d/donomo-app
+
+    # --- Config Files ---
+    /bin/cp -f /home/donomo/nginx/*.conf /etc/nginx/
+    chown root:root /etc/nginx/*
+    chmod 644 /etc/nginx/*
+
+    path=/home/donomo/lib/donomo/archive/media
+    find $path -type f -print0 | xargs -0 chmod 644
+    find $path -type d -print0 | xargs -0 chmod 755
+    until [[ "$path" = "/home" ]]
+    do
+        chmod o+x $path
+        path=$(dirname $path)
+    done
+
+    mkdir -p /var/lib/nginx/empty
+
+    # --- Turn on Services ---
+    chkconfig nginx on
+    chkconfig donomo-app on
 fi
 
 if [[ $processors -eq 1 ]]
 then
-    cat > /etc/init.d/donomo-procs <<"EOF"
-#!/bin/sh -e
+    # --- Init Script ---
+    /bin/cp -f /home/donomo/init.d/donomo-procs /etc/init.d/
+    chown root:root /etc/init.d/donomo-procs
+    chmod 750 /etc/init.d/donomo-procs
 
-workdir=/home/donomo
-pidfile=$workdir/logs/processors.pid
-logfile=$workdir/logs/processors.log
-
-function start
-{
-    if [-e $pidfile ]
-    then
-        echo >2 "Donomo Processing Pipeline is already running (pid=$(cat $pidfile))"
-        exit 1
-    fi
-
-    export PYTHONPATH=$workdir/deps:$workdir/lib:$PYTHONPATH
-    su donomo -c "$workdir/bin/processors --daemonize --pidfild=$pidfile --workdir=$workdir --logfile=$logfile"
-}
-
-function stop
-{
-    if [ -e $pidfile ]
-    then
-        kill $(cat pidfile)
-        rm $pidfile
-    fi
-}
-
-case ${1:?} in
-    start)
-        start
-        ;;
-    stop)
-        stop
-        ;;
-    restart)
-        stop
-        start
-    *)
-        echo >2 "I don't know how to $1"
-        exit 1
-esac
-EOF
-    chmod 700 /etc/init.d/donomo-procs
-    ln -sf /etc/init.d/donomo-procs /etc/rc.d/rc3.d/S98domono-procs
+    # -- Turn on Services ---
+    chkconfig donomo-procs on
 fi
 
 
+if [[ $solr -eq 1 ]]
+then
+    cat >> /etc/sysconfig/iptables << EOF
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 8983 -j ACCEPT
+EOF
+
+    cat >> /etc/sysconfig/system-config-securitylevel << EOF
+--port=8983
+EOF
+fi
+
+
+cat >> /etc/sysconfig/iptables << EOF
+-A INPUT -j REJECT --reject-with icmp-host-prohibited
+-A FORWARD -j REJECT --reject-with icmp-host-prohibited
+COMMIT
+EOF
+
+chmod 600 /etc/sysconfig/iptables
+chmod 644 /etc/sysconfig/system-config-securitylevel
+
+#
+# Clean up /home/donomo
+#
+
+#rm -rf /home/donomo/init.d
+#rm -rf /home/donomo/conf
 
 #
 # Clean the /root directory and your shell history and exit from the image
 #
 rm -rf /root/*
+chown -R root:root /root/.donomo
+chmod 700 /root/.donomo
+chmod 600 /root/.donomo/*
+
 echo -n '' > /root/.bash_history

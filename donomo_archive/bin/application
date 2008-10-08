@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-export DJANGO_SETTINGS_MODULE=donomo.settings
-python -m donomo.manage syncdb
-exec python -m donomo.manage runserver '0.0.0.0:8000'
+source $(dirname $0)/env.sh
+
+exec python -m donomo.manage "$@"
 

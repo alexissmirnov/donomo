@@ -1,0 +1,60 @@
+#!/bin/sh
+
+# chkconfig: - 70 07
+# description: Donomo Database Initialization
+
+source /etc/rc.d/init.d/functions
+
+workdir=/home/donomo
+logfile=/var/log/donomo/dbinit.log
+initfile=/etc/sysconfig/donomo.db
+
+function init_db
+{
+    source /root/.donomo/db_pwd_root.sh
+    source /root/.donomo/db_pwd_donomo.sh
+
+    mysqladmin -u root password "$ROOT_PASSWORD"
+
+    mysql -u root "-p$ROOT_PASSWORD" mysql <<SQL
+create database donomo;
+grant all on donomo.* to 'donomo'@'%' identified by '$DATABASE_PASSWORD';
+flush privileges;
+SQL
+    mysqladmin -u root "-p$ROOT_PASSWORD" reload
+
+    /home/donomo/bin/application syncdb --noinput
+}
+
+function start
+{
+    if [[ -e $initfile ]]
+    then
+        init_db
+        rm -f $initfile
+    fi
+
+    action "Donomo Database Initialization" /bin/true
+}
+
+function stop
+{
+    action "Donomo database initialization" /bin/true
+}
+
+case ${1:?} in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        $0 stop
+        $0 start
+        ;;
+    *)
+        echo "Usage: $(basename $0) start|stop|restart"
+        exit 1
+        ;;
+esac

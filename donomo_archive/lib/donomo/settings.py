@@ -58,8 +58,8 @@ TEMP_DIR         = tempfile.gettempdir()
 
 DONOMO_PATH = get_module_dir('donomo')
 DJANGO_PATH = get_module_dir('django')
-LOG_PATH    = os.environ.get('DONOMO_LOG_PATH', '.')
-CACHE_PATH  = os.environ.get('DONOMO_CACHE_PATH', '/home/alexissmirnov/tmp/cache/')
+LOG_PATH    = os.environ.get('DONOMO_LOG_PATH', '/var/log/donomo')
+CACHE_PATH  = os.environ.get('DONOMO_CACHE_PATH', '/var/lib/donomo/cache')
 
 ##############################################################################
 #
@@ -101,7 +101,7 @@ if DEVELOPMENT_MODE:
             })
 else:
     LOGGING_PARAMS.update( {
-            'filename' : join_and_normalize(LOG_PATH, 'donomo.log'),
+            'stream'   : sys.stderr,
             'level'    : logging.INFO,
             })
 
@@ -121,13 +121,15 @@ DATABASE_ENGINE    = 'mysql'
 DATABASE_NAME      = 'donomo'
 DATABASE_USER      = 'donomo'
 DATABASE_PASSWORD  = os.environ.get('DATABASE_PASSWORD', '8d85bcc668074be7ae4be08deae11705')
+DATABASE_HOST      = os.environ.get('DATABASE_HOST', 'db.donomo.com')
+DATABASE_PORT      = 3306
 
 if DEVELOPMENT_MODE or TEST_MODE:
     MEDIA_ROOT         = join_and_normalize(DONOMO_PATH, 'archive', 'media/')
     ADMIN_MEDIA_PREFIX = '/admin_media/'
 else:
     MEDIA_ROOT         = '~/webapps/static/media/'
-    ADMIN_MEDIA_PREFIX = 'http://smirnov.ca/media/'
+    ADMIN_MEDIA_PREFIX = '/admin_media/'
     CACHE_BACKEND                   = "file://%s" % CACHE_PATH
     CACHE_MIDDLEWARE_SECONDS        = 60 * 5 # 5 minutes
     CACHE_MIDDLEWARE_KEY_PREFIX     = 'donomo'

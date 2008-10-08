@@ -129,7 +129,7 @@ def main():
 
     parser.add_option(
         '--daemonize',
-        action  = 'set_true',
+        action  = 'store_true',
         default = False )
 
     parser.add_option('--workdir')
@@ -143,7 +143,7 @@ def main():
         from django.utils.daemonize import become_daemon
         daemon_kwargs = {}
         if options.workdir:
-            daemon_kwargs['our_home_dir'] = options.work_dir
+            daemon_kwargs['our_home_dir'] = options.workdir
         if options.logfile:
             daemon_kwargs['out_log'] = options.logfile
             daemon_kwargs['err_log'] = options.logfile
@@ -157,6 +157,8 @@ def main():
             pidfile.write('%d\n' % os.getpid())
         finally:
             pidfile.close()
+
+    logging.info("Starting")
 
     if len(process_names) == 0:
         process_names = DEFAULT_PROCESSORS
@@ -181,7 +183,7 @@ def main():
             if not thread.isAlive():
                 break
 
-    print "Stopped"
+    logging.info("Stopped")
 
 
 ##############################################################################

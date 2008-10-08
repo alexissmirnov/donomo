@@ -1,0 +1,60 @@
+#!/bin/sh
+
+# chkconfig: - 99 06
+# description: Donomo Archive Processing Pipeline
+# pidfile: /var/run/donomo/processor.pid
+
+source /etc/rc.d/init.d/functions
+
+workdir=/var/lib/donomo
+pidfile=/var/run/donomo/processors.pid
+logfile=/var/log/donomo/processors.log
+prog="Donomo Processing Pipeline"
+function start
+{
+    if [[ -e $pidfile ]]
+    then
+        echo >2 "$prog is already running (pid=$(cat $pidfile))"
+        action "Starting $prog:" /bin/false
+        exit 1
+    fi
+
+    source /root/.donomo/db_pwd_donomo.sh
+    source /root/.donomo/aws.sh
+    su -c "/home/donomo/bin/processors --daemonize --pidfile=$pidfile --logfile=$logfile --workdir=$workdir" donomo
+
+    if [[ $? -eq 0 ]]
+    then
+        action "Starting $prog:" /bin/true
+    else
+        action "Starting $prog:" /bin/false
+    fi
+
+}
+
+function stop
+{
+    if killproc -p $pidfile
+    then
+        action "Stopping $prog:" /bin/true
+    else
+        action "Stopping $prog:" /bin/false
+    fi
+}
+
+case ${1:?} in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        $0 stop
+        $0 start
+        ;;
+    *)
+        echo "Usage: $(basename $0) start|stop|restart"
+        exit 1
+        ;;
+esac

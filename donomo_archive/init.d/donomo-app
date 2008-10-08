@@ -1,0 +1,79 @@
+#!/bin/sh
+
+# chkconfig: - 99 06
+# description: Donomo Archive Web Application
+# pidfile: /var/run/donomo/application.pid
+
+source /etc/rc.d/init.d/functions
+
+workdir=/var/lib/donomo
+pidfile=/var/run/donomo/application.pid
+logfile=/var/log/donomo/application.log
+socket=$workdir/fcgi.sock
+prog="Donomo Web Application"
+
+function start
+{
+    if [[ -e $pidfile ]]
+    then
+        echo "$(date) - $prog is already running (pid=$(cat $pidfile))" >> $logfile
+        action "Starting $prog:" /bin/false
+        exit 1
+    fi
+
+    source /root/.donomo/db_pwd_donomo.sh
+    source /root/.donomo/aws.sh
+    su -c "/home/donomo/bin/application runfcgi protocol=fcgi method=prefork daemonize=true pidfile=$pidfile socket=$socket workdir=$workdir outlog=$logfile errlog=$logfile" donomo
+
+    if [[ $? -eq 0 ]]
+    then
+        action "Starting $prog:" /bin/true
+    else
+        action "Starting $prog:" /bin/false
+    fi
+
+    if chown donomo:nginx $socket
+    then
+        action "  - Setting socket owner" /bin/true
+    else
+        action "  - Setting socket owner" /bin/false
+        $0 stop
+        exit 1
+    fi
+
+    if chmod 770 $socket
+    then
+        action "  - Setting socket permissions" /bin/true
+    else
+        action "  - Setting socket permissions" /bin/false
+        $0 stop
+        exit 1
+    fi
+}
+
+function stop
+{
+    if killproc -p $pidfile
+    then
+        action "Stopping $prog:" /bin/true
+    else
+        action "Stopping $prog:" /bin/false
+    fi
+}
+
+case ${1:?} in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        $0 stop
+        $0 start
+        ;;
+    *)
+        echo "Usage: $(basename $0) start|stop|restart"
+        exit 1
+        ;;
+esac
