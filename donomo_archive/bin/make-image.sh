@@ -232,7 +232,7 @@ cat $ssh_dir/* > $UPDATES/authorized_keys
 
 /bin/cp -f config-image.sh parse-args.sh $UPDATES/
 chmod +x $UPDATES/config-image.sh
-${CHROOT} ${mount_point} /tmp/updates/config-image.sh "$@"
+${CHROOT} /tmp/updates/config-image.sh "$@"
 #rm -rf $UPDATES
 
 umount ${mount_point}/proc
