@@ -243,5 +243,5 @@ mkdir -p ${output_dir}
 source $aws_dir/ec2.sh
 prefix=donomo-f${fedora_version}-ami_v1_0-$(date '+%Y%m%d%H%M')
 ec2-bundle-image -i ${volume_file} -c $aws_dir/cert-*.pem -k $aws_dir/pk-*.pem -u $AWS_ACCOUNT_NUMBER -d ${output_dir} --kernel $aki --ramdisk $ari -p $prefix
-ec2-upload-bundle -b ami.donomo.com -m ${output_dir}/${prefix}.manifest.xml -a $AWS_ACCESS_KEY_ID -s $AWS_SECRET_ACCESS_KEY
+ec2-upload-bundle -b ami.donomo.com -m ${output_dir}/${prefix}.manifest.xml -a $AWS_ACCESS_KEY_ID -s $AWS_SECRET_ACCESS_KEY --retry
 ec2-register ami.donomo.com/$manifest

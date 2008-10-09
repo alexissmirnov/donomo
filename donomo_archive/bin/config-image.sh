@@ -376,12 +376,19 @@ EOF
 chmod 600 /etc/sysconfig/iptables
 chmod 644 /etc/sysconfig/system-config-securitylevel
 
+/bin/cp -f /home/donomo/init.d/rc.local /etc/init.d
+chown root:root /etc/init.d/rc.local
+chmod 754 /etc/init.d/rc.local
+
 #
 # Clean up /home/donomo
 #
 
 #rm -rf /home/donomo/init.d
-#rm -rf /home/donomo/conf
+#rm -rf /home/donomo/nginx
+#rm -rf /home/donomo/mysqld
+#rm -rf /home/donomo/solr
+
 
 #
 # Clean the /root directory and your shell history and exit from the image
