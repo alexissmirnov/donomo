@@ -85,7 +85,7 @@ mount -t proc none ${mount_point}/proc
 echo "Configuring yum for Fedora ${fedora_version} ..."
 
 basearch=i386
-releasever=${fedora_version]
+releasever=${fedora_version}
 
 cat > $YUM_CONF <<EOF
 [main]
