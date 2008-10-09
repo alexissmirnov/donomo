@@ -26,8 +26,6 @@ __all__ = (
     )
 
 ###############################################################################
-@logged_in_or_basicauth()
-@login_required
 @http_method_dispatcher
 def document_list():
     """

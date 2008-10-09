@@ -14,6 +14,8 @@ from django.conf                     import settings
 from django.core.validators          import ValidationError
 from django.db.models                import ObjectDoesNotExist
 from django.http                     import HttpResponse, HttpResponseRedirect
+from django.contrib.auth             import authenticate, login
+from django.contrib.auth.decorators  import login_required
 from donomo.archive                  import models, operations
 from donomo.archive.service          import indexer
 from donomo.archive.utils            import pdf, s3
@@ -216,7 +218,7 @@ def extract_query_string(request):
 
 
 ##############################################################################
-
+@login_required
 @json_view
 def get_document_list(request):
     """
@@ -252,6 +254,19 @@ def upload_document(request):
     Upload a new document.
 
     """
+    logging.debug('upload_document')
+    username = request.POST['user']
+    password = request.POST['password']
+    logging.debug('username=%s'%username)
+    user = authenticate(username=username, password=password)
+    if user is not None:
+        if user.is_active:
+            login(request, user)
+        else:
+            return ValidationError('account disabled')
+    else:
+        return ValidationError('invalid login')
+
     gateway      = _init_processor()[0]
 
     # pick all files that are send in this API
@@ -285,7 +300,7 @@ def upload_document(request):
         }
     
 ##############################################################################
-
+@login_required
 @json_view
 def split_document(request):
     """
@@ -306,7 +321,7 @@ def split_document(request):
         }
 
 ##############################################################################
-
+@login_required
 @json_view
 def merge_documents(request):
     """

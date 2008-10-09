@@ -72,17 +72,12 @@ def main():
     
     print "Uploading %s to %s for %s" % (files, options.domain, options.user)
 
-    h.add_credentials(options.user, options.password)
-    r, c = h.request("http://%s/api/1.0/documents/" % options.domain, 'GET')
-    if r.status != 200:
-        print "Login failed"
-        return
-    
     for file_to_upload in files:
         with open(file_to_upload, 'rb') as f:
             print "Uploading %s ..." % file_to_upload
             uploaded = post_multipart("http://%s/api/1.0/documents/" % options.domain, 
-                                      ((file_to_upload, file_to_upload, f.read()),))
+                                      ((file_to_upload, file_to_upload, f.read()),), 
+                                      (('user', options.user), ('password', options.password),))
         print "Uploaded? %s" % uploaded
             
         if options.delete and uploaded:
