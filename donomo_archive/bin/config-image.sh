@@ -8,25 +8,23 @@ source $(dirname $0)/parse-args.sh "$@"
 # Check consistency of passwd and group files and make appropriate corrections
 #
 
-pwck -r
-grpck -r
+authconfig --enableshadow --useshadow --enablemd5 --updateall
 
-# Convert passwd and group files to shadow (/etc/shadow and /etc/gshadow
-# respectively)
 #
-pwconv
-grpconv
-
 # Set default root password on instance;
 #
 passwd root
 
-cat <<EOF > /etc/sysconfig/network
+cat > /etc/hosts <<EOF
+127.0.0.1 localhost localhost.localdomain
+EOF
+
+cat > /etc/sysconfig/network <<EOF
 NETWORKING=yes
 HOSTNAME=localhost.localdomain
 EOF
 
-cat <<EOF > /etc/sysconfig/network-scripts/ifcfg-eth0
+cat > /etc/sysconfig/network-scripts/ifcfg-eth0 <<EOF
 DEVICE=eth0
 BOOTPROTO=dhcp
 ONBOOT=yes
