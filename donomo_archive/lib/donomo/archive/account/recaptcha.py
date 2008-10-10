@@ -67,6 +67,10 @@ class RecaptchaField(Field):
     def clean(self, value):
         value = super(RecaptchaField, self).clean(value)
         challenge, response = value
+
+        if settings.RECAPTCHA_DISABLED:
+            return value
+        
         if not challenge:
             raise ValidationError(u'An error occured with the CAPTCHA service. Please try again.')
         if not response:
