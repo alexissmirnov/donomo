@@ -4,6 +4,8 @@ set -x
 
 source $(dirname $0)/parse-args.sh "$@"
 
+source_tree=/tmp/updates/trunk
+
 #
 # Check consistency of passwd and group files and make appropriate corrections
 #
@@ -50,7 +52,7 @@ sed -r -i 's/^.*ClientAliveCountMax\s+[0-9]+/ClientAliveCountMax 240/g' /etc/ssh
 # Create and populate /root/.ssh directory
 #
 mkdir -p /root/.ssh
-cat /tmp/updates/trunk/ssh/* > /root/.ssh/authorized_keys
+cat ${source_tree}/ssh/* > /root/.ssh/authorized_keys
 chmod 700 /root/.ssh
 chmod 600 /root/.ssh/*
 
@@ -243,16 +245,16 @@ if [[ $solr -eq 1 ]]
 then
     useradd solr
 
-    /bin/cp -rf /tmp/updates/trunk/donomo_archive/solr/* /home/solr/
+    /bin/cp -rf ${source_tree}/donomo_archive/solr/* /home/solr/
     
     mkdir -p /var/lib/solr
     mkdir -p /var/log/solr
     mkdir -p /var/run/solr
 
-    /bin/rm -f /home/solr/logs
+    /bin/rm -rf /home/solr/logs
     ln -s /var/log/solr /home/solr/logs
 
-    chown -R solr:solr /home/solr/*
+    chown -R solr:solr /home/solr
     chown -R solr:solr /var/lib/solr
     chown -R solr:solr /var/log/solr
     chown -R solr:solr /var/run/solr
@@ -265,11 +267,11 @@ EOF
 --port=8983
 EOF
 
-    /bin/cp -f /home/donomo/init.d/solr /etc/solr
+    /bin/cp -f ${source_tree}/donomo_archive/init.d/solr /etc/init.d/solr
     chown root:root /etc/init.d/solr
     chmod 750 /etc/init.d/solr
 
-    chkconfig solr
+    chkconfig solr on
 fi
 
 
@@ -277,21 +279,20 @@ if [[ $(( database + application + processors )) -gt 0 ]]
 then
     useradd donomo
 
-    /bin/cp -rf /tmp/updates/trunk/donomo_archive/* /home/donomo/
-    chown -R donomo:donomo /home/donomo
-    chown -R donomo:donomo /home/donomo/.*
+    /bin/cp -rf ${source_tree}/donomo_archive/* /home/donomo/
     find /home/donomo -type d -print0 | xargs -0 chmod 750
     find /home/donomo -type f -print0 | xargs -0 chmod 640
     chmod 750 /home/donomo/bin/*
     mkdir -p /var/lib/donomo/cache
     mkdir -p /var/log/donomo
     mkdir -p /var/run/donomo
+    chown -R donomo:donomo /home/donomo
     chown -R donomo:donomo /var/lib/donomo
     chown -R donomo:donomo /var/log/donomo
     chown -R donomo:donomo /var/run/donomo
 
     mkdir -p /root/.donomo
-    /bin/cp -f /tmp/updates/trunk/aws/aws.sh /root/.donomo/aws.sh
+    /bin/cp -f ${source_tree}/aws/aws.sh /root/.donomo/aws.sh
     cat > /root/.donomo/db_pwd_donomo.sh <<EOF
 export DATABASE_PASSWORD=310711f3249542dfa52d9737533771b9
 EOF
@@ -316,12 +317,12 @@ export ROOT_PASSWORD=259053d112344fb09b4e8ddb83779803
 EOF
 
     # --- Use Transactional Tables ---
-    /bin/cp -f /home/donomo/mysqld/my.cnf /etc/my.cnf
+    /bin/cp -f ${source_tree}/donomo_archive/mysqld/my.cnf /etc/my.cnf
     chown root:root /etc/my.cnf
     chmod 644 /etc/my.cnf
 
     # --- Init Script ---
-    /bin/cp -f /home/donomo/init.d/donomo-dbinit /etc/init.d/
+    /bin/cp -f ${source_tree}/donomo_archive/init.d/donomo-dbinit /etc/init.d/
     chown root:root /etc/init.d/donomo-dbinit
     chmod 750 /etc/init.d/donomo-dbinit
 
@@ -346,7 +347,7 @@ EOF
 EOF
 
     # --- Init Script ---
-    /bin/cp -f /home/donomo/init.d/donomo-app /etc/init.d/
+    /bin/cp -f ${source_tree}/donomo_archive/init.d/donomo-app /etc/init.d/
     chown root:root /etc/init.d/donomo-app
     chmod 750 /etc/init.d/donomo-app
 
@@ -374,7 +375,7 @@ fi
 if [[ $processors -eq 1 ]]
 then
     # --- Init Script ---
-    /bin/cp -f /home/donomo/init.d/donomo-procs /etc/init.d/
+    /bin/cp -f ${source_tree}/donomo_archive/init.d/donomo-procs /etc/init.d/
     chown root:root /etc/init.d/donomo-procs
     chmod 750 /etc/init.d/donomo-procs
 
@@ -391,7 +392,7 @@ EOF
 chmod 600 /etc/sysconfig/iptables
 chmod 644 /etc/sysconfig/system-config-securitylevel
 
-/bin/cp -f /home/donomo/init.d/rc.local /etc/init.d
+/bin/cp -f ${source_tree}/donomo_archive/init.d/rc.local /etc/init.d
 chown root:root /etc/init.d/rc.local
 chmod 750 /etc/init.d/rc.local
 

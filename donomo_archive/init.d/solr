@@ -1,8 +1,8 @@
 #!/bin/sh
 
 # chkconfig: - 99 06
-# description: Donomo Archive Processing Pipeline
-# pidfile: /var/run/donomo/processor.pid
+# description: solr
+# pidfile: /var/run/solr/solr.pid
 
 source /etc/rc.d/init.d/functions
 
