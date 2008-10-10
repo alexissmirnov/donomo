@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 touch /var/lock/subsys/local
 
@@ -39,8 +39,8 @@ echo -e \
     "--- Instance Meta-Data -----------------------------------------\n" \
     >> $SUMMARY
 
-for i in $(curl -f "$META_DATA_URL"); do
-    curl "$META_DATA_URL/$i"> ${EC2_INFO_DIR}/$i;
+for i in $(curl -f "$META_DATA_URL/"); do
+    curl -f "$META_DATA_URL/$i" > ${EC2_INFO_DIR}/$i;
     echo "  $i : $(cat ${EC2_INFO_DIR}/$i)" >> $SUMMARY;
 done
 
@@ -54,7 +54,7 @@ echo -e \
 
 USER_DATA_TEMP=/tmp/user-data
 mkdir -p $USER_DATA_TEMP
-curl -f $INFOURL/user-data > $USER_DATA_TEMP/user-data.tgz
+curl -f "$META_DATA_URL/user-data/" > $USER_DATA_TEMP/user-data.tgz
 if [[ $? -ne 0 ]]
 then
     echo " * None * "

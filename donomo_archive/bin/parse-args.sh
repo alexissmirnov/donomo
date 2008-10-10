@@ -57,7 +57,7 @@ done
 
 fedora_version=8
 aki=aki-9b00e5f2
-ari=ari-a51cf9cc
+#ari=ari-a51cf9cc
 
 echo "------------------------------------------------------------------------"
 echo "Volume File : ${volume_file:?}"

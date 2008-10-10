@@ -8,9 +8,15 @@ source /etc/rc.d/init.d/functions
 workdir=/home/donomo
 logfile=/var/log/donomo/dbinit.log
 initfile=/etc/sysconfig/donomo.db
+prog="Donomo DB Init"
 
-function init_db
+function init_db_i
 {
+    if [[ ! -e $initfile ]]
+    then
+	return 0
+    fi
+
     source /root/.donomo/db_pwd_root.sh
     source /root/.donomo/db_pwd_donomo.sh
 
@@ -23,31 +29,27 @@ flush privileges;
 SQL
     mysqladmin -u root "-p$ROOT_PASSWORD" reload
 
-    /home/donomo/bin/application syncdb --noinput
-}
+    /home/donomo/bin/application syncdb --noinput 1>&2
 
-function start
-{
-    if [[ -e $initfile ]]
+    if [[ $? -eq 0 ]]
     then
-        init_db
-        rm -f $initfile
+	rm -f $initfile
     fi
 
-    action "Donomo Database Initialization" /bin/true
+    return $?
 }
 
-function stop
+function init_db
 {
-    action "Donomo database initialization" /bin/true
+    init_db_i 2>>$logfile
 }
 
-case ${1:?} in
+case ${1:-blah} in
     start)
-        start
+	action "Starting: $prog" init_db
         ;;
     stop)
-        stop
+	action "Stopping: $prog" /bin/true
         ;;
     restart)
         $0 stop

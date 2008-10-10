@@ -34,7 +34,7 @@ UPDATES=${mount_point}/tmp/updates
 echo "---- Initializating AMI Filesystem --------------------------------"
 
 echo "Creating volume file (${volume_file}) ..."
-dd if=/dev/zero of=${volume_file} bs=1M count=2048
+dd if=/dev/zero of=${volume_file} bs=1M count=4096
 
 echo "Initializing file system ..."
 mke2fs -F -j ${volume_file}
@@ -142,10 +142,42 @@ EOF
 
 ${YUM} groupinstall Base
 ${YUM} install yum-utils
-${YUM} install kernel-xen
+#${YUM} install kernel-xen # has drifted out of sync
 ${YUM} install dstat iptraf
-${YUM} install vim-enhancedd
+${YUM} install vim-enhanced
 #${YUM_DBG} openssl
+
+wget -N -O "$UPDATES/xen-kernel.tgz" \
+    "http://ec2-downloads.s3.amazonaws.com/ec2-modules-2.6.18-xenU-ec2-v1.0-i686.tgz"
+
+tar -C ${mount_point} -xvzf "$UPDATES/xen-kernel.tgz"
+
+#
+# Java
+#
+
+if [[ $(( ec2 + solr )) -gt 0 ]]
+then
+    ${YUM} install java
+fi
+
+#
+# EC2 Tools
+#
+
+if [[ $ec2 -eq 1 ]]
+then
+    ${YUM} install ruby
+    wget -N -O "$UPDATES/ec2-ami-tools.noarch.rpm" \
+	"http://s3.amazonaws.com/ec2-downloads/ec2-ami-tools.noarch.rpm"
+    ${CHROOT} rpm -i "/tmp/updates/ec2-ami-tools.noarch.rpm"
+
+    wget -N -O "$UPDATES/ec2-api-tools.zip" \
+	"http://s3.amazonaws.com/ec2-downloads/ec2-api-tools.zip"
+
+    (cd ${mount_point}/usr/local && unzip "$UPDATES/ec2-api-tools.zip")
+fi
+
 
 #
 # MySQL Database
@@ -162,9 +194,8 @@ fi
 
 if [[ $solr -eq 1 ]]
 then
-    ${YUM} groupinstall "Java"
     wget -N -P $UPDATES "http://gulus.usherbrooke.ca/pub/appl/apache/lucene/solr/1.3.0/apache-solr-1.3.0.tgz"
-    SOLR_DIR=$mount_point/home/solr
+    SOLR_DIR=$mount_point/usr/local
     rm -rf $SOLR_DIR
     mkdir -p $SOLR_DIR
     tar -C $SOLR_DIR -xvzf $UPDATES/apache-solr-1.3.0.tgz
@@ -208,16 +239,12 @@ then
     ${YUM} install boost-devel ImageMagick-devel ImageMagick-c++-devel
 fi
 
-
 #
 # Donomo bits
 #
 
-if [[ $(( processors + application )) -gt 0 ]]
-then
-    (cd $UPDATES && svn export --non-interactive http://svn2.assembla.com/svn/vaultit/trunk/donomo_archive)
-    /bin/cp -f $aws_dir/ec2.sh $UPDATES/aws.sh
-fi
+(cd $UPDATES && svn export --non-interactive http://svn2.assembla.com/svn/vaultit/trunk)
+/bin/cp -f $aws_dir/ec2.sh $UPDATES/aws.sh
 
 #
 # Web Server
@@ -233,15 +260,15 @@ cat $ssh_dir/* > $UPDATES/authorized_keys
 /bin/cp -f config-image.sh parse-args.sh $UPDATES/
 chmod +x $UPDATES/config-image.sh
 ${CHROOT} /tmp/updates/config-image.sh "$@"
-#rm -rf $UPDATES
+rm -rf $UPDATES
 
 umount ${mount_point}/proc
 umount ${mount_point}
 
 mkdir -p ${output_dir}
 
-source $aws_dir/ec2.sh
-prefix=donomo-f${fedora_version}-ami_v1_0-$(date '+%Y%m%d%H%M')
-ec2-bundle-image -i ${volume_file} -c $aws_dir/cert-*.pem -k $aws_dir/pk-*.pem -u $AWS_ACCOUNT_NUMBER -d ${output_dir} --kernel $aki --ramdisk $ari -p $prefix
+source $aws_dir/aws.sh
+prefix=donomo-f${fedora_version}-ami-$(date '+%Y%m%d-%H%M')
+ec2-bundle-image --arch i386 -i ${volume_file} -c $aws_dir/cert-*.pem -k $aws_dir/pk-*.pem -u $AWS_ACCOUNT_NUMBER -d ${output_dir}  -p $prefix --kernel $aki #--ramdisk $ari
 ec2-upload-bundle -b ami.donomo.com -m ${output_dir}/${prefix}.manifest.xml -a $AWS_ACCESS_KEY_ID -s $AWS_SECRET_ACCESS_KEY --retry
 ec2-register ami.donomo.com/$manifest

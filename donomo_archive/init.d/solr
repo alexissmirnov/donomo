@@ -6,10 +6,10 @@
 
 source /etc/rc.d/init.d/functions
 
-workdir=/var/lib/donomo
-pidfile=/var/run/donomo/processors.pid
-logfile=/var/log/donomo/processors.log
-prog="Donomo Services"
+workdir=/var/lib/solr
+pidfile=/var/run/solr/solr.pid
+logfile=/var/log/solr/solr.log
+prog="SOLR"
 
 function start
 {
@@ -20,22 +20,26 @@ function start
 	return 1
     fi
 
-    source /root/.donomo/db_pwd_donomo.sh
-    source /root/.donomo/aws.sh
-    su -c "/home/donomo/bin/processors --daemonize --pidfile=$pidfile --logfile=$logfile --workdir=$workdir" donomo
+    su -c "/home/solr/bin/run $logfile $pidfile &" solr
 
     return $?
 }
 
-case ${1:?} in
+function stop
+{
+    killproc -p $pidfile
+    return $?
+}
+
+case ${1:-blah} in
     start)
-        action "Starting $prog" start
+	action "Starting $prog" start
         ;;
     stop)
-        action "Stopping $prog" killproc -p $pidfile
+        action "Stopping $prog" stop
         ;;
     status)
-	status -p $pidfile "$prog"
+	status -p $pidfile $prog
 	;;
     restart)
         $0 stop

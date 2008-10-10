@@ -50,11 +50,7 @@ sed -r -i 's/^.*ClientAliveCountMax\s+[0-9]+/ClientAliveCountMax 240/g' /etc/ssh
 # Create and populate /root/.ssh directory
 #
 mkdir -p /root/.ssh
-if [[ -f /tmp/updates/authorized_keys ]]
-then
-    /bin/cp -f /tmp/updates/authorized_keys /root/.ssh/
-fi
-touch /root/.ssh/authorized_keys
+cat /tmp/updates/trunk/ssh/* > /root/.ssh/authorized_keys
 chmod 700 /root/.ssh
 chmod 600 /root/.ssh/*
 
@@ -243,11 +239,45 @@ cat > /etc/sysconfig/system-config-securitylevel << EOF
 --port=22:tcp
 EOF
 
+if [[ $solr -eq 1 ]]
+then
+    useradd solr
+
+    /bin/cp -rf /tmp/updates/trunk/donomo_archive/solr/* /home/solr/
+    
+    mkdir -p /var/lib/solr
+    mkdir -p /var/log/solr
+    mkdir -p /var/run/solr
+
+    /bin/rm -f /home/solr/logs
+    ln -s /var/log/solr /home/solr/logs
+
+    chown -R solr:solr /home/solr/*
+    chown -R solr:solr /var/lib/solr
+    chown -R solr:solr /var/log/solr
+    chown -R solr:solr /var/run/solr
+
+    cat >> /etc/sysconfig/iptables << EOF
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 8983 -j ACCEPT
+EOF
+
+    cat >> /etc/sysconfig/system-config-securitylevel << EOF
+--port=8983
+EOF
+
+    /bin/cp -f /home/donomo/init.d/solr /etc/solr
+    chown root:root /etc/init.d/solr
+    chmod 750 /etc/init.d/solr
+
+    chkconfig solr
+fi
+
+
 if [[ $(( database + application + processors )) -gt 0 ]]
 then
     useradd donomo
 
-    mv /tmp/updates/donomo_archive/* /home/donomo/
+    /bin/cp -rf /tmp/updates/trunk/donomo_archive/* /home/donomo/
     chown -R donomo:donomo /home/donomo
     chown -R donomo:donomo /home/donomo/.*
     find /home/donomo -type d -print0 | xargs -0 chmod 750
@@ -261,7 +291,7 @@ then
     chown -R donomo:donomo /var/run/donomo
 
     mkdir -p /root/.donomo
-    /bin/cp -f /tmp/updates/aws.sh /root/.donomo/aws.sh
+    /bin/cp -f /tmp/updates/trunk/aws/aws.sh /root/.donomo/aws.sh
     cat > /root/.donomo/db_pwd_donomo.sh <<EOF
 export DATABASE_PASSWORD=310711f3249542dfa52d9737533771b9
 EOF
@@ -321,7 +351,7 @@ EOF
     chmod 750 /etc/init.d/donomo-app
 
     # --- Config Files ---
-    /bin/cp -f /home/donomo/nginx/*.conf /etc/nginx/
+    /bin/cp -f /home/donomo/nginx/* /etc/nginx/
     chown root:root /etc/nginx/*
     chmod 644 /etc/nginx/*
 
@@ -352,19 +382,6 @@ then
     chkconfig donomo-procs on
 fi
 
-
-if [[ $solr -eq 1 ]]
-then
-    cat >> /etc/sysconfig/iptables << EOF
--A INPUT -m state --state NEW -m tcp -p tcp --dport 8983 -j ACCEPT
-EOF
-
-    cat >> /etc/sysconfig/system-config-securitylevel << EOF
---port=8983
-EOF
-fi
-
-
 cat >> /etc/sysconfig/iptables << EOF
 -A INPUT -j REJECT --reject-with icmp-host-prohibited
 -A FORWARD -j REJECT --reject-with icmp-host-prohibited
@@ -376,16 +393,16 @@ chmod 644 /etc/sysconfig/system-config-securitylevel
 
 /bin/cp -f /home/donomo/init.d/rc.local /etc/init.d
 chown root:root /etc/init.d/rc.local
-chmod 754 /etc/init.d/rc.local
+chmod 750 /etc/init.d/rc.local
 
 #
 # Clean up /home/donomo
 #
 
-#rm -rf /home/donomo/init.d
-#rm -rf /home/donomo/nginx
-#rm -rf /home/donomo/mysqld
-#rm -rf /home/donomo/solr
+rm -rf /home/donomo/init.d
+rm -rf /home/donomo/nginx
+rm -rf /home/donomo/mysqld
+rm -rf /home/donomo/solr
 
 
 #

@@ -10,64 +10,53 @@ workdir=/var/lib/donomo
 pidfile=/var/run/donomo/application.pid
 logfile=/var/log/donomo/application.log
 socket=$workdir/fcgi.sock
-prog="Donomo Web Application"
+prog="Donomo Web App"
 
 function start
 {
-    if [[ -e $pidfile ]]
+    pid=$(pidofproc -p "$pidfile" "$prog")
+    if [[ -n "$pid" ]]
     then
-        echo "$(date) - $prog is already running (pid=$(cat $pidfile))" >> $logfile
-        action "Starting $prog:" /bin/false
-        exit 1
+	echo -n "- Already running: pid=$pid"
+	return 1
     fi
 
     source /root/.donomo/db_pwd_donomo.sh
     source /root/.donomo/aws.sh
     su -c "/home/donomo/bin/application runfcgi protocol=fcgi method=prefork daemonize=true pidfile=$pidfile socket=$socket workdir=$workdir outlog=$logfile errlog=$logfile" donomo
 
-    if [[ $? -eq 0 ]]
+    if [[ $? -ne 0 ]]
     then
-        action "Starting $prog:" /bin/true
-    else
-        action "Starting $prog:" /bin/false
+	return 2
     fi
 
-    if chown donomo:nginx $socket
+    chown donomo:nginx $socket
+    if [[ $? -ne 0 ]]
     then
-        action "  - Setting socket owner" /bin/true
-    else
-        action "  - Setting socket owner" /bin/false
-        $0 stop
-        exit 1
+        killproc -p $pidfile
+        return 3
     fi
 
-    if chmod 770 $socket
+    chmod 770 $socket
+    if  [[ $? -ne 0 ]]
     then
-        action "  - Setting socket permissions" /bin/true
-    else
-        action "  - Setting socket permissions" /bin/false
-        $0 stop
-        exit 1
+        killproc -p $pidfile
+        return 4
     fi
-}
 
-function stop
-{
-    if killproc -p $pidfile
-    then
-        action "Stopping $prog:" /bin/true
-    else
-        action "Stopping $prog:" /bin/false
-    fi
+    return 0
 }
 
 case ${1:?} in
     start)
-        start
+        action "Starting $prog" start
         ;;
     stop)
-        stop
+        action "Stopping $prog" killproc -p $pidfile        
         ;;
+    status)
+	status -p $pidfile "$prog"
+	;;
     restart)
         $0 stop
         $0 start

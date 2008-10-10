@@ -42,8 +42,10 @@ def join_and_normalize( *path_components ):
 # Debugging Status
 #
 
-TEST_MODE        = os.environ.get('USE_TEST_ENV', False)
-DEVELOPMENT_MODE = (platform.node() != 'web18.webfaction.com') and not TEST_MODE
+MODE             = os.environ.get('DONOMO_MODE', 'dev').lower()
+TEST_MODE        = (MODE == 'test')
+DEVELOPMENT_MODE = (MODE == 'dev')
+PRODUCTION_MODE  = (MODE == 'prod')
 DEBUG            = DEVELOPMENT_MODE or os.environ.get('DEBUG', False)
 TEMPLATE_DEBUG   = DEBUG
 OS_USER_NAME     = os.environ.get('LOGNAME', None) or os.getlogin()
@@ -121,8 +123,8 @@ DATABASE_ENGINE    = 'mysql'
 DATABASE_NAME      = 'donomo'
 DATABASE_USER      = 'donomo'
 DATABASE_PASSWORD  = os.environ.get('DATABASE_PASSWORD', '8d85bcc668074be7ae4be08deae11705')
-DATABASE_HOST      = os.environ.get('DATABASE_HOST', 'db.donomo.com')
-DATABASE_PORT      = 3306
+#DATABASE_HOST      = os.environ.get('DATABASE_HOST', 'db.donomo.com')
+#DATABASE_PORT      = 3306
 
 if DEVELOPMENT_MODE or TEST_MODE:
     MEDIA_ROOT         = join_and_normalize(DONOMO_PATH, 'archive', 'media/')
