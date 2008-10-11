@@ -16,7 +16,7 @@ authconfig --enableshadow --useshadow --enablemd5 --updateall
 # Set default root password on instance;
 #
 chpasswd <<EOF
-root:b0d92034-6609-4c33-b9ac-c72b35c5e745
+root:a3838ca654494710945b31b13561aec2
 EOF
 
 cat > /etc/hosts <<EOF
@@ -255,7 +255,7 @@ then
     useradd solr
 
     chpasswd <<EOF
-solr:6976b317-1d1d-45be-af74-73e389bcf571
+solr:87b0e98dca2546d5b73f27c4a577d35c
 EOF
 
     /bin/cp -rf ${source_tree}/donomo_archive/solr/* /home/solr/    
@@ -293,7 +293,7 @@ then
     useradd donomo
 
     chpasswd <<EOF
-donomo:1bcc35ff-4ea3-467f-9870-609c56dcf3d6
+donomo:7a7b08c0472b437b925840e949ead8a5
 EOF
 
     /bin/cp -rf ${source_tree}/donomo_archive/* /home/donomo/
@@ -310,7 +310,7 @@ EOF
 
     /bin/cp -f ${source_tree}/xen/aws/aws.sh /root/.donomo/aws.sh
     cat > /root/.donomo/db_pwd_donomo.sh <<EOF
-export DATABASE_PASSWORD=ea1149f2-70a3-4aa1-a459-b2464f21f309
+export DATABASE_PASSWORD=146eb0938ee346ad8b35d6e1397fe82d
 EOF
 fi
 
@@ -329,7 +329,7 @@ EOF
 
     # --- Root's DB Password ---
     cat > /root/.donomo/db_pwd_root.sh <<EOF
-export ROOT_PASSWORD=54dbaa01-de8d-4b0a-b50b-793e3b46ad7b
+export ROOT_PASSWORD=f360746aba7640928f277b9433a76da4
 EOF
 
     # --- Use Transactional Tables ---
