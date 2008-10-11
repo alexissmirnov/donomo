@@ -4,8 +4,7 @@ set -x
 
 source ./parse-args.sh
 
-aws_dir=$(dirname $0)/../../aws
-ssh_dir=$(dirname $0)/../../ssh
+aws_dir=$(cd $(dirname $0)/../aws && pwd)
 
 #if [[ $(( processors + database + application )) -eq 0 ]]
 #then
@@ -254,13 +253,11 @@ then
     ${YUM} install nginx
 fi
 
-${CHROOT} /tmp/updates/trunk/donomo_archive/bin/config-image.sh "$@"
+${CHROOT} /tmp/updates/trunk/xen/bin/config-image.sh "$@"
 rm -rf $UPDATES
 
 umount ${mount_point}/proc
 umount ${mount_point}
-
-mkdir -p ${output_dir}
 
 source $aws_dir/aws.sh
 prefix=donomo-f${fedora_version}-ami-$(date '+%Y%m%d-%H%M')

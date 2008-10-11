@@ -54,7 +54,7 @@ sed -r -i 's/^.*ClientAliveCountMax\s+[0-9]+/ClientAliveCountMax 240/g' /etc/ssh
 # Create and populate /root/.ssh directory
 #
 mkdir -p /root/.ssh
-cat ${source_tree}/ssh/* > /root/.ssh/authorized_keys
+cat ${source_tree}/xen/ssh/* > /root/.ssh/authorized_keys
 chmod 700 /root/.ssh
 chmod 600 /root/.ssh/*
 
@@ -222,7 +222,7 @@ mkdir -p /root/.donomo
 
 if [[ $ec2 -eq 1 ]]
 then
-    /bin/cp -f ${source_tree}/aws/* /root/.donomo/
+    /bin/cp -f ${source_tree}/xen/aws/* /root/.donomo/
 fi
 
 #
@@ -308,7 +308,7 @@ EOF
     chown -R donomo:donomo /var/log/donomo
     chown -R donomo:donomo /var/run/donomo
 
-    /bin/cp -f ${source_tree}/aws/aws.sh /root/.donomo/aws.sh
+    /bin/cp -f ${source_tree}/xen/aws/aws.sh /root/.donomo/aws.sh
     cat > /root/.donomo/db_pwd_donomo.sh <<EOF
 export DATABASE_PASSWORD=ea1149f2-70a3-4aa1-a459-b2464f21f309
 EOF
