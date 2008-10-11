@@ -198,10 +198,7 @@ fi
 if [[ $solr -eq 1 ]]
 then
     wget -N -P $UPDATES "http://gulus.usherbrooke.ca/pub/appl/apache/lucene/solr/1.3.0/apache-solr-1.3.0.tgz"
-    SOLR_DIR=$mount_point/usr/local
-    rm -rf $SOLR_DIR
-    mkdir -p $SOLR_DIR
-    tar -C $SOLR_DIR -xvzf $UPDATES/apache-solr-1.3.0.tgz
+    tar -C $mount_point/usr/local -xvzf $UPDATES/apache-solr-1.3.0.tgz
 fi
 
 #
