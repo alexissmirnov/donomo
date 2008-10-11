@@ -422,7 +422,7 @@ chmod 700 /root/.donomo
 chmod 600 /root/.donomo/*
 
 /bin/cp -f /home/donomo/.bash* /root/
-cat >> /home/donomo/.bashrc <<EOF
+cat >> /root/.bashrc <<EOF
 export DONOMO_AWS=/root/.donomo
 
 if [[ -f $DONOMO_AWS/aws.sh ]]
