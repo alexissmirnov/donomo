@@ -256,7 +256,7 @@ then
     ${YUM} install nginx
 fi
 
-${CHROOT} /tmp/updates/trunk/donomo-archive/bin/config-image.sh "$@"
+${CHROOT} /tmp/updates/trunk/donomo_archive/bin/config-image.sh "$@"
 rm -rf $UPDATES
 
 umount ${mount_point}/proc
