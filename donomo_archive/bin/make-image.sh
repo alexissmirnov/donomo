@@ -68,7 +68,8 @@ mkdir -p ${mount_point}/var/lib/yum
 mkdir -p ${mount_point}/var/log
 mkdir -p ${mount_point}/var/spool/uucp
 mkdir -p ${mount_point}/var/cache/yum
-
+mkdir -p ${mount_point}/sys/block
+touch ${mount_point}/etc/mtab
 
 echo "Creating filesystem tables ..."
 cat > ${mount_point}/etc/fstab << EOF
