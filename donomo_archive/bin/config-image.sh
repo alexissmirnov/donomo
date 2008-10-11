@@ -422,7 +422,8 @@ chmod 700 /root/.donomo
 chmod 600 /root/.donomo/*
 
 /bin/cp -f /home/donomo/.bash* /root/
-cat >> /root/.bashrc <<EOF
+echo -n '' > /root/.bash_history
+cat >> /root/.bashrc <<"EOF"
 export DONOMO_AWS=/root/.donomo
 
 if [[ -f $DONOMO_AWS/aws.sh ]]
@@ -435,7 +436,6 @@ then
     source $DONOMO_AWS/ec2.sh ]]
 fi
 EOF
-chown -R root:root /root/.bash*
+chown root:root /root/.bash*
 chmod 640 /root/.bash*
 
-echo -n '' > /root/.bash_history
