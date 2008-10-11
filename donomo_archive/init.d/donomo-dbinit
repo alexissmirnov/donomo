@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# chkconfig: - 70 07
+# chkconfig: - 97 07
 # description: Donomo Database Initialization
 
 source /etc/rc.d/init.d/functions
@@ -41,7 +41,7 @@ SQL
 
 function init_db
 {
-    init_db_i 2>>$logfile
+    init_db_i 2 >>$logfile
 }
 
 case ${1:-blah} in

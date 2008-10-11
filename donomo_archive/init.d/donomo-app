@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# chkconfig: - 99 06
+# chkconfig: - 98 06
 # description: Donomo Archive Web Application
 # pidfile: /var/run/donomo/application.pid
 
