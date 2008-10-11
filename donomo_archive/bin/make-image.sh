@@ -25,7 +25,9 @@ then
     exit 1
 fi
 
-YUM_CONF=${mount_point}/yum.conf
+mkdir -p ${output_dir}
+
+YUM_CONF=${output_dir}/yum.conf
 YUM="/usr/bin/yum -c $YUM_CONF --installroot=${mount_point} -y"
 YUM_DBG="debuginfo-install --installroot=${mount_point} -y"
 CHROOT="chroot ${mount_point}"

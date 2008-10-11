@@ -11,8 +11,6 @@ Usage: $1 [-a] [-d] [-p] [-s] [-x] [-e] [-v FILE] [-m PATH]
     -x        install development tools
     -e        install ec2 tools and credentials
     -o PATH   the output path in which to create the ami bundle
-    -v FILE   create the volume file at the path given by FILE
-    -m PATH   mount the volume file (specified with -v) at PATH
 EOF
 }
 
@@ -40,12 +38,6 @@ do
         y)
             python=1
             ;;
-        v)
-            volume_file=$OPTARG
-            ;;
-        m)
-            mount_point=$OPTARG
-            ;;
         o)
             output_dir=$OPTARG
             ;;
@@ -55,6 +47,8 @@ do
     esac
 done
 
+volume_file="${output_dir:?}/volume.bin"
+mount_point="${output_dir:?}/mnt"
 fedora_version=8
 aki=aki-9b00e5f2
 #ari=ari-a51cf9cc
