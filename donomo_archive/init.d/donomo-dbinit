@@ -29,6 +29,10 @@ flush privileges;
 SQL
     mysqladmin -u root "-p$ROOT_PASSWORD" reload
 
+    export USER=donomo
+    export LOGNAME=$USER
+    export HOME=/home/$USER
+
     su -c "/home/donomo/bin/application syncdb --noinput" donomo 1>&2
 
     if [[ $? -eq 0 ]]

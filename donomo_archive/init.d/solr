@@ -20,6 +20,10 @@ function start
 	return 1
     fi
 
+    export USER=solr
+    export LOGNAME=$USER
+    export HOME=/home/$USER
+
     su -c "/home/solr/bin/run $logfile $pidfile &" solr
 
     return $?

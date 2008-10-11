@@ -23,6 +23,11 @@ function start
 
     source /root/.donomo/db_pwd_donomo.sh
     source /root/.donomo/aws.sh
+
+    export USER=donomo
+    export LOGNAME=$USER
+    export HOME=/home/$USER
+
     su -c "/home/donomo/bin/application runfcgi protocol=fcgi method=prefork daemonize=true pidfile=$pidfile socket=$socket workdir=$workdir outlog=$logfile errlog=$logfile" donomo
 
     if [[ $? -ne 0 ]]
