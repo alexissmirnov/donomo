@@ -439,3 +439,4 @@ EOF
 chown root:root /root/.bash*
 chmod 640 /root/.bash*
 
+updatedb
