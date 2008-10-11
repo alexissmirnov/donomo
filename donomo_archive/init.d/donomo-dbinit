@@ -29,7 +29,7 @@ flush privileges;
 SQL
     mysqladmin -u root "-p$ROOT_PASSWORD" reload
 
-    /home/donomo/bin/application syncdb --noinput 1>&2
+    su -c "/home/donomo/bin/application syncdb --noinput" donomo 1>&2
 
     if [[ $? -eq 0 ]]
     then
