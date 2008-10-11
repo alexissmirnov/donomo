@@ -12,5 +12,6 @@ then
     export EC2_HOME
     export EC2_PRIVATE_KEY
     export EC2_CERT
+    export JAVA_HOME
     export PATH=$PATH:$EC2_HOME/bin
 fi
