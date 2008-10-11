@@ -17,8 +17,8 @@ function start
     pid=$(pidofproc -p "$pidfile" "$prog")
     if [[ -n "$pid" ]]
     then
-	echo -n "- Already running: pid=$pid"
-	return 1
+        echo -n "- Already running: pid=$pid"
+        return 1
     fi
 
     source /root/.donomo/db_pwd_donomo.sh
@@ -27,7 +27,7 @@ function start
 
     if [[ $? -ne 0 ]]
     then
-	return 2
+        return 2
     fi
 
     chown donomo:nginx $socket
@@ -50,13 +50,16 @@ function start
 case ${1:?} in
     start)
         action "Starting $prog" start
+        /sbin/service nginx start
         ;;
     stop)
+        /sbin/service nginx stop
         action "Stopping $prog" killproc -p $pidfile        
         ;;
     status)
-	status -p $pidfile "$prog"
-	;;
+        status -p $pidfile "$prog"
+        /sbin/service nginx status
+        ;;
     restart)
         $0 stop
         $0 start

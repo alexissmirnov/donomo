@@ -216,6 +216,13 @@ EOF
 
 ldconfig
 
+mkdir -p /root/.donomo
+
+if [[ $ec2 -eq 1 ]]
+then
+    /bin/cp -f ${source_tree}/aws/* /root/.donomo/
+fi
+
 #
 # Start setting up iptables
 #
@@ -291,7 +298,6 @@ then
     chown -R donomo:donomo /var/log/donomo
     chown -R donomo:donomo /var/run/donomo
 
-    mkdir -p /root/.donomo
     /bin/cp -f ${source_tree}/aws/aws.sh /root/.donomo/aws.sh
     cat > /root/.donomo/db_pwd_donomo.sh <<EOF
 export DATABASE_PASSWORD=310711f3249542dfa52d9737533771b9
@@ -368,7 +374,8 @@ EOF
     mkdir -p /var/lib/nginx/empty
 
     # --- Turn on Services ---
-    chkconfig nginx on
+    # note that nginx will be started/stopped by donomo-app as necessary
+
     chkconfig donomo-app on
 fi
 
@@ -392,26 +399,43 @@ EOF
 chmod 600 /etc/sysconfig/iptables
 chmod 644 /etc/sysconfig/system-config-securitylevel
 
-/bin/cp -f ${source_tree}/donomo_archive/init.d/rc.local /etc/init.d
-chown root:root /etc/init.d/rc.local
-chmod 750 /etc/init.d/rc.local
+/bin/cp -f ${source_tree}/donomo_archive/init.d/rc.local /etc/rc.d/
+chown root:root /etc/rc.d/rc.local
+chmod 750 /etc/rc.d/rc.local
 
 #
 # Clean up /home/donomo
 #
 
-rm -rf /home/donomo/init.d
-rm -rf /home/donomo/nginx
-rm -rf /home/donomo/mysqld
-rm -rf /home/donomo/solr
+/bin/rm -rf /home/donomo/init.d
+/bin/rm -rf /home/donomo/nginx
+/bin/rm -rf /home/donomo/mysqld
+/bin/rm -rf /home/donomo/solr
 
 
 #
 # Clean the /root directory and your shell history and exit from the image
 #
-rm -rf /root/*
+/bin/rm -rf /root/*
 chown -R root:root /root/.donomo
 chmod 700 /root/.donomo
 chmod 600 /root/.donomo/*
+
+/bin/cp -f /home/donomo/.bash* /root/
+cat >> /home/donomo/.bashrc <<EOF
+export DONOMO_AWS=/root/.donomo
+
+if [[ -f $DONOMO_AWS/aws.sh ]]
+then
+    source $DONOMO_AWS/aws.sh ]]
+fi
+
+if [[ -f $DONOMO_AWS/ec2.sh ]]
+then
+    source $DONOMO_AWS/ec2.sh ]]
+fi
+EOF
+chown -R root:root /root/.bash*
+chmod 640 /root/.bash*
 
 echo -n '' > /root/.bash_history

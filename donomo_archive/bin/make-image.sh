@@ -244,7 +244,6 @@ fi
 #
 
 (cd $UPDATES && svn export --non-interactive http://svn2.assembla.com/svn/vaultit/trunk)
-/bin/cp -f $aws_dir/ec2.sh $UPDATES/aws.sh
 
 #
 # Web Server
@@ -255,11 +254,7 @@ then
     ${YUM} install nginx
 fi
 
-cat $ssh_dir/* > $UPDATES/authorized_keys
-
-/bin/cp -f config-image.sh parse-args.sh $UPDATES/
-chmod +x $UPDATES/config-image.sh
-${CHROOT} /tmp/updates/config-image.sh "$@"
+${CHROOT} /tmp/updates/trunk/donomo-archive/bin/config-image.sh "$@"
 rm -rf $UPDATES
 
 umount ${mount_point}/proc
