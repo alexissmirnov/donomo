@@ -35,6 +35,9 @@ function start
         return 2
     fi
 
+    # Give the process time to create the socket
+    sleep 2
+
     chown donomo:nginx $socket
     if [[ $? -ne 0 ]]
     then
