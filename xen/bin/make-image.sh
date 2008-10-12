@@ -147,6 +147,8 @@ ${YUM} install yum-utils
 #${YUM} install kernel-xen # has drifted out of sync
 ${YUM} install dstat iptraf
 ${YUM} install vim-enhanced
+${YUM} install emacs
+${YUM} install svn
 #${YUM_DBG} openssl
 
 wget -N -O "$UPDATES/xen-kernel.tgz" \
