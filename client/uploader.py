@@ -7,6 +7,8 @@ import mimetypes, mimetools
 import httplib2
 import socket
 
+VERSION = "$Rev:$"
+
 h = httplib2.Http()
 
 def post_multipart(url, files, fields=[]):
@@ -17,12 +19,16 @@ def post_multipart(url, files, fields=[]):
     Return the server's response page.
     """
     content_type, body = encode_multipart_formdata(files, fields)
-    headers = {'Content-Type': content_type,
+    headers = {'User-Agent' : 'Donomo Desktop Uploader ' + VERSION,
+               'Content-Type': content_type,
                'Content-Length': str(len(body))}
     try:
         r, c = h.request(url, 'POST', body, headers)
+        print r.status
+        print c
         return r.status == 202
-    except socket.error, e:
+        
+    except Exception, e:
         print str(e)
         return False
 
