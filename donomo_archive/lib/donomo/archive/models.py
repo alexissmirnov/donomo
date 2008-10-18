@@ -310,9 +310,9 @@ class Page(models.Model):
         # pylint: disable-msg=E1101
 
         if isinstance(asset_class, AssetClass):
-            return self.assets.get(pk = asset_class.pk)
+            return self.assets.get(asset_class__pk = asset_class.pk)
         else:
-            return self.assets.get(name = asset_class)
+            return self.assets.get(asset_class__name = asset_class)
 
         # pylint: enable-msg=E1101
         

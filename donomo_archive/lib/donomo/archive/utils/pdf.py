@@ -12,47 +12,76 @@ from tempfile                   import mkdtemp
 from pyPdf                      import PdfFileWriter, PdfFileReader
 import os
 import logging
+from donomo.archive.utils       import s3, misc
+from donomo.archive.models      import AssetClass
+import urllib
 
 
 logging = logging.getLogger('pdf-utils')
 
-# ---------------------------------------------------------------------------
+##############################################################################
 
-def _draw_page_list(page_list, output_buffer = None, view_type = None):
+def _draw_page_list(page_list, 
+                    output_buffer = None,
+                    username = None,
+                    title = None,
+                    view_type = None):
     """
     Draw a list of pages into a pdf file
 
     """
-    # todo figure out page size based on the pdi and x/y ratio
 
     if output_buffer is None:
         output_buffer = StringIO()
 
-    if view_type is None:
-        view_type = 'image'
-
     canvas = Canvas(output_buffer)
-
+    
+    if username is not None:
+        canvas.setAuthor(username)
+    
+    if title is not None:
+        canvas.setTitle(title)
+    
+    if view_type is None:
+        view_type = AssetClass.PAGE_IMAGE
+        
+    view_asset_class = AssetClass.objects.get(name = view_type)
+    text_asset_class = AssetClass.objects.get(name = AssetClass.PAGE_TEXT)
+    
     for page in page_list:
-        image = ImageReader(
-            Image.open(
-                StringIO(page.download_to_memory(view_type) ['Content'] )))
-
-        canvas.drawImage(
+        image_stream = StringIO()
+        image_asset = page.get_asset(view_asset_class)
+        url = s3.generate_url(image_asset.s3_key, 1000)
+        image_file = urllib.urlretrieve(url)[0]
+        image = Image.open(image_file)
+        
+        text_asset = page.get_asset(text_asset_class)
+        url = s3.generate_url(text_asset.s3_key, 1000)
+        text_file = urllib.urlretrieve(url)[0]
+        
+        text = misc.extract_text_from_html(open(text_file,'r').read())
+        canvas.drawString(0,0, text)
+        canvas.drawInlineImage(
             image,
             0,
             0,
             8.5 * inch,
             11 * inch)
         canvas.showPage()
-
+        os.remove(image_file)
+        os.remove(text_file)
+        
     canvas.save()
 
     return output_buffer
 
-# ----------------------------------------------------------------------------
+##############################################################################
 
-def render_document(document, output_buffer = None, view_type = None):
+def render_document(document, 
+                    output_buffer = None, 
+                    username = None, 
+                    title = None, 
+                    view_type = None):
 
     """
     Renders a document as a PDF file
@@ -61,11 +90,17 @@ def render_document(document, output_buffer = None, view_type = None):
     return _draw_page_list(
         document.pages.order_by('position').all(),
         output_buffer,
+        username,
+        title,
         view_type )
 
-# ----------------------------------------------------------------------------
+##############################################################################
 
-def render_page(page, output_buffer = None, view_type = None):
+def render_page(page, 
+                output_buffer = None, 
+                username = None, 
+                title = None, 
+                view_type = None):
     """
     Renders a page as a PDF file
 
@@ -73,9 +108,11 @@ def render_page(page, output_buffer = None, view_type = None):
     return _draw_page_list(
         [ page ],
         output_buffer,
+        username,
+        title,
         view_type )
 
-# ----------------------------------------------------------------------------
+##############################################################################
 
 def split_pages(input_filename, prefix = None):
 
@@ -124,7 +161,7 @@ def split_pages(input_filename, prefix = None):
             rmtree(output_dir)
         raise
 
-# ----------------------------------------------------------------------------
+##############################################################################
 
 def convert(
     input_path,
@@ -155,8 +192,5 @@ def convert(
                 output_path))
 
     return output_path
-
-
-# ----------------------------------------------------------------------------
 
 

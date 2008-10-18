@@ -364,11 +364,14 @@ def get_document_pdf(request, pk):
     is not a JSON view.
 
     """
-
     document = request.user.documents.get(pk = pk)
-    return HttpResponse(
-        content = pdf.render_document(document),
-        content_type = 'application/pdf' )
+    
+    response = HttpResponse(content_type = 'application/pdf')
+    response['Content-Disposition'] = \
+        'attachment; filename=doc-%d.pdf' % document.pk
+    pdf.render_document(document, response, request.user.username, str(document.pk))
+
+    return response
 
 ##############################################################################
 
@@ -390,7 +393,7 @@ def update_document(request, pk):
         document.save()
 
     return {
-        'document' : document_as_json_dict(document),
+        'document' : document_as_json_dict(document, DEFAULT_PAGE_VIEW_NAME),
         }
 
 ##############################################################################
@@ -443,10 +446,17 @@ def get_page_pdf(request, pk):
     Returns a PDF of a given page. Not a JSON view
     """
     page = request.user.pages.get(pk = pk)
+    
+    response = HttpResponse(content_type = 'application/pdf')
+    response['Content-Disposition'] = \
+        'attachment; filename=doc-%d-page-%s-of-%s.pdf' \
+            % (page.document.pk, 
+               page.position, 
+               page.document.num_pages)
+    
+    pdf.render_page(page, response, request.user.username, str(page))
 
-    return HttpResponse(
-        content = pdf.render_page(page),
-        content_type = 'application/pdf' )
+    return response
 
 ##############################################################################
 

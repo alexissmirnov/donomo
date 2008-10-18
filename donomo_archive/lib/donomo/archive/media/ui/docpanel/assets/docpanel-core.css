@@ -22,20 +22,20 @@
 }
 
 #panel .page-first {
-	border-left: solid 2px gray;
+	/*border-left: solid 2px gray;
 	border-top: solid 2px gray;
-	border-bottom: solid 2px gray;
+	border-bottom: solid 2px gray;*/
 }
 
 #panel .page-last {
-	border-right: solid 2px gray;
+	/*border-right: solid 2px gray;
 	border-top: solid 2px gray;
-	border-bottom: solid 2px gray;
+	border-bottom: solid 2px gray;*/
 }
 
 #panel .page-middle {
-	border-top: solid 2px gray;
-	border-bottom: solid 2px gray;
+	/*border-top: solid 2px gray;
+	border-bottom: solid 2px gray;*/
 }
 
 #panel .page-selected {

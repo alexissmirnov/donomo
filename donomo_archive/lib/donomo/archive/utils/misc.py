@@ -6,6 +6,7 @@ Miscellaneous stuff.
 from django.core.urlresolvers import reverse
 import re
 import mimetypes
+import BeautifulSoup
 
 #
 # pylint: disable-msg=C0103,W0142
@@ -103,4 +104,30 @@ def param_is_false(value):
     """
     return false_re.match(value.strip()) is not None
 
+###############################################################################
+
+def extract_text_from_html( html ):
+    """
+    Extracts all plain text from HTML string. Used in indexing.
+
+    """
+    # Clean the text from HTML tags
+    bsoup = BeautifulSoup.BeautifulSoup(html)
+
+        # Remove all comments
+    comments = bsoup.findAll(
+        text=lambda text:isinstance(text, BeautifulSoup.Comment))
+
+    for comment in comments:
+        comment.extract()
+
+    # Remove all script elements
+    for script_element in bsoup.findAll('script'):
+        script_element.extract()
+
+    # Now get the text of the body
+    body = bsoup.body(text=True)
+    text = ''.join(body)
+
+    return text
 ###############################################################################

@@ -8,9 +8,14 @@ YAHOO.donomo.TagEditorDialog = function(){
 	var setTag = function(doc, tags) {
 		console.log('submit ' + tags + ' with ' + doc.id);
 		doc.attributes['donomo.tags'].value = tags;
+		
+		// This API is reall a PUT, but we don't want to risk
+		// having a browser that doesn't support PUTs
+		// so we make a POST request and overrride the HTTP method
+		// by passing _method
 		Connect.asyncRequest(
 			'POST', 
-			doc.id + 'tags/',
+			doc.id+'?_method=PUT',
 			{ success : function(o) {
 				console.log(o.responseText);
 			  },
@@ -67,9 +72,12 @@ YAHOO.donomo.TagEditorDialog = function(){
 		YAHOO.donomo.dlgTagEditor.cfg.setProperty('context',[eltAlignWith, 'tl', 'bl']);
 		YAHOO.donomo.dlgTagEditor.doc = doc;
 		
-		YAHOO.donomo.dlgTagEditor.form.elements[0].value = doc.attributes['donomo.tags'].value;
-		console.log(YAHOO.donomo.dlgTagEditor.form.elements[0].value);
-		
+		var tags_string = '';
+		if (doc.attributes['donomo.tags'].nodeValue) {
+			tags_string = doc.attributes['donomo.tags'].value;
+		}
+
+		YAHOO.donomo.dlgTagEditor.form.elements[0].value = tags_string;
 		YAHOO.donomo.dlgTagEditor.show();
 	}
 	

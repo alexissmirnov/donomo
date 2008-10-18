@@ -234,6 +234,11 @@ YUI_INIT_RE = re.compile(
 
 class YUIIncludeMiddleware(object):
     def process_response(self, request, response):
+        
+        # Only add YUI includes into HTML files
+        if response['Content-Type'].split(';')[0] != 'text/html':
+            return response
+        
         components = set()
         loader = YUILoader()
 

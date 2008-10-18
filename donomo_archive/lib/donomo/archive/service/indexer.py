@@ -4,6 +4,7 @@ Full Text Indexer Process Driver
 
 from __future__             import with_statement
 from donomo.archive.models  import AssetClass, MimeType
+from donomo.archive.utils   import misc
 from django.conf            import settings
 from django.template        import Template, Context
 from django.core.validators import ValidationError
@@ -12,7 +13,6 @@ import httplib2
 import simplejson
 import urllib
 import os
-import BeautifulSoup
 import logging
 
 #
@@ -93,23 +93,7 @@ def _index_page_from_string( page, text ):
     """
     http_client = httplib2.Http()
 
-    # Clean the text from HTML tags
-    bsoup = BeautifulSoup.BeautifulSoup(text)
-
-        # Remove all comments
-    comments = bsoup.findAll(
-        text=lambda text:isinstance(text, BeautifulSoup.Comment))
-
-    for comment in comments:
-        comment.extract()
-
-    # Remove all script elements
-    for script_element in bsoup.findAll('script'):
-        script_element.extract()
-
-    # Now get the text of the body
-    body = bsoup.body(text=True)
-    text = ''.join(body)
+    text = misc.extract_text_from_html(text) 
 
     data = {
         'id' : page.pk,
