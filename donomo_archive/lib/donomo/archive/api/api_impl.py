@@ -259,16 +259,18 @@ def upload_document(request):
     password = request.POST['password']
     logging.debug('username=%s'%username)
     user = authenticate(username=username, password=password)
+    logging.debug(str(user))
     if user is not None:
         if user.is_active:
             login(request, user)
         else:
-            return ValidationError('account disabled')
+            raise ValidationError('account disabled')
     else:
-        return ValidationError('invalid login')
+        raise ValidationError('invalid login')
 
     gateway      = _init_processor()[0]
-
+    logging.debug(str(gateway))
+    
     # pick all files that are send in this API
     # support sending multiple files in a single request
     for key, the_file in request.FILES.iteritems():
@@ -298,7 +300,7 @@ def upload_document(request):
         'status'   : 202,
         # 'location' : upload.get_absolute_url(),
         }
-    
+
 ##############################################################################
 @login_required
 @json_view
