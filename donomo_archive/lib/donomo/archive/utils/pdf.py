@@ -27,7 +27,9 @@ def _draw_page_list(page_list,
                     title = None,
                     view_type = None):
     """
-    Draw a list of pages into a pdf file
+    Draw a list of pages into a pdf file.
+    
+    
 
     """
 
@@ -49,6 +51,12 @@ def _draw_page_list(page_list,
     text_asset_class = AssetClass.objects.get(name = AssetClass.PAGE_TEXT)
     
     for page in page_list:
+        # For each page, get S3 URL for an image and HTML representation
+        # extract text from the HTML
+        # put image and text into PDF canvas
+        # NB Image.open seems to only work with a file (not a stream)
+        # so we have to create (and delete) a temporary file that
+        # holds the image and the text
         image_stream = StringIO()
         image_asset = page.get_asset(view_asset_class)
         url = s3.generate_url(image_asset.s3_key, 1000)
@@ -59,7 +67,8 @@ def _draw_page_list(page_list,
         url = s3.generate_url(text_asset.s3_key, 1000)
         text_file = urllib.urlretrieve(url)[0]
         
-        text = misc.extract_text_from_html(open(text_file,'r').read())
+        text = open(text_file,'r').read()
+        text = misc.extract_text_from_html(text)
         canvas.drawString(0,0, text)
         canvas.drawInlineImage(
             image,
