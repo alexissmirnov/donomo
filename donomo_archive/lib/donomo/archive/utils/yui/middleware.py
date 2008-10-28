@@ -76,7 +76,11 @@ from module_info_2_5_1 import MODULE_INFO, SKIN
 from components import Components
 
 
-DEFAULT_BASE = 'http://yui.yahooapis.com/2.5.1/build/'
+if settings.DEBUG:
+    DEFAULT_BASE = '/media/yui/build/'
+else:
+    DEFAULT_BASE = 'http://yui.yahooapis.com/2.5.1/build/'
+
 DEFAULT_JS_TAG = '<script type="text/javascript" src="%s"></script>'
 DEFAULT_CSS_TAG = '<link rel="stylesheet" type="text/css" href="%s" />'
 
