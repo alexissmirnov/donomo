@@ -29,7 +29,7 @@
   <!-- Used to specify an alternate directory to hold all index data
        other than the default ./data under the Solr home.
        If replication is in use, this should match the replication configuration. -->
-  <dataDir>${solr.data.dir:../../../solr_data}</dataDir>
+  <!-- dataDir>${solr.data.dir:../data}</dataDir -->
 
 
   <indexDefaults>
@@ -127,7 +127,7 @@
 		
 		For more details see http://wiki.apache.org/solr/SolrJmx
   -->
-  <jmx />
+  <!-- jmx / -->
 
   <!-- the default high-performance update handler -->
   <updateHandler class="solr.DirectUpdateHandler2">
