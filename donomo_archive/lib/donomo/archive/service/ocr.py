@@ -7,6 +7,7 @@ text/html representations, suitable for indexing in a search engine.
 
 from donomo.archive import operations, models
 import os
+import logging
 
 DEFAULT_INPUTS  = (
     models.AssetClass.PAGE_IMAGE,
@@ -22,6 +23,9 @@ DEFAULT_ACCEPTED_MIME_TYPES = (
     models.MimeType.TIFF,
     )
 
+class OCRFailed(Exception):
+    pass
+
 ##############################################################################
 
 def image_to_html( in_path, out_path = None ):
@@ -35,7 +39,7 @@ def image_to_html( in_path, out_path = None ):
         out_path = '%s.html' % in_path
 
     if 0 != os.system('ocroscript recognize %r > %r' % (in_path, out_path)):
-        raise Exception( 'Failed to OCR: %r' % in_path)
+        raise OCRFailed( 'Failed to OCR: %r' % in_path)
 
     return out_path
 
@@ -49,15 +53,18 @@ def handle_work_item(processor, item):
         also be removed from the work queue.
 
     """
-    parent_asset = item['Asset-Instance']
-    operations.publish_work_item(
-        operations.create_asset_from_file(
-            owner        = item['Owner'],
-            producer     = processor,
-            asset_class  = models.AssetClass.PAGE_TEXT,
-            file_name    = image_to_html( item['Local-Path'] ),
-            related_page = parent_asset.related_page,
-            parent       = parent_asset,
-            mime_type    = models.MimeType.HTML ))
+    try:
+        parent_asset = item['Asset-Instance']
+        operations.publish_work_item(
+            operations.create_asset_from_file(
+                owner        = item['Owner'],
+                producer     = processor,
+                asset_class  = models.AssetClass.PAGE_TEXT,
+                file_name    = image_to_html( item['Local-Path'] ),
+                related_page = parent_asset.related_page,
+                parent       = parent_asset,
+                mime_type    = models.MimeType.HTML ))
+    except OCRFailed:
+        logging.error('OCR failed, dropping from processing chain')
 
 ##############################################################################

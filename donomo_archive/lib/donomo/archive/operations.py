@@ -316,13 +316,10 @@ def publish_work_item( *asset_list ):
 
 ###############################################################################
 
-def retrieve_work_item(
-    visibility_timeout = None,
-    max_wait_time      = None,
-    interrupt_func     = None ):
+def instantiate_asset( asset_id):
 
-    """ Retrieve the next work item for the given processor.
-
+    """ Lookup the asset referenced by the message and instantiate a local
+        copy of it.
     """
 
     temp_dir = tempfile.mkdtemp(
@@ -330,38 +327,54 @@ def retrieve_work_item(
         dir    = settings.TEMP_DIR )
 
     try:
+        asset = manager(Asset).get( pk = asset_id )
+
+        meta_data = {
+            'Asset-Instance' : asset,
+            'Asset-Class'    : asset.asset_class,
+            'Owner'          : asset.owner,
+            }
+
+        meta_data.update(
+            s3.download_to_file(
+                s3_source_path  = asset.s3_key,
+                local_dest_path = os.path.join(temp_dir, asset.file_name)))
+        
+        logging.info( 'Instantiated %r' % asset )
+
+        return meta_data
+
+    except:
+        logging.exception(
+            "Failed to retrieve work item: %(Asset-ID)s" % message)
+        shutil.rmtree(temp_dir)
+        raise
+
+###############################################################################
+
+def retrieve_work_item(
+    visibility_timeout = None,
+    max_wait_time      = None,
+    interrupt_func     = None,
+    auto_get_asset     = True ):
+
+    """ Retrieve the next work item from the queue.
+
+    """
+
+    try:
+
         message = sqs.get_message(
             visibility_timeout = visibility_timeout,
             max_wait_time      = max_wait_time,
             interrupt_func     = interrupt_func )
 
-        if message is None:
-            return None
-
-        asset = manager(Asset).get( pk = message['Asset-ID'] )
-
-        message.update(
-            s3.download_to_file(
-                s3_source_path = asset.s3_key,
-                local_dest_path = os.path.join(temp_dir, asset.file_name)))
-
-        message.update(
-            { 'Asset-Instance' : asset,
-              'Asset-Class'    : asset.asset_class,
-              'Owner'          : asset.owner,
-              })
-
-        logging.info(
-            'Retrieved work item: '         \
-                'process=%(Process-Name)s,' \
-                'asset=%(Asset-Instance)r'  \
-                % message)
+        if message and auto_get_asset:
+            message.update(instantiate_asset(message['Asset-ID']))
 
         return message
 
     except:
-        logging.exception("Failed to retrieve work item")
-        shutil.rmtree(temp_dir)
         return None
 
 ###############################################################################
@@ -375,16 +388,16 @@ def close_work_item(work_item, delete_from_queue):
     """
 
     logging.info(
-        "%s %r" % (
-            (delete_from_queue and ' closing ' or ' aborting '),
-            work_item['Asset-Instance'] ))
+        "%s asset %s" % (
+            (delete_from_queue and 'closing' or 'aborting'),
+            work_item['Asset-ID'] ))
 
-    local_path = work_item['Local-Path']
+    local_path = work_item.get('Local-Path')
 
     if delete_from_queue:
         sqs.delete_message(work_item)
 
-    if os.path.exists(local_path):
+    if local_path and os.path.exists(local_path):
         shutil.rmtree(os.path.dirname(local_path))
 
 ###############################################################################

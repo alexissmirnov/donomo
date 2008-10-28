@@ -92,7 +92,7 @@ def post_message( msg ):
 ##############################################################################
 
 def get_message(
-    visibility_timeout = None,
+    visibility_timeout = 120,
     max_wait_time      = None,
     interrupt_func     = None ):
 
