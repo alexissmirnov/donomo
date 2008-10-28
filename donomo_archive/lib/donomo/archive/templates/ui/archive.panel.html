@@ -67,7 +67,8 @@ jstemplate templates
 					</a>	
 				</li>
 			</ul>
-			<img height="60%"  width="100%"  jsvalues=".src:$this.view"/>
+			<img width="100%" class='page-thumbnail' jsvalues="src:view;id:url+'thb/'"/>
+			<div class='bd' jscontent="hits[0].text + ' ' + hits.length + ' times'"></div>
 			<p><a href="id" 
 				jsvalues="href:$this.document" 
 				jscontent="'page ' + $this.position">

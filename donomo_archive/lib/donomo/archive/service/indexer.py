@@ -14,6 +14,7 @@ import simplejson
 import urllib
 import os
 import logging
+import BeautifulSoup
 
 #
 # pylint: disable-msg=C0103
@@ -49,7 +50,6 @@ SOLR_UPDATE_TEMPLATE = Template(
            <field name="tag">{{tag}}</field>{% endfor %}
          </doc>
        </add>
-       <commit/>
        {% endautoescape %}
        {% endspaceless %}""")
 
@@ -93,8 +93,6 @@ def _index_page_from_string( page, text ):
     """
     http_client = httplib2.Http()
 
-    text = misc.extract_text_from_html(text) 
-
     data = {
         'id' : page.pk,
         'content' : text,
@@ -113,6 +111,23 @@ def _index_page_from_string( page, text ):
         uri     = SOLR_UPDATE_URL,
         method  = 'POST',
         body    = body,
+        headers = { "Content-type" : "text/xml; charset=utf-8" })
+
+    if response.status >= 400:
+        raise Exception(
+            'Failed to index page (%s, %s)' % (
+                response.status,
+                content ))
+
+    # solr 1.3 doesnt like it when commit is sent as part of
+    # the POST with <add> element
+    # its XML parser complains about 
+    # "Illegal to have multiple roots (start tag in epilog?)"
+    # send commit command in a separate POST
+    response, content = http_client.request(
+        uri     = SOLR_UPDATE_URL,
+        method  = 'POST',
+        body    = '<commit/>',
         headers = { "Content-type" : "text/xml; charset=utf-8" })
 
     if response.status >= 400:
@@ -155,14 +170,16 @@ def raw_query( user, query_string, start_index = 0, num_rows = 50):
     """
     validate_query_string(query_string)
     solr_query_params = {
-        'q'            : 'owner:%d AND (%s)' % (user.id, query_string),
+        'q'            : query_string,
+        'fq'           : 'owner:'+str(user.id),
         'version'      : 2.2,
         'start'        : start_index,
         'rows'         : num_rows,
         'indent'       : 'on',
         'hl'           : 'true',
         'hl.fl'        : 'tags,text',
-        'hl.snippets'  : 3,
+        'hl.snippets'  : 100,
+        'hl.fragsize'  : 500,
         'wt'           : 'json',
         }
 
@@ -178,10 +195,9 @@ def raw_query( user, query_string, start_index = 0, num_rows = 50):
     response, content = httplib2.Http().request( solr_request_url, 'GET' )
 
     logging.debug(
-        'GET to %s returns %s\n%s' % (
+        'GET to %s returns %s' % (
             solr_request_url,
-            response,
-            content ))
+            response))
 
     if response.status != 200:
         raise Exception("Search query failed")
@@ -200,13 +216,56 @@ def query( user,
     res = raw_query( user,
                     query_string,
                     start_index,
-                    num_rows )['response']
+                    num_rows )
+
+    for doc in res['response']['docs']:
+        page_id = doc['page_id']
+        
+        # find the dimentions of the page's image
+        # we need this to make sense of coordinates of
+        # bounding boxes
+        page_width = 0
+        page_height = 0
+        page_soup = BeautifulSoup.BeautifulSoup(doc['text'][0])
+        ocr_page = page_soup.find('div', {'class' : 'ocr_page'})
+        title_parts = ocr_page['title'].split(';')
+        for title_part in title_parts:
+            bbox = title_part.split(' ')
+            if bbox[1] == 'bbox':
+                page_width = int(bbox[4]) - int(bbox[2])
+                page_height = int(bbox[5]) - int(bbox[3])
+        
+        doc['page_width'] = page_width
+        doc['page_height'] = page_height
+        doc['hits'] = list()
+
+        
+        for snippet in res['highlighting'][page_id]['text']:
+            soup = BeautifulSoup.BeautifulSoup(snippet)
+            hits = soup.findAll('em')
+            
+            for hit in hits:
+                #FIXME
+                # sometimes HOCR doesn't include the bounding box
+                # fake it for now
+                if hit.parent.has_key('title'):
+                    coords = hit.parent['title'].split(' ')
+                else:
+                    coords = ['', '0','0','20','20'] 
+                hit = {'fragment' : hit.parent.renderContents(), 
+                       'x1' : coords[1], 
+                       'y1' : coords[2], 
+                       'x2' : coords[3], 
+                       'y2' : coords[4],
+                       'text' : hit.renderContents()}
+                
+                doc['hits'].append(hit) 
 
     return {
         'query'       : query_string,
         'start_index' : start_index,
         'max_rows'    : num_rows,
-        'results'     : res,
+        'results'     : res['response'],
         }
 
 ###############################################################################

@@ -7,6 +7,7 @@ function onApiFailure(o) {
 if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 		var Event = YAHOO.util.Event;
 		var Dom = YAHOO.util.Dom;
+		var Element = YAHOO.util.Element;
 		
 		var config = {
 			panelId: 'panel', //TODO: remove built-in references to panel ID
@@ -181,7 +182,7 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 		
 		var renderSearchResultsJSON = function(response) {
 			try {
-				responseJSON = eval('(' + response.responseText + ')');
+				var responseJSON = eval('(' + response.responseText + ')');
 				lastDocumentLoadCount = responseJSON.pages.length;
 				
 				var processingContext = new JsEvalContext(responseJSON);
@@ -189,10 +190,43 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 				
 				panel.appendChild(template);
 				jstProcess(processingContext, template);
+				
+				//Add search hit overlays
+				for(var i = 0; i < responseJSON.pages.length; i++) {
+					var idThumbnail = responseJSON.pages[i].url + 'thb/'
+					var thb = new Element(Dom.get(idThumbnail));
+					var thbRegion = Dom.getRegion(idThumbnail);
+					var thbWidth = thbRegion.right - thbRegion.left;
+					var thbHeight = thbRegion.bottom - thbRegion.top;
+					var widthRatio = thbWidth/parseInt(responseJSON.pages[i].width);
+					var heigthRatio = thbHeight/parseInt(responseJSON.pages[i].height);
+
+					for (var j = 0; j < responseJSON.pages[i].hits.length; j++) {
+						var x1 = Math.floor(Dom.getX(idThumbnail) + parseInt(responseJSON.pages[i].hits[j].x1)*widthRatio);
+						var y1 = Math.floor(Dom.getY(idThumbnail) + parseInt(responseJSON.pages[i].hits[j].y1)*heigthRatio);
+						var x2 = Math.floor(Dom.getX(idThumbnail) + parseInt(responseJSON.pages[i].hits[j].x2)*widthRatio);
+						var y2 = Math.floor(Dom.getY(idThumbnail) + parseInt(responseJSON.pages[i].hits[j].y2)*heigthRatio);
+						
+						var hitId = responseJSON.pages[i].url + 'hit/' + x1 + ':' + y1 + ':' + x2 + ':' + y2;
+						var o = new YAHOO.widget.Overlay(hitId, {
+							x: x1,
+							y: y1,
+							visible: false,
+							width: (x2-x1)+'px',
+							height: (y2-y1)+'px'
+						});
+						o.render(responseJSON.pages[i].url);
+						
+						console.log(Dom.getRegion(hitId));
+						o.show();
+					}
+				}
 			} 
 			catch (e) {
+				console.log('renderSearchResultsJSON throws:');
 				console.log(e);
-			}			
+			}
+			
 		}
 		
 		var onSeachStringChanged = function(type, args){

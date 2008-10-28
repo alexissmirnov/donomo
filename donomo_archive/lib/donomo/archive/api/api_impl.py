@@ -573,13 +573,23 @@ def get_search(request):
             query_string,
             start_index,
             num_rows)
-    
+
+    # transform 'docs' collection returned by indexer
+    # into pages collection
+    # once the transformation is done we don't need 'docs' section
+    # so we delete it
     search_results['pages'] = []
 
     for d in search_results['results']['docs']:
         page = models.Page.objects.get(pk = d['page_id'])
-        search_results['pages'].append(page_as_json_dict(page, page_view_name))
+        page_json = page_as_json_dict(page, page_view_name)
+        page_json['hits'] = d['hits']
+        page_json['height'] = d['page_height']
+        page_json['width'] = d['page_width']
         
+        search_results['pages'].append(page_json)
+    
+    del(search_results['results'])
     return search_results
         
 
