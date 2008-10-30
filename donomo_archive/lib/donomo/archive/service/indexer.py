@@ -229,11 +229,13 @@ def query( user,
         page_soup = BeautifulSoup.BeautifulSoup(doc['text'][0])
         ocr_page = page_soup.find('div', {'class' : 'ocr_page'})
         title_parts = ocr_page['title'].split(';')
+        
         for title_part in title_parts:
-            bbox = title_part.split(' ')
-            if bbox[1] == 'bbox':
-                page_width = int(bbox[4]) - int(bbox[2])
-                page_height = int(bbox[5]) - int(bbox[3])
+            bbox = title_part.strip().split(' ')
+            
+            if bbox[0] == 'bbox':
+                page_width = int(bbox[3]) - int(bbox[1])
+                page_height = int(bbox[4]) - int(bbox[2])
         
         doc['page_width'] = page_width
         doc['page_height'] = page_height

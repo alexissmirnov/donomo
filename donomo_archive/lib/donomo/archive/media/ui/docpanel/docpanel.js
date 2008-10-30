@@ -8,6 +8,7 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 		var Event = YAHOO.util.Event;
 		var Dom = YAHOO.util.Dom;
 		var Element = YAHOO.util.Element;
+		var Connect = YAHOO.util.Connect;
 		
 		var config = {
 			panelId: 'panel', //TODO: remove built-in references to panel ID
@@ -95,10 +96,26 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 		}
 				
 		var splitDocument = function(elSeparator){
+			// Take care of the visuals first
 			Dom.removeClass(elSeparator, 'page-separator-over');
 			Dom.removeClass(elSeparator, 'page-separator');
 			Dom.addClass(elSeparator, 'doc-separator');
 			Dom.addClass(elSeparator, 'doc-separator-over');
+			
+			var docId = elSeparator.getAttribute('donomo-doc-id');
+			var splitAfterPage = elSeparator.getAttribute('donomo-split-after-page');
+			
+			// extract the id from a document URL having the form /api/1.0/document/13123/
+			docId = docId.substring(docId.search('/documents/')+'/documents/'.length,docId.length-1);
+			// Now POST the splitting request
+			Connect.asyncRequest(
+				'POST',
+				'/api/1.0/documents/'
+				+ '?op=split'
+				+ '&id=' + docId 
+				+ '&split_after_page=' + splitAfterPage, {
+				faulure: onApiFailure
+			});
 		};
 		
 		var joinDocument = function(elSeparator){
@@ -216,8 +233,6 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 							height: (y2-y1)+'px'
 						});
 						o.render(responseJSON.pages[i].url);
-						
-						console.log(Dom.getRegion(hitId));
 						o.show();
 					}
 				}

@@ -133,7 +133,7 @@ jstemplate templates
 				</p>
 		</div>
 		<div  jsdisplay="(total_pages - $index) != 1" 
-				jsvalues="id:'split:/pages/' + $this.id + '/sep/' + $index + '/' + total_pages" 
+				jsvalues="donomo-doc-id:doc_id;donomo-split-after-page:$index+1" 
 				class="line-item page-middle page-separator"></div>
 		<div jsdisplay="(total_pages - $index) == 1" 
 			jsvalues="id:'join:' + doc_id" 
