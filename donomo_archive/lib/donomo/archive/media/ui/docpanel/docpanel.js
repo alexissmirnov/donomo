@@ -9,6 +9,8 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 		var Dom = YAHOO.util.Dom;
 		var Element = YAHOO.util.Element;
 		var Connect = YAHOO.util.Connect;
+		var Panel = YAHOO.donomo.Panel;
+		
 		
 		var config = {
 			panelId: 'panel', //TODO: remove built-in references to panel ID
@@ -28,6 +30,7 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 		// of the document list when this variable is 0.
 		// The variable is set by renderDocumentJSON and is used by onScroll handler
 		var lastDocumentLoadCount = -1;
+		var documentLoadInProgress = false;
 		
 		var eventPageSelected = new YAHOO.util.CustomEvent("pageSelected", this);
 		var eventDocumentExpanded = new YAHOO.util.CustomEvent("documentExpanded", this);
@@ -207,15 +210,26 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 		}
 		
 		var loadSearchResults = function(query, startIndex){
-			YAHOO.util.Connect.asyncRequest(
+			// Set the load-in-progress flag to prevent re-entry (eg.
+			// while handling onScroll event)
+			// Set it back to false when the response is received
+			documentLoadInProgress = true;
+
+			Connect.asyncRequest(
 				'GET', 
 				"/api/1.0/search/?view_name=thumbnail&q=" + query
 				+ '&start_index='
 				+ startIndex
 				+ '&num_rows='
 				+ config.dynamicPaginationSize, {
-				success: renderSearchResultsJSON,
-				faulure: onApiFailure
+				success: function(r) { 
+					documentLoadInProgress = false;
+					renderSearchResultsJSON(r);
+				},
+				faulure: function(e) {
+					documentLoadInProgress = false;
+					onApiFailure(e);
+				},
 			});
 		};
 		
@@ -260,7 +274,6 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 				}
 			} 
 			catch (e) {
-				console.log('renderSearchResultsJSON throws:');
 				console.log(e);
 			}
 			
@@ -289,6 +302,7 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 			}
 
 			var postHashPathParts = location.hash.toString().split('/');
+
 			
 			if (postHashPathParts.length >= 3 && postHashPathParts[1] == 'search') {
 				loadSearchResults(postHashPathParts[2], startIndex);
@@ -302,14 +316,25 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 		};
 		
 		var loadDocuments = function(startIndex) {
+			// Set the load-in-progress flag to prevent re-entry (eg.
+			// while handling onScroll event)
+			// Set it back to false when the response is received
+			documentLoadInProgress = true;
+			
 			YAHOO.util.Connect.asyncRequest(
 				'GET',
 				'/api/1.0/documents/?view_name=thumbnail&start_index='
 					+startIndex
 					+'&num_rows='
 					+config.dynamicPaginationSize,
-				{ 	success : renderDocumentsJSON ,
-					faulure : onApiFailure
+				{ 	success: function(r){
+					documentLoadInProgress = false;
+					renderDocumentsJSON(r);
+				},
+					faulure: function(e){
+						documentLoadInProgress = false;
+						onApiFailure(e);
+					},
 				});
 		}
 		
@@ -328,12 +353,12 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 		var onScroll = function(e) {
 			// The algorithm is based on
 			// http://www.developer.com/design/article.php/3681771
-			var scrollContainerPanel = new YAHOO.util.Element(config.panelScrollContainerId);
+			var scrollContainerPanel = new Element(new Element(config.panelScrollContainerId).get('parentNode'));
 			
 			// get the current height of a panel item. Sinse thumbnails can be resized, the height
 			// may be different every time onScroll is fired.
 			// Assumption: panel-items are children of panel
-			var panelItem = new YAHOO.util.Element(YAHOO.util.Dom.getFirstChild(config.panelId));
+			var panelItem = new Element(Dom.getFirstChild(config.panelId));
 			var panelItemHeigth = panelItem.get('clientHeight');
 			
 			var intElemScrollWidthOuter = scrollContainerPanel.get('clientWidth');
@@ -347,8 +372,12 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 			// scrolls to the second last line.
 			// If the last attempt to load more documents returned 0, then don't try to 
 			// load any more
-			if (intElemScrolled >= height - 2*panelItemHeigth && lastDocumentLoadCount != 0) {
-				
+			
+			// Don't try to load documents when we're already in the process of
+			// loading. Check for documentLoadInProgress value.
+			if (intElemScrolled >= height - 2*panelItemHeigth && 
+					lastDocumentLoadCount != 0 && 
+					documentLoadInProgress == false) {
 				// load documents
 				loadPanelContents(currentDocumentIndex);
 			}
@@ -361,7 +390,8 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 			Event.on(config.panelId, 'mouseover', onMouseOver);
 			Event.on(config.panelId, 'mouseout', onMouseOut);
 			Event.on(config.panelId, 'click', onClick);
-			Event.on(config.panelScrollContainerId, 'scroll', onScroll);
+			var parent = new Element(config.panelScrollContainerId).get('parentNode');
+			Event.on(parent, 'scroll', onScroll);
 			
 			YAHOO.donomo.TagEditorDialog.init();
 		};

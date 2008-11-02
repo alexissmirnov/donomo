@@ -39,11 +39,16 @@
                 { position: 'top', height: 35, body: 'header', gutter: '-1px', collapse: false, resize: false },
                 { position: 'left', width: 200, resize: true, body: 'sidebar', gutter: '-2px', collapse: false, close: false, scroll: false },
                 { position: 'bottom', height: 35, resize: false, body: 'footer', gutter: '-2px', collapse: false },
-                { position: 'center', body: 'panel', scroll: true }
+                { position: 'center', body: 'panel-scroll-container', scroll: true }
             ]
         });
+		
+		// Initialize the main panel only when Layout widget is created.
+		// We need to do this because init() assumes YUI's emenent yui-layout-bd is created.
+		// This element provides the scroll bar that Panel needs to subscribe to
+		layout.subscribe('render', YAHOO.donomo.Panel.init);
 
-        layout.render();		
+        layout.render();
     });
 })();
 </script>
