@@ -68,7 +68,7 @@ def main():
     parser.add_option("-u", "--user", help="User's email address", dest="user")
     parser.add_option("-p", "--password", help="User's password", dest="password")
     parser.add_option("-d", "--delete", help="Delete files after they were uploaded", dest="delete", default=False, action="store_true", )
-    parser.add_option("--domain", help="Domain name of the donomo server. May include port number after :", dest="domain", default="donomo.com" )
+    parser.add_option("--domain", help="Domain name of the donomo server. May include port number after :", dest="domain", default="www.donomo.com" )
     
     (options, files) = parser.parse_args()
 
