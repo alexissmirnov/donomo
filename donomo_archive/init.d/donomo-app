@@ -12,6 +12,27 @@ logfile=/var/log/donomo/application.log
 socket=$workdir/fcgi.sock
 prog="Donomo Web App"
 
+##############################################################################
+#
+# Common function to setup the environment variables that the
+# application expects to have
+#
+
+function setup_env
+{
+    source /root/.donomo/db_pwd_donomo.sh
+    source /root/.donomo/aws.sh
+
+    export USER=donomo
+    export LOGNAME=$USER
+    export HOME=/home/$USER
+}
+
+##############################################################################
+#
+# Start the application if it isn't already running
+#
+
 function start
 {
     pid=$(pidofproc -p "$pidfile" "$prog")
@@ -21,14 +42,9 @@ function start
         return 1
     fi
 
-    source /root/.donomo/db_pwd_donomo.sh
-    source /root/.donomo/aws.sh
+    setup_env
 
-    export USER=donomo
-    export LOGNAME=$USER
-    export HOME=/home/$USER
-
-    su -c "/home/donomo/bin/application runfcgi protocol=fcgi method=prefork daemonize=true pidfile=$pidfile socket=$socket workdir=$workdir outlog=$logfile errlog=$logfile" donomo
+    /bin/su -c "/home/donomo/bin/application runfcgi protocol=fcgi method=prefork daemonize=true pidfile=$pidfile socket=$socket workdir=$workdir outlog=$logfile errlog=$logfile" donomo
 
     if [[ $? -ne 0 ]]
     then
@@ -55,7 +71,27 @@ function start
     return 0
 }
 
+##############################################################################
+#
+# Run an application shell or database shell
+#
+
+function run_shell
+{
+    setup_env
+
+    exec /bin/su -c "/home/donomo/bin/application ${1:?}" donomo
+}
+
+##############################################################################
+#
+# Dispatch requested behaviour
+#
+
 case ${1:?} in
+    dbshell|shell)
+	run_shell $1
+	;;
     start)
         action "Starting $prog" start
         /sbin/service nginx start
@@ -73,7 +109,7 @@ case ${1:?} in
         $0 start
         ;;
     *)
-        echo "Usage: $(basename $0) start|stop|restart"
+        echo "Usage: $(basename $0) dbshell|shell|start|status|stop|restart"
         exit 1
         ;;
 esac

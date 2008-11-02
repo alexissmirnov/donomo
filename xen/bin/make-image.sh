@@ -149,6 +149,10 @@ ${YUM} install dstat iptraf
 ${YUM} install vim-enhanced
 ${YUM} install emacs
 ${YUM} install svn
+${YUM} groupinstall "Development Tools"
+${YUM} install httpd-devel apr-devel apr-util-devel libapreq2-devel openssl-devel curl-devel expat-devel libetpan-devel createrepo
+${YUM} install boost-devel ImageMagick-devel ImageMagick-c++-devel
+${YUM} install scons
 #${YUM_DBG} openssl
 
 wget -N -O "$UPDATES/xen-kernel.tgz" \
@@ -223,22 +227,16 @@ then
     ${YUM} install python-simplejson
     ${YUM} --enablerepo=updates-testing --enablerepo=updates-testing-newkey install MySQL-python
     ${YUM} install libtiff
-    ${YUM} install ImageMagick
-    wget -N -O $UPDATES/pyPdf-1.12-1.fc10.noarch.rpm \
-        'http://download.fedora.redhat.com/pub/fedora/linux/development/i386/os/Packages/pyPdf-1.12-1.fc10.noarch.rpm'
-    ${CHROOT} rpm -i /tmp/updates/pyPdf-1.12-1.fc10.noarch.rpm
+
+    ( cd $UPDATES && wget 'http://download.fedora.redhat.com/pub/fedora/linux/development/i386/os/Packages/pyPdf-1.12-1.fc10.noarch.rpm' )
+
+    ( cd $UPDATES && wget "http://iulib.googlecode.com/files/iulib-0.3.tar.gz" && tar -xvzf iulib-0.3.tar.gz )
+
+    ( cd $UPDATES && svn export -r 193 --non-interactive "http://tesseract-ocr.googlecode.com/svn/trunk/" tesseract-ocr )
+
+    ( cd $UPDATES && wget http://ocropus.googlecode.com/files/ocropus-0.3.1.tar.gz && tar -xvzf ocropus-0.3.1.tar.gz )
 fi
 
-#
-# Development Tools and libraries
-#
-
-if [[ $development -eq 1 ]]
-then
-    ${YUM} groupinstall "Development Tools"
-    ${YUM} install httpd-devel apr-devel apr-util-devel libapreq2-devel openssl-devel curl-devel expat-devel libetpan-devel createrepo
-    ${YUM} install boost-devel ImageMagick-devel ImageMagick-c++-devel
-fi
 
 #
 # Donomo bits

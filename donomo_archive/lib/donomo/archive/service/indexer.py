@@ -102,10 +102,10 @@ def _index_page_from_string( page, text ):
         }
 
     body = SOLR_UPDATE_TEMPLATE.render(Context(data))
-    logging.debug('Sending to SOLR:')
-    logging.debug('--------------')
-    logging.debug(body)
-    logging.debug('--------------')
+    #logging.debug('Sending to SOLR:')
+    #logging.debug('--------------')
+    #logging.debug(body)
+    #logging.debug('--------------')
 
     response, content = http_client.request(
         uri     = SOLR_UPDATE_URL,

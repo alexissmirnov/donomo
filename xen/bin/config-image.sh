@@ -273,11 +273,11 @@ EOF
     chown -R solr:solr /var/run/solr
 
     cat >> /etc/sysconfig/iptables << EOF
--A INPUT -m state --state NEW -m tcp -p tcp --dport 8983 -j ACCEPT
+#-A INPUT -m state --state NEW -m tcp -p tcp --dport 8983 -j ACCEPT
 EOF
 
     cat >> /etc/sysconfig/system-config-securitylevel << EOF
---port=8983
+#--port=8983
 EOF
 
     /bin/cp -f ${source_tree}/donomo_archive/init.d/solr /etc/init.d/solr
@@ -351,7 +351,7 @@ fi
 if [[ $application -eq 1 ]]
 then
     # --- IP Tables ---
-    cat >> /etc/sysconfig/iptables << EOF
+    cat >> /etc/sysconfig/iptables << "EOF"
 -A INPUT -m state --state NEW -m tcp -p tcp --dport 80 -j ACCEPT
 -A INPUT -m state --state NEW -m tcp -p tcp --dport 443 -j ACCEPT
 EOF
@@ -400,7 +400,7 @@ then
     chkconfig donomo-procs on
 fi
 
-cat >> /etc/sysconfig/iptables << EOF
+cat >> /etc/sysconfig/iptables << "EOF"
 -A INPUT -j REJECT --reject-with icmp-host-prohibited
 -A FORWARD -j REJECT --reject-with icmp-host-prohibited
 COMMIT
@@ -408,6 +408,23 @@ EOF
 
 chmod 600 /etc/sysconfig/iptables
 chmod 644 /etc/sysconfig/system-config-securitylevel
+
+#
+# Compile the bits that don't come as packages
+#
+
+if [[ $(( python + processors + application )) -gt 0 ]]
+then
+    rpm -i /tmp/updates/pyPdf-1.12-1.fc10.noarch.rpm
+
+    ( cd /tmp/updates/iulib && scons && scons install )
+    ( cd /tmp/updates/tesseract-ocr && ./configure CXXFLAGS="-fPIC -O2" && make && make install )
+    ( cd /tmp/updates/ocropus-0.3 && ./configure --without-fst --without-leptonica --without-SDL CXXFLAGS="-fPIC -O2" && make && make install )
+fi
+
+#
+# Post Boot Script
+#
 
 /bin/cp -f ${source_tree}/donomo_archive/init.d/rc.local /etc/rc.d/
 chown root:root /etc/rc.d/rc.local
@@ -433,19 +450,6 @@ chmod 600 /root/.donomo/*
 
 /bin/cp -f /home/donomo/.bash* /root/
 echo -n '' > /root/.bash_history
-cat >> /root/.bashrc <<"EOF"
-export DONOMO_AWS=/root/.donomo
-
-if [[ -f $DONOMO_AWS/aws.sh ]]
-then
-    source $DONOMO_AWS/aws.sh ]]
-fi
-
-if [[ -f $DONOMO_AWS/ec2.sh ]]
-then
-    source $DONOMO_AWS/ec2.sh ]]
-fi
-EOF
 chown root:root /root/.bash*
 chmod 640 /root/.bash*
 

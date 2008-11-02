@@ -27,7 +27,7 @@ function start
     export LOGNAME=$USER
     export HOME=/home/$USER
 
-    su -c "/home/donomo/bin/processors --daemonize --pidfile=$pidfile --logfile=$logfile --workdir=$workdir" donomo
+    nice su -c "/home/donomo/bin/processors --daemonize --pidfile=$pidfile --logfile=$logfile --workdir=$workdir" donomo
 
     return $?
 }
@@ -47,7 +47,7 @@ case ${1:?} in
         $0 start
         ;;
     *)
-        echo "Usage: $(basename $0) start|stop|restart"
+        echo "Usage: $(basename $0) start|status|stop|restart"
         exit 1
         ;;
 esac

@@ -34,6 +34,7 @@ import os
 import tempfile
 import shutil
 import logging
+from time import gmtime, strftime
 
 logging    = logging.getLogger('donomo-archive')
 page_meta  = manager(Page).model._meta
@@ -67,7 +68,9 @@ def create_document( owner, title = None):
     """
 
     if title is None:
-        title = 'New Document'
+        title = 'Created on %s' % strftime(
+            "%Y-%m-%d %Y %H:%M:%S",
+            gmtime())
 
     logging.info( 'Creating new document for %s: %s' % ( owner, title))
 
@@ -89,38 +92,26 @@ def create_page (document, position = None):
 
 ###############################################################################
 
-def split_document( document, at_page_number):
-    """
-    Split the given document into two documents, moving all pages starting
-    from at_page_number and beyond into the new document.
+def split_document( document, offset ):
+
+    """ Split the given document into two documents, moving all pages
+        after offset into the new document.  For example, splitting a
+        10 page document at offset 5 results in pages 1 through 5
+        staying in the original document and pages 6 through 10 moving
+        into the new document.
 
     """
 
-    if at_page_number < 1:
+    if offset < 1:
         raise Exception(
-            'Cannot split document at position %d' % at_page_number)
+            'Cannot split document at position %d' % offset)
 
-    new_document = create_document(document.owner, 'New Document')
-    cursor       = get_cursor()
+    new_document = create_document(document.owner)
 
-    params = {
-        'old_document_id' : document.pk,
-        'new_document_id' : new_document.pk,
-        'owner_id'        : document.owner.pk,
-        'offset'          : at_page_number,
-        'page_table'      : quote_name(page_meta.db_table),
-        'document_column' : quote_name(get_field('document').column),
-        'owner_column'    : quote_name(get_field('owner').column),
-        'position_column' : quote_name(get_field('position').column),
-        }
-
-    cursor.execute("""
-        UPDATE    %(page_table)s
-          SET     %(document_column)s = %(new_document_id)d,
-                  %(position_column)s = %(position_column)s - %(offset)d
-          WHERE   %(document_column)s = %(old_document_id)d
-                  AND %(owner_column)s = %(owner_id)d
-                  AND %(position_column)s > %(offset)d;""" % params)
+    for page in document.pages.filter( position__gt=offset ):
+        page.document =  new_document
+        page.position -= offset
+        page.save()
 
     return new_document
 
@@ -140,49 +131,31 @@ def merge_documents( target, source, offset):
         # avoid odd requests
         return
 
-    num_target_pages = target.num_pages
+    target_length = target.num_pages
 
     if offset is None:
-        offset = num_target_pages
-    elif (offset < 0 or offset > num_target_pages):
+        offset = target_length
+    elif (offset < 0 or offset > target_length):
         raise ValidationError('Invalid merge position: %d' % offset)
-
-    cursor = get_cursor()
-
-    params = {
-        'src_doc_id'      : source.pk,
-        'tgt_doc_id'      : target.pk,
-        'owner_id'        : target.owner.pk,
-        'offset'          : offset,
-        'required_space'  : source.num_pages,
-        'page_table'      : quote_name(page_meta.db_table),
-        'document_column' : quote_name(get_field('document').column),
-        'owner_column'    : quote_name(get_field('owner').column),
-        'position_column' : quote_name(get_field('position').column),
-        }
 
     #
     # Make space in the target document
     #
 
-    if offset != num_target_pages:
-        cursor.execute("""
-          UPDATE    %(page_table)s
-            SET     %(position_column)s = %(position_column)s + %(required_space)d
-            WHERE   %(owner_column)s = %(owner_id)d
-                    AND %(document_column)s = %(tgt_doc_id)d
-                    AND %(position_column)s > %(offset)d;""" % params)
+    source_length = source.num_pages
+
+    for page in target.pages.filter( position__gt=offset ):
+        page.position += source_length
+        page.save()
 
     #
     # insert the source doucment into the space
     #
 
-    cursor.execute("""
-        UPDATE    %(page_table)s
-          SET     %(document_column)s = %(tgt_doc_id)d,
-                  %(position_column)s = %(position_column)s + %(offset)d
-          WHERE   %(document_column)s = %(src_doc_id)d
-                  AND %(owner_column)s = %(owner_id)d;""" % params)
+    for page in source.pages.all():
+        page.document =  target
+        page.position += offset
+        page.save()
 
     #
     # Delete the source document
@@ -353,7 +326,7 @@ def instantiate_asset( asset_id):
 ###############################################################################
 
 def retrieve_work_item(
-    visibility_timeout = None,
+    visibility_timeout = 300,
     max_wait_time      = None,
     interrupt_func     = None,
     auto_get_asset     = True ):

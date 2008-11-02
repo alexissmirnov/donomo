@@ -24,6 +24,11 @@ function start
     export LOGNAME=$USER
     export HOME=/home/$USER
 
+    mkdir -p /data/solr
+    chown solr:solr /data/solr
+    chmod 750 /data/solr
+
+    su -c "ln -sf /data/solr /home/solr/solr/data" solr
     su -c "/home/solr/bin/run $logfile $pidfile &" solr
 
     return $?
