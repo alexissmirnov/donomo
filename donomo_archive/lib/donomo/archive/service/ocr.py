@@ -65,6 +65,5 @@ def handle_work_item(processor, item):
                 parent       = parent_asset,
                 mime_type    = models.MimeType.HTML ))
     except OCRFailed:
-        logging.error('OCR failed, dropping from processing chain')
-
+        logging.warning('OCR failed, dropping from processing chain')
 ##############################################################################
