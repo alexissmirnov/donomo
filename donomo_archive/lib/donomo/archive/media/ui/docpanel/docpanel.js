@@ -36,6 +36,10 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 		var eventViewFullPage = new YAHOO.util.CustomEvent("viewFullPage", this);
 		var eventDocumentsLoaded = new YAHOO.util.CustomEvent("documentsLoaded", this);
 		
+		// extract the id from a document URL having the form /api/1.0/document/13123/
+		var getDocumentID = function(docId) {
+			return docId.substring(docId.search('/documents/')+'/documents/'.length,docId.length-1);
+		}
 		// Create the panel object
 		var onMouseOver = function(e){
 			// Capture the current target element
@@ -105,8 +109,7 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 			var docId = elSeparator.getAttribute('donomo-doc-id');
 			var splitAfterPage = elSeparator.getAttribute('donomo-split-after-page');
 			
-			// extract the id from a document URL having the form /api/1.0/document/13123/
-			docId = docId.substring(docId.search('/documents/')+'/documents/'.length,docId.length-1);
+			docId = getDocumentID(docId);
 			// Now POST the splitting request
 			Connect.asyncRequest(
 				'POST',
@@ -119,10 +122,29 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 		};
 		
 		var joinDocument = function(elSeparator){
+			// Take case of the visual change first, don't wait for the server response
 			Dom.removeClass(elSeparator, 'doc-separator-over');
 			Dom.removeClass(elSeparator, 'doc-separator');
 			Dom.addClass(elSeparator, 'page-separator');
 			Dom.addClass(elSeparator, 'page-separator-over');
+			
+			var idDoc1 = elSeparator.getAttribute('donomo-doc-id');
+			var eltDoc1 = new Element(idDoc1);
+			var panelItem = Dom.getNextSibling(eltDoc1.get('parentNode'));
+			var eltDoc2 = Dom.getFirstChild(panelItem);
+			var idDoc2 = eltDoc2.getAttribute('id');
+			
+			idDoc1 = getDocumentID(idDoc1);
+			idDoc2 = getDocumentID(idDoc2);
+			
+			Connect.asyncRequest(
+				'POST',
+				'/api/1.0/documents/'
+				+ '?op=merge'
+				+ '&tgt_id=' + idDoc1 
+				+ '&src_id=' + idDoc2, {
+				faulure: onApiFailure
+			});
 		};
 		
 		var onClick = function(e){
@@ -138,7 +160,7 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 				}
 				else 
 					if (Dom.hasClass(elTarget, 'doc-separator-over')) {
-						joinDocument(elTarget.id);
+						joinDocument(elTarget);
 						break;
 					// If we got a click on a page, fire an event
 					}
