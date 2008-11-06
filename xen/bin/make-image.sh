@@ -242,7 +242,7 @@ fi
 # Donomo bits
 #
 
-(cd $UPDATES && svn export --non-interactive http://svn2.assembla.com/svn/vaultit/trunk)
+(cd $UPDATES && svn export --non-interactive "http://svn.donomo.com/trunk")
 
 #
 # Web Server
