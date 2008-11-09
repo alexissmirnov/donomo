@@ -258,7 +258,7 @@ then
 solr:87b0e98dca2546d5b73f27c4a577d35c
 EOF
 
-    /bin/cp -rf ${source_tree}/donomo_archive/solr/* /home/solr/    
+    /bin/cp -rf ${source_tree}/donomo_archive/solr/* /home/solr/
 
     mkdir -p /var/lib/solr
     mkdir -p /var/log/solr
@@ -453,4 +453,41 @@ echo -n '' > /root/.bash_history
 chown root:root /root/.bash*
 chmod 640 /root/.bash*
 
+cat > /root/.emacs <<EOF
+;;disable splash screen and startup message
+(setq inhibit-startup-message t)
+(setq initial-scratch-message nil)
+
+;;enable syntax highlight by default
+(global-font-lock-mode t)
+(setq font-lock-maximum-decoration t)
+
+;; enable visual feedback on selections
+(setq transient-mark-mode t)
+(line-number-mode t)
+(column-number-mode t)
+
+;; Force to use spaces for tabs and to be 4 spaces
+(setq-default indent-tabs-mode nil)
+(setq-default tab-width 4)
+
+;; Set up my C/C++ preferences
+(setq c-default-style "bsd")
+
+(defun my-c++-mode-hook ()
+  (setq tab-width 4)
+  (setq indent-tabs-mode nil)
+  (setq c-indent-level 4))
+
+
+(add-hook 'c++-mode-hook 'my-c++-mode-hook)
+
+(setq auto-mode-alist
+      (cons '("\\.\\(c\\|C\\|cpp\\|h\\|H\\|hpp\\)$" . c++-mode)
+	    auto-mode-alist))
+
+;; Delete trailing whitspace from files
+(add-hook 'write-file-functions 'delete-trailing-whitespace)
+
+EOF
 updatedb
