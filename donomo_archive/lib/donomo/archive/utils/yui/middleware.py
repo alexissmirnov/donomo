@@ -72,14 +72,14 @@ from shlex import shlex
 
 from django.conf import settings
 
-from module_info_2_5_1 import MODULE_INFO, SKIN
+from module_info_2_6_0 import MODULE_INFO, SKIN
 from components import Components
 
 
 if settings.DEBUG:
-    DEFAULT_BASE = '/media/yui/build/'
+    DEFAULT_BASE = '/media/yui/2.6.0/build/'
 else:
-    DEFAULT_BASE = 'http://yui.yahooapis.com/2.5.1/build/'
+    DEFAULT_BASE = 'http://yui.yahooapis.com/2.6.0/build/'
 
 DEFAULT_JS_TAG = '<script type="text/javascript" src="%s"></script>'
 DEFAULT_CSS_TAG = '<link rel="stylesheet" type="text/css" href="%s" />'
@@ -238,7 +238,6 @@ YUI_INIT_RE = re.compile(
 
 class YUIIncludeMiddleware(object):
     def process_response(self, request, response):
-        
         # Only add YUI includes into HTML files
         if response['Content-Type'].split(';')[0] != 'text/html':
             return response
