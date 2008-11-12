@@ -14,10 +14,10 @@ from donomo.archive.ui.ui_views    import front_page
 urlpatterns = patterns(
     '',
     url(
-        regex  = r'^archive/?$',
+        regex  = r'^view/page/$',
         view   = direct_to_template,
-        kwargs = { 'template' : 'ui/archive.html' },
-        name   = 'ui_archive' ),
+        kwargs = { 'template' : 'ui/page.html' },
+        name   = 'ui_view_page' ),
 
     url(
         regex  = r'^$',
