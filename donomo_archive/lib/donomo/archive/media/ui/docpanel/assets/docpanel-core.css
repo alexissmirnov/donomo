@@ -12,13 +12,11 @@
 	width: 11em;
 }
 #panel .page {
-	background-color: #FFeeFF;
+	background-color: #ebf2f6;
 	color: #444;
 	float: left;
-}
-
-#panel .page-cover {
-	padding: 3px;
+	padding-left: .5em;
+	padding-right: .5em;
 }
 
 #panel .page-first {
@@ -42,12 +40,17 @@
 	background-color: blue;
 }
 
+#panel .page-cover {
+	background-color: #cfdfea;
+}
+
+
 #panel .page-separator {
 	visibility:inherit;
 	width:20px; 
 	float: inherit;
 	cursor: pointer;
-	background-color: #FFeeFF;
+	background-color: #ebf2f6;
 }
 
 #panel .page-separator-over {
