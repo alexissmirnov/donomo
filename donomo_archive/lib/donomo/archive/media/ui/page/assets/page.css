@@ -1,0 +1,40 @@
+/* 1280 = 140 + 1 + 1 + 6 + 100 + 6 + 937 + 6  */
+
+.page-item {
+	border:dotted thin #ff0000;
+	width: 1049px;
+}
+
+.page-item-thumbnail { 
+	float:left;
+	margin:6px 0 3px 3px;
+	width:100px;
+}
+
+.page-item-fragment {
+	float: left;
+	width:937px;
+	height: 129px;
+	margin:6px 0 3px 3px;
+	overflow:hidden;
+}
+
+.page-item-document {
+	border:dotted thin #00ff00;
+}
+
+.page-item-count {
+	position:relative;
+}
+
+.page-item-status {
+	left: 50%;
+	position:relative;
+}
+
+.page-item-document-pages {
+	overflow-x: hidden;	
+	height: 129px;
+	
+}
+
