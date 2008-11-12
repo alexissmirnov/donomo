@@ -16,8 +16,6 @@
 	 */	
 	(function(){
 		YAHOO.util.Event.onContentReady("panel", function(){
-			//YAHOO.donomo.Panel.init();
-			
 			YAHOO.donomo.SearchPanel.eventSearchStringChanged.subscribe(YAHOO.donomo.Panel.onSeachStringChanged);
 			YAHOO.donomo.TagPanel.eventTagSelected.subscribe(YAHOO.donomo.Panel.onTagSelected);
 		});
@@ -33,7 +31,7 @@
 	dynamic scrolling. The algorithm is based on 
 	http://www.developer.com/design/article.php/3681771
 -->
-<div id='panel-scroll-container' style="overflow-x:hidden;overflow:auto;">
+<div id='panel-scroll-container'>
 	<div id="panel" class="db">
 	</div>
 </div>
@@ -81,11 +79,12 @@ jstemplate templates
 
 
 	<div id="document.template" jsselect="documents" class="panel-item" >
-		<div jsdisplay="$this.length > 0" jsvalues="donomo.tags:$this.tags_string;id:$this.url" class="line-item document page page-cover" >
-			<p>
-				<b><a class="doc-expand" jsvalues="id:'expand:' + $this.url; href: '#' + $this.url" href="#" jscontent="$this.title">title</a></b>
-				<span jsdisplay="$this.length > 1"> |  
-				<a class="doc-expand" jsvalues="id:'expand:' + $this.url; href: '#' + $this.url" href="#"><span jscontent="$this.length">1</span> pages &raquo;</a>
+		<div heigth='300px' 
+				jsdisplay="$this.length > 0" 
+				jsvalues="donomo.tags:$this.tags_string;id:$this.url" 
+				class="line-item document page page-cover" >
+			<p> 
+				<a class="doc-expand" jsvalues="id:'expand:' + $this.url; href: '#doc=' + $this.url" href="#"><span jscontent="$this.length">1</span> pages &raquo;</a>
 				</span>
 			</p>
 			<img height="60%"  width="100%" jsvalues=".src:$this.thumbnail" src="img"/>
@@ -103,6 +102,7 @@ jstemplate templates
 
 	<div id="page.template" jsselect="document.pages" class="panel-item">
 		<div 
+			heigth='300px'
 			jsvalues="id:$this.url;donomo.tags:tags_string;donomo-doc-id:doc_id;class: 'page line-item '  + ( $index == 0 ? 'page-first ' : '' )  + ($index == total_pages - 1 ? 'page-last ' : '' ) + ( $index > 0 && $index < total_pages-1 ? 'page-middle ' : '');" 
 			class="page line-item" 
 			donomo-doc-id="parent-doc"

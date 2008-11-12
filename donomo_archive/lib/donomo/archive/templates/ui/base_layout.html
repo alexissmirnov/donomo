@@ -1,0 +1,61 @@
+{% extends "ui/base.html" %}
+{% block title %}{{user.username}}{% endblock %}
+{% block head %}
+<script src="{{MEDIA_URL}}jstemplate/util.js"></script>
+<script src="{{MEDIA_URL}}jstemplate/jsevalcontext.js"></script>
+<script src="{{MEDIA_URL}}jstemplate/jstemplate.js"></script>
+{% endblock %}
+
+{% block body %}
+<!-- YUI_include fonts grids dom event dragdrop logger -->
+<div id='header'>
+	<form action="/" name=f>
+        <table cellpadding=0 cellspacing=0>
+            <tr valign=top>
+                <td align=center nowrap>
+					<a href="/"><b><i>donomo</i></b></a> |
+					<a href="/account/{{user.username}}/">Settings</a> |
+					<a href="/account/logout/?next=/"> Sign Out</a>
+					{% include 'ui/search.panel.html' %}
+                </td>
+            </tr>
+        </table>
+    </form>	
+</div>
+<div id='footer'>
+	{% block footer_panel %}{% include 'ui/slider.panel.html' %}{% endblock %}
+</div>
+<div id='sidebar'>
+	{% block sidebar %}{% include 'ui/tags.panel.html' %}{% endblock %}
+</div>
+<div id='main'>
+	{% block main_panel %}{% endblock %}
+</div>
+
+<script>
+
+(function() {
+    var Dom = YAHOO.util.Dom,
+        Event = YAHOO.util.Event;
+
+    Event.onDOMReady(function() {
+ 		var layout = new YAHOO.widget.Layout({
+            units: [
+                { position: 'top', height: 35, body: 'header', gutter: '-1px', collapse: false, resize: false },
+                { position: 'left', width: 140, resize: true, body: 'sidebar', gutter: '-2px', collapse: false, close: false, scroll: false },
+                { position: 'bottom', height: 35, resize: false, body: 'footer', gutter: '-2px', collapse: false },
+                { position: 'center', body: 'panel-scroll-container', scroll: true }
+            ]
+        });
+		
+		// Initialize the main panel only when Layout widget is created.
+		// We need to do this because init() assumes YUI's emenent yui-layout-bd is created.
+		// This element provides the scroll bar that Panel needs to subscribe to
+		layout.subscribe('render', {% block main_panel_init %}function() {return;} {% endblock %});
+
+        layout.render();
+    });
+})();
+</script>
+{% endblock %}
+
