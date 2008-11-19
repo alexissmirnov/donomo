@@ -1,36 +1,34 @@
 {% extends "ui/base_layout.html" %}
 
 {% block main_panel %}
-<!-- YUI_include fonts grids slider logger container layout selector cookie json event element datasource button utilities animation carousel -->
+<!-- YUI_include carousel fonts grids slider logger container layout selector cookie json event element datasource button utilities animation carousel -->
+
+
 <script src="{{MEDIA_URL}}ui/page/page.js"></script>
 <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}ui/page/assets/page.css" >
+{% include 'ui/page.jst.html' %}
+<script>
+(function() {
+	    YAHOO.util.Event.onDOMReady(function() {
+			YAHOO.widget.Logger.enableBrowserConsole();
+			var page = new YAHOO.donomo.Page('page-panel', {
+							pageId: {{params.id}}, 
+							showFullPage: true, 
+							showDocument: false });
+			page.load();
+	});
+})();
+</script>
+
+
 
 <div id='panel-scroll-container'>
 	<div id="page-panel" class="db">
-		<!--
-		jstemplate templates
-		-->
-		<div style='display:inherit;'>
-			<div class='page-item' id='search.page.template'>
-				<div class='page-item-thumbnail'>
-					<img width='100%' src='{{MEDIA_URL}}ui/page/assets/thumbnail.jpg'/>
-				</div>
-				<div class='page-item-fragment'>
-					<img width='100%' src='{{MEDIA_URL}}ui/page/assets/image.jpg'/>
-				</div>
-				<div class='page-item-document'>
-					<span class='page-item-count'><a href='#'>&raquo;</a>Page 5 of 20<span>
-					<span class='page-item-status'>Uploaded 1 week ago</span>
-				</div>
-				<div class='page-item-document-carousel'>
-				</div>
-				<div class=
-			</div>	
-		</div>
 	</div>
 </div>
 
+
 {% endblock %}
 
-{% block main_panel_init %}YAHOO.donomo.Page.init{% endblock %}
+{% block main_panel_render %}YAHOO.donomo.Page.getById({{params.id}}).show{% endblock %}
 

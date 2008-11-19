@@ -4,18 +4,17 @@
 {% block body %}
 <!-- YUI_include fonts grids dom event dragdrop logger -->
 <div id='header'>
-	<form action="/" name=f>
-        <table cellpadding=0 cellspacing=0>
-            <tr valign=top>
-                <td align=center nowrap>
-					<a href="/"><b><i>donomo</i></b></a> |
-					<a href="/account/{{user.username}}/">Settings</a> |
-					<a href="/account/logout/?next=/"> Sign Out</a>
-					{% include 'ui/search.panel.html' %}
-                </td>
-            </tr>
-        </table>
-    </form>	
+    <table cellpadding=0 cellspacing=0>
+        <tr valign=top>
+            <td align=center nowrap>
+				<a href="/"><b><i>donomo</i></b></a> |
+				<a href="/account/{{user.username}}/">Settings</a> |
+				<a href="/account/logout/?next=/"> Sign Out</a>
+				{% include 'ui/search.panel.html' %}
+            </td>
+        </tr>
+    </table>
+
 </div>
 <div id='footer'>
 	{% include 'ui/slider.panel.html' %}
@@ -34,6 +33,10 @@
         Event = YAHOO.util.Event;
 
     Event.onDOMReady(function() {
+		{% if settings.DEBUG %}
+		YAHOO.widget.Logger.enableBrowserConsole();
+		{% endif %}
+
  		var layout = new YAHOO.widget.Layout({
             units: [
                 { position: 'top', height: 35, body: 'header', gutter: '-1px', collapse: false, resize: false },

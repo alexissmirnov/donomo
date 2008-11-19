@@ -1,4 +1,4 @@
-<!-- YUI_include fonts grids slider logger container layout selector cookie json event element datasource button utilities animation -->
+<!-- YUI_include carousel fonts grids slider container layout selector cookie json event element datasource button utilities animation -->
 <script src="{{MEDIA_URL}}jstemplate/util.js"></script>
 <script src="{{MEDIA_URL}}jstemplate/jsevalcontext.js"></script>
 <script src="{{MEDIA_URL}}jstemplate/jstemplate.js"></script>
@@ -6,6 +6,8 @@
 <script src="{{MEDIA_URL}}ui/docpanel/docpanel.js"></script>
 <script src="{{MEDIA_URL}}ui/docpanel/tageditor.js"></script>
 <script src="{{MEDIA_URL}}ui/tags/tagpanel.js"></script>
+<script src="{{MEDIA_URL}}ui/page/page.js"></script>
+<link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}ui/page/assets/page.css" >
 
 <script>
 	/*
@@ -16,7 +18,7 @@
 	 */	
 	(function(){
 		YAHOO.util.Event.onContentReady("panel", function(){
-			YAHOO.donomo.SearchPanel.eventSearchStringChanged.subscribe(YAHOO.donomo.Panel.onSeachStringChanged);
+			//YAHOO.donomo.SearchPanel.eventSearchStringChanged.subscribe(YAHOO.donomo.Panel.onSeachStringChanged);
 			YAHOO.donomo.TagPanel.eventTagSelected.subscribe(YAHOO.donomo.Panel.onTagSelected);
 		});
 	})();
@@ -48,49 +50,25 @@
 jstemplate templates
 -->
 <div style='display: none;'>
-	<div id='searchresults.template'
-		jsselect='pages' 
-		jsvars="title: $this.position; page_classes: page line-item ; total_pages:$page_count; doc_id: $this.document" 
-		class='panel-item' >
-		<div jsvalues="id:$this.url;donomo.tags:tags_string;donomo-doc-id:$this.document" 
-			 class="page line-item" >
-			<ul class="page-menu">
-				<li>
-					<a class="view-full-page" 
-						jsvalues="id:'view-full-page:' + $this.url;href:'#' + $this.url + '?view_name=image'" 
-						href="#">
-						<img title="Full Size" style='border:none' src='{{MEDIA_URL}}ui/docpanel/assets/page_white.png'/>
-					</a>	
-				</li>
-				<li>
-					<a jsvalues="href:$this.url + 'pdf/'" href="#">
-						<img title="Download this page as PDF" style='border:none' src='{{MEDIA_URL}}ui/docpanel/assets/page_white_acrobat.png'/>
-					</a>	
-				</li>
-			</ul>
-			<img width="100%" class='page-thumbnail' jsvalues="src:view;id:url+'thb/'"/>
-			<div class='bd' jscontent="hits[0].text + ' ' + hits.length + ' times'"></div>
-			<p><a href="id" 
-				jsvalues="href:$this.document" 
-				jscontent="'page ' + $this.position">
-			</a></p>
-		</div>
-	</div>
-
-
 	<div id="document.template" jsselect="documents" class="panel-item" >
 		<div heigth='300px' 
 				jsdisplay="$this.length > 0" 
 				jsvalues="donomo.tags:$this.tags_string;id:$this.url" 
 				class="line-item document page page-cover" >
-			<p> 
-				<a class="doc-expand" jsvalues="id:'expand:' + $this.url; href: '#doc=' + $this.url" href="#"><span jscontent="$this.length">1</span> pages &raquo;</a>
-				</span>
-			</p>
-			<img height="60%"  width="100%" jsvalues=".src:$this.thumbnail" src="img"/>
+			<a jsdisplay="$this.length == 1" jsvalues="href:'/view/pages/'+$this.pages[0].id+'/'">
+				<img border='0' height="60%"  width="100%" jsvalues=".src:$this.thumbnail" src="img"/>
+			</a>
+			<a jsdisplay="$this.length > 1" class="doc-expand" jsvalues="href: '#doc=' + $this.url">
+				<img border='0' height="60%"  width="100%" jsvalues=".src:$this.thumbnail" src="img"/>
+			</a>
+			
 			<p>	
 				<a jsvalues="href:$this.url + 'pdf/'" href="#">pdf</a> |
 				<a class="doc-tag" jsvalues="id:'doc-tag:' + $this.url;" href="#">tags</a> <span jscontent="$this.tags_string"></span>
+				<div jsdisplay="$this.length > 1">
+					<a class="doc-expand" jsvalues="id:'expand:' + $this.url; href: '#doc=' + $this.url" href="#">
+						<span jscontent="$this.length">1</span> pages &raquo;</a>
+				</div>
 			</p>
 		</div>
 		<div
@@ -107,33 +85,19 @@ jstemplate templates
 			class="page line-item" 
 			donomo-doc-id="parent-doc"
 			>
-				<ul class="page-menu">
-					<li>
-						<a class="view-full-page" 
-							jsvalues="id:'view-full-page:' + $this.url;href:'#' + $this.url + '?view_name=image'" 
-							href="#">
-							<img title="Full Size" style='border:none' src='{{MEDIA_URL}}ui/docpanel/assets/page_white.png'/>
-						</a>	
-					</li>
-					<li>
-						<a jsvalues="href:$this.url + 'pdf/'" href="#">
-							<img title="Download this page as PDF" style='border:none' src='{{MEDIA_URL}}ui/docpanel/assets/page_white_acrobat.png'/>
-						</a>	
-					</li>
-					<li jsdisplay="!search_result">
-						<a class="doc-collapse" jsvalues="id:'collapse:'; href: '#'" href="#">
-							<img src="{{MEDIA_URL}}ui/docpanel/assets/btn-collapse-document.gif" style='border:none' />
-						</a>
-					</li>				
-				</ul>
-				<img height="60%"  width="100%"  jsvalues=".src:$this.view"/>
-				<p><a href="id" 
-					jsvalues="href:$this.url" 
-					jscontent="'page ' + $this.position + ' of ' + total_pages">
-				</a></p>
-				<p jsdisplay="$index == 0">
-					<a class="doc-tag" jsvalues="id:'doc-tag:' + doc_id;" href="#">tags</a> <span jscontent="tags_string"></span>
+				<a jsvalues="href:'/view/pages/'+$this.id+'/'">
+					<img border='0' height="60%"  width="100%"  jsvalues=".src:$this.view"/>
+				</a>
+				<p>	
+					<a jsvalues="href:$this.url + 'pdf/'" href="#">pdf</a>
+					<span jsdisplay="$index==0">
+						| <a class="doc-tag" jsvalues="id:'doc-tag:' + doc_id;" href="#">tags</a> <span jscontent="tags_string"></span></span>
+					</span>
+					<div>
+						<a class='doc-collapse' jsvalues="href:'#';id:'collapse:'+$this.url" jscontent="'page ' + $this.position + ' of ' + total_pages + '  &laquo;'"></a>
+					</div>
 				</p>
+				
 		</div>
 		<div  jsdisplay="(total_pages - $index) != 1" 
 				jsvalues="donomo-doc-id:doc_id;donomo-split-after-page:$index+1" 

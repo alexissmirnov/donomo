@@ -1,30 +1,46 @@
 YAHOO.namespace("donomo");
-YAHOO.donomo.SearchPanel = function(){
-	var config = {};
-	var Dom = YAHOO.util.Dom;
-	var Event = YAHOO.util.Event;
+
+if (YAHOO.donomo.SearchResultPanel == undefined) { YAHOO.donomo.SearchResultPanel = function(){
+		var Event = YAHOO.util.Event;
+		var Dom = YAHOO.util.Dom;
+		var Element = YAHOO.util.Element;
+		var Connect = YAHOO.util.Connect;
+		
+		var config = {
+			urlGetSearch : '/api/1.0/search/?view_name=thumbnail&q={0}&start_index={1}&num_rows={2}',
+			dynamicPaginationSize : 40,
+			idPageTemplate : 'full.page.template',
+			idPanel : 'page-panel',
+ 		};
+		var lastDocumentLoadCount;
+		
+		var init = function(query) {
+			Connect.asyncRequest('GET',
+				config.urlGetSearch.format(query, 0, config.dynamicPaginationSize),
+				{ faulure: processApiFailure, success: processGetSearch });
+			
+			//TODO subscribe to bubbled up mousemove event
+			// Event.on(elementId + config.idSuffixThumbnail, 'mousemove', onThumbnailMouseMove);
+			// might need to set 'background-position', '0% 0%' on mouseout, 
+			// but i'm not crazy about the snapping effect
+							
+		};
+		
+		var processGetSearch = function(response) {
+			var responseJSON = eval('(' + response.responseText + ')');
+			
+			YAHOO.donomo.Page.createPages(config.idPanel, responseJSON);
+		};
+
+		var processApiFailure = function(o) { 
+			console.error(o); 
+		};
+		
+		
 	
-	function onChangeSearchText(e){
-		var searchQuery = Dom.get(config.idSearchBox).value;
-		var url = location.href.split('#')[0];
-		if (searchQuery.length > 0) {
-			url = url + '#/search/' + Dom.get(config.idSearchBox).value + '/';
-			location.replace(url);
-			eventSearchStringChanged.fire(this);
-		} else {
-			location.replace(url);
-			location.reload();
-		}
-	}
-	init = function(idSearchForm, idResultPanel){
-		config.idSearchBox = idSearchForm;
-		Event.addListener(config.idSearchBox, 'change', onChangeSearchText);
-	};
-	
-	var eventSearchStringChanged = new YAHOO.util.CustomEvent("eventSearchStringChanged", this);
-	
-	return {
-		init : init,
-		eventSearchStringChanged : eventSearchStringChanged,
-	}
-}();
+		return {
+			init: init
+		};
+}();}
+
+

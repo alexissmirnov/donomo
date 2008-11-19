@@ -1,14 +1,8 @@
 <script src="{{MEDIA_URL}}ui/search/search.js"></script>
-<script>
-	(function(){
-		YAHOO.util.Event.onContentReady('search-text', function(){
-			YAHOO.donomo.SearchPanel.init('search-text');
-		});
-	})();
-</script>
-<form id='search-form' action='#/search/' method='GET'>
-	<input id='search-text-hack' type='text' style='display:none;'/>
-	<input id='search-text' type='text'/>
+<link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}ui/search/assets/search.css" >
+
+<form id='archive-search-form' action='/view/search/' method='GET'>
+	<input name='q' type='text'/>
+	<input type='submit' value='Search'/>
 </form>
-<a href'/'><img border='0' src='{{MEDIA_URL}}ui/search/assets/clear_search.png'/></a>
 

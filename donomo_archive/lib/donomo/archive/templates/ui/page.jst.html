@@ -1,0 +1,85 @@
+<!--
+page jstemplate templates
+-->
+<div style='display:none;'>
+	<ol id='carousel.template'> 
+		<li class='page-item-thumbnail' jsselect='document.pages'>
+			<a jsvalues="href:'/view/pages/'+$this.id+'/'">
+				<img border='0' width='100%' jsvalues='src:$this.view'/>
+			</a>
+		</li>
+	</ol>
+	
+	<div id='full.page.template'>
+		<div class='page-item'
+			 jsvalues='id:$this.page.url'
+			 
+			 id='/api/1.0/pages/123/'>
+			
+			<span class='page-item-count'><a href='#'>&raquo;</a>Page <span jscontent='$this.page.position'></span></span>
+			<span class='page-item-status'>Uploaded 1 week ago</span>
+
+			<div class='page-item-fragment' style='height:100%'
+				 jsvalues='id:$this.page.url + "page-item-fragment"'
+					
+				 id='/api/1.0/pages/123/page-item-fragment'>
+				<!-- style="background: url('{{MEDIA_URL}}ui/page/assets/image.jpg') no-repeat;" -->
+				 <img width='100%'
+				 	  jsvalues='id:$this.page.url + "page-item-fragment/img/"; src:$this.page.view'>
+					  
+				 	  <!-- src='{{MEDIA_URL}}ui/page/assets/image.jpg'/> -->
+			</div>
+			<div class='page-item-document-carousel'
+				 jsvalues='id:$this.page.url+"page-item-document-carousel"'
+				 id='page-item-document-carousel' >
+			</div>
+		</div>
+	</div>
+
+	<div id='page.template' jsselect='$this.page'>
+		<div transclude='single.page.template'></div>
+	</div>
+	
+	<div id='single.page.template'>
+		<span jsvalue='$this'></span>
+		<div class='page-item'
+			 jsvalues='id:$this.url'
+			 
+			 id='/api/1.0/pages/123/'>
+			
+			<div class='page-item-thumbnail'
+				 jsvalues='id:$this.url+"page-item-thumbnail"'
+				 
+				 id='page-item-thumbnail' >
+				 <img width='100%' 
+					jsvalues='src:$this.view'>
+			</div>
+
+			<div class='page-item-fragment'
+				 jsvalues='id:$this.url + "page-item-fragment"'
+					
+				 id='/api/1.0/pages/123/page-item-fragment'>
+				<!-- style="background: url('{{MEDIA_URL}}ui/page/assets/image.jpg') no-repeat;" -->
+				<a jsvalues="href:'/view/pages/'+$this.id+'/'">
+					<img width='100%' border='0'
+				 	  jsvalues='id:$this.url + "page-item-fragment/img/"; src:$this.view'>
+				 	  <!-- src='{{MEDIA_URL}}ui/page/assets/image.jpg'/> -->
+				</a>
+			</div>
+			<span class='page-item-count'><a href='#'>&raquo;</a>Page <span jscontent='$this.position'></span></span>
+			<span class='page-item-status'>Uploaded 1 week ago</span>
+			<div class='page-item-document-carousel'
+				 jsvalues='id:$this.url+"page-item-document-carousel"'
+				 id='page-item-document-carousel' >
+			</div>
+		</div>
+	</div>
+	
+	<div id='pages.template'
+		jsselect='pages'
+		jsvars="title: $this.position;page_classes:'page-item'; total_pages:$page_count;doc_id: $this.document" 
+		class='panel-item'>
+		<div transclude='single.page.template'></div>
+
+	</div>		
+</div>

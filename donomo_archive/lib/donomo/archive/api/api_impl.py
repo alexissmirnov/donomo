@@ -91,6 +91,7 @@ def page_as_json_dict( page, view_name, only_api_url = False):
         return { 'url' : get_url('api_page_info', pk = page.pk) }
 
     return {
+        'id'       : page.pk,
         'url'      : get_url('api_page_info', pk = page.pk),
         'owner'    : page.owner.pk,
         'document' : get_url('api_document_info', pk = page.document.pk),

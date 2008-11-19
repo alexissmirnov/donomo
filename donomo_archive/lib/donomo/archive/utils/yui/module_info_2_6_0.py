@@ -15,7 +15,7 @@ MODULE_INFO = {
                'requires': ['element'],
                'skinnable': True,
                'type': 'js'},
-    'carousel': {'path': 'calendar/carousel-beta-min.js',
+    'carousel': {'path': 'carousel/carousel-beta-min.js',
                  'requires': ['event', 'dom', 'element', 'animation', 'connection'],
                  'skinnable': True,
                  'type': 'js'},
