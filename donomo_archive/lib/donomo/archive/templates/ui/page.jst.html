@@ -59,15 +59,13 @@ page jstemplate templates
 				 jsvalues='id:$this.url + "page-item-fragment"'
 					
 				 id='/api/1.0/pages/123/page-item-fragment'>
-				<!-- style="background: url('{{MEDIA_URL}}ui/page/assets/image.jpg') no-repeat;" -->
 				<a jsvalues="href:'/view/pages/'+$this.id+'/'">
 					<img width='100%' border='0'
 				 	  jsvalues='id:$this.url + "page-item-fragment/img/"; src:$this.view'>
-				 	  <!-- src='{{MEDIA_URL}}ui/page/assets/image.jpg'/> -->
 				</a>
 			</div>
-			<span class='page-item-count'><a href='#'>&raquo;</a>Page <span jscontent='$this.position'></span></span>
-			<span class='page-item-status'>Uploaded 1 week ago</span>
+			<span class='page-item-count'><a class='page-item-toggle-document-carousel' href='#'>&raquo;</a>Page <span jscontent='$this.position'></span></span>
+			<span class='page-item-status' jsvalues='id:$this.url + "page-item-status"'>Uploaded 1 week ago</span>
 			<div class='page-item-document-carousel'
 				 jsvalues='id:$this.url+"page-item-document-carousel"'
 				 id='page-item-document-carousel' >

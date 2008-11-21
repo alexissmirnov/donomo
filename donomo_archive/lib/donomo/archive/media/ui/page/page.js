@@ -190,7 +190,8 @@ String.prototype.format = function() {
 		ID_SUFFIX_THUMBNAIL : 'page-item-thumbnail',
 		ID_SUFFIX_PAGE_ITEM_FRAGMENT : 'page-item-fragment',
 		ID_SUFFIX_FRAGMENT_IMAGE : 'page-item-fragment/img/',
-		ID_SUFFIX_CAROUSEL_PANEL : 'page-item-document-carousel',			
+		ID_SUFFIX_CAROUSEL_PANEL : 'page-item-document-carousel',
+		ID_SUFFIX_PAGE_ITEM_STATUS : 'page-item-status',	
 	};
     /*
      * Internationalizable strings in the Page component
@@ -424,6 +425,10 @@ String.prototype.format = function() {
 		        });
 			carousel.render();
 			carousel.show();
+			
+			// Now that we got the document, display its name in the 
+			var status = Dom.get(this._pageId + Page.CONFIG.ID_SUFFIX_PAGE_ITEM_STATUS);
+			status.innerHTML = responseJSON.document.title;
 		},
 		
 		/**
