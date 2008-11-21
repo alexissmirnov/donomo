@@ -7,7 +7,7 @@ if (YAHOO.donomo.SearchResultPanel == undefined) { YAHOO.donomo.SearchResultPane
 		var Connect = YAHOO.util.Connect;
 		
 		var config = {
-			urlGetSearch : '/api/1.0/search/?view_name=thumbnail&q={0}&start_index={1}&num_rows={2}',
+			urlGetSearch : '/api/1.0/search/?view_name=image&q={0}&start_index={1}&num_rows={2}',
 			dynamicPaginationSize : 40,
 			idPageTemplate : 'full.page.template',
 			idPanel : 'page-panel',
