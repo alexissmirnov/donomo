@@ -23,7 +23,6 @@ if (YAHOO.donomo.SearchResultPanel == undefined) { YAHOO.donomo.SearchResultPane
 			// Event.on(elementId + config.idSuffixThumbnail, 'mousemove', onThumbnailMouseMove);
 			// might need to set 'background-position', '0% 0%' on mouseout, 
 			// but i'm not crazy about the snapping effect
-							
 		};
 		
 		var processGetSearch = function(response) {
