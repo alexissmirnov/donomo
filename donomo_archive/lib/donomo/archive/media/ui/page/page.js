@@ -49,8 +49,8 @@ String.prototype.format = function() {
 
     /* Some abbreviations to avoid lengthy typing and lookups. */
     var Page    = YAHOO.donomo.Page,
-		Log			= YAHOO.log,	
         Dom         = YAHOO.util.Dom,
+		Element     = YAHOO.util.Element,
         Event       = YAHOO.util.Event,
 		Connect		= YAHOO.util.Connect,
         JS          = YAHOO.lang;
@@ -143,7 +143,7 @@ String.prototype.format = function() {
 		jstProcess(processingContext, template);
 
 		for (var i = 0; i < json.pages.length; i++) {
-			var p = new Page(container, {showDocument: true, showFullPage: false, pageId : json.pages[i].id});
+			var p = new Page(container, {showDocument: false, showFullPage: true, pageId : json.pages[i].id});
 			p.insert(json.pages[i]);
 		}
 	}
@@ -274,7 +274,7 @@ String.prototype.format = function() {
 		},
 		
 		insert: function(pageJson) {
-			//TODO this._createSearchOverlays(pageJson);
+			this._createSearchOverlays(pageJson);
 			
 			if (this._config.showDocument) {
 				Connect.asyncRequest('GET', pageJson.document, {
@@ -332,15 +332,19 @@ String.prototype.format = function() {
 		 * @param {Object} pageJson - json from search API
 		 */
 		_createSearchOverlays: function(pageJson) {
-			var idThumbnail = pageJson.url + Page.CONFIG.ID_SUFFIX_PAGE_ITEM_FRAGMENT;
+			var idThumbnail = pageJson.url + Page.CONFIG.ID_SUFFIX_FRAGMENT_IMAGE;
 			var thbRegion = Dom.getRegion(idThumbnail);
-			var thbWidth = thbRegion.right - thbRegion.left;
-			var thbHeight = thbRegion.bottom - thbRegion.top;
+			
+			var th = new Element(Dom.get(idThumbnail));
+
+			var thbWidth = th.get('scrollWidth');
+			var thbHeight = th.get('scrollHeight');
 			var widthRatio = thbWidth/parseInt(pageJson.width);
 			var heigthRatio = thbHeight/parseInt(pageJson.height);
 
 			var thbX = Dom.getX(idThumbnail);
 			var thbY = Dom.getY(idThumbnail);
+			
 			for (var j = 0; j < pageJson.hits.length; j++) {
 				var x1 = Math.floor(thbX + parseInt(pageJson.hits[j].x1)*widthRatio);
 				var y1 = Math.floor(thbY + parseInt(pageJson.hits[j].y1)*heigthRatio);
@@ -351,16 +355,17 @@ String.prototype.format = function() {
 				var o = new YAHOO.widget.Overlay(hitId, {
 					x: x1,
 					y: y1,
-					visible: false,
+					visible: true,
 					width: (x2-x1)+'px',
 					height: (y2-y1)+'px'
 				});
 				o.render(idThumbnail);
-				o.show();
 			}	
 		},
 		
 		_initEvents: function() {
+			//TODO replace this by a more efficient option of
+			// subscribing to bulled-up notifications
 			Event.on(this._pageId + Page.CONFIG.ID_SUFFIX_THUMBNAIL, 
 					'mousemove', 
 					this._mousemoveEventHandler,
@@ -432,19 +437,44 @@ String.prototype.format = function() {
 		},
 		
 		/**
-		 * 
+		 * Handle mousemove over the thumbnail.
+		 * The mousemove over the thumbnail controls the scrolling of the image and highlights
+		 * of the image fragment.
+		 * When the mouse is at the top of the thumbnail, the image is set with 0 scroll offset.
+		 * When mouse is at the bottom of the thumbnail, the image is scrolled to the bottom
+		 * with its bottom line flush with the bottom line of the thumbnail.
 		 * @param {Object} pos : Position of the mouse
 		 * @protected
 		 */
 		_mousemoveEventHandler: function(pos, page) {
+			// Get the element of teh thumbnail - this is where the mouse moves
 			var th = Dom.get(page._pageId + Page.CONFIG.ID_SUFFIX_THUMBNAIL);
-			var offsetPercent = (Dom.getXY(th.id)[1] - pos.clientY) / th.clientHeight;
-			var fragment = Dom.get(page._pageId + Page.CONFIG.ID_SUFFIX_FRAGMENT_IMAGE);
 			
-			if (page._pageFragmentOriginalY === undefined) {
+			// Get the element representing the image fragment
+			var fragment = Dom.get(page._pageId + Page.CONFIG.ID_SUFFIX_FRAGMENT_IMAGE);
+
+			// Get the element of fragmentContainer -- we need this to get its
+			// clientHeight.			
+			var fragmentContainer = Dom.get(page._pageId + Page.CONFIG.ID_SUFFIX_PAGE_ITEM_FRAGMENT);
+			
+			// Calculate the persent of the distance between top edge of the
+			// thumbnail and the current mouse position
+			var offsetPercent = (Dom.getY(th.id) - pos.clientY) / th.clientHeight;
+
+			// store the original Y position of this element - we'll use
+			// this value as the starting point i.e. what the value of Y 
+			// should be at 0% offset
+			if (page._pageFragmentOriginalY === null) {
 				page._pageFragmentOriginalY = Dom.getY(fragment.id);
 			};
-			Dom.setY(fragment.id, page._pageFragmentOriginalY + fragment.clientHeight * offsetPercent);
+
+			// Calculate the entre height of the scrollable area.
+			// This is the value by which the image will be scrolled when the mouse reaches
+			// the bottom of the thumbnail.
+			var offsetY = fragment.scrollHeight-fragmentContainer.clientHeight;
+
+			// set the value of Y to original plus 
+			Dom.setY(fragment.id, page._pageFragmentOriginalY + offsetY * offsetPercent);
 		}
 
     });

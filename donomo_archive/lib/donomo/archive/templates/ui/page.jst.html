@@ -41,7 +41,6 @@ page jstemplate templates
 	</div>
 	
 	<div id='single.page.template'>
-		<span jsvalue='$this'></span>
 		<div class='page-item'
 			 jsvalues='id:$this.url'
 			 
@@ -56,15 +55,15 @@ page jstemplate templates
 			</div>
 
 			<div class='page-item-fragment'
-				 jsvalues='id:$this.url + "page-item-fragment"'
-					
-				 id='/api/1.0/pages/123/page-item-fragment'>
-				<a jsvalues="href:'/view/pages/'+$this.id+'/'">
-					<img width='100%' border='0'
-				 	  jsvalues='id:$this.url + "page-item-fragment/img/"; src:$this.view'>
-				</a>
+				 jsvalues="id:$this.url + 'page-item-fragment'">
+				 <div jsvalues='id:$this.url + "page-item-fragment/img/"'>
+					<a jsvalues="href:'/view/pages/'+$this.id+'/'">
+						<img width='100%' border='0'
+					 	  jsvalues='src:$this.view'>
+					</a>
+				</div>
 			</div>
-			<span class='page-item-count'><a class='page-item-toggle-document-carousel' href='#'>&raquo;</a>Page <span jscontent='$this.position'></span></span>
+			<span class='page-item-count'><a class='toggle-document-carousel' href='#'>&raquo;</a>Page <span jscontent='$this.position'></span></span>
 			<span class='page-item-status' jsvalues='id:$this.url + "page-item-status"'>Uploaded 1 week ago</span>
 			<div class='page-item-document-carousel'
 				 jsvalues='id:$this.url+"page-item-document-carousel"'
@@ -79,5 +78,6 @@ page jstemplate templates
 		class='panel-item'>
 		<div transclude='single.page.template'></div>
 
-	</div>		
+	</div>
+
 </div>
