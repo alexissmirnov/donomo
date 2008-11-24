@@ -143,7 +143,7 @@ String.prototype.format = function() {
 		jstProcess(processingContext, template);
 
 		for (var i = 0; i < json.pages.length; i++) {
-			var p = new Page(container, {showDocument: false, showFullPage: true, pageId : json.pages[i].id});
+			var p = new Page(container, {showDocument: true, showFullPage: true, pageId : json.pages[i].id});
 			p.insert(json.pages[i]);
 		}
 	}
@@ -476,9 +476,7 @@ String.prototype.format = function() {
 			// set the value of Y to original plus 
 			Dom.setY(fragment.id, page._pageFragmentOriginalY + offsetY * offsetPercent);
 		}
-
     });
-
 })();
 
 YAHOO.register("page", YAHOO.donomo.Page, {version: "1.0", build: "$Rev:$"});
