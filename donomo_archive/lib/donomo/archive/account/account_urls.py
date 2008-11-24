@@ -47,7 +47,11 @@ urlpatterns = patterns('',
                        url(r'^delete/$', 
                             'donomo.archive.account.account_views.account_delete',
                             name='account-delete'),
-                       url(r'^(?P<username>\w+)/$', 
+                       url(r'^(?P<username>[-+@.a-zA-Z0-9_]+)/export/$',  
+                            'donomo.archive.account.account_views.account_export',
+                            name='account-export'),
+                       url(r'^(?P<username>[-+@.a-zA-Z0-9_]+)/$',  
                             'donomo.archive.account.account_views.account_detail',
                             name='account-detail'),
+                        
                        )

@@ -55,8 +55,23 @@ def account_detail(request, username):
     else:
         return HttpResponse('forbidden')
 
+@login_required()
+def account_export(request, username):
+    """
+        Renders account management UI
+    """
+    #TODO replace with generic views once
+    #http://code.djangoproject.com/ticket/3639 is resolved
+    
+    if username != request.user.username and not request.user.staff:
+        return HttpResponse('forbidden: username %s' % username)
+   
+    if request.method == 'GET':
+       return HttpResponse('Not implemented yet')
+    else:
+       return HttpResponse('forbidden')
 
-        
+    
 # I put this on all required fields, because it's easier to pick up
 # on them with CSS or JavaScript if they have a class of "required"
 # in the HTML. Your mileage may vary. If/when Django ticket #3515
