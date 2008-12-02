@@ -3,6 +3,7 @@
 .page-item {
 	border:dotted thin #ff0000;
 	width: 1049px;
+	overflow:hidden;
 }
 
 .page-item-thumbnail { 
@@ -11,16 +12,18 @@
 	width:100px;
 }
 
-.page-item-fragment {
+.page-item-full {
 	float: left;
-	width:937px;
-	height: 129px;
 	margin:6px 0 3px 3px;
 	overflow:hidden;
+	width:937px;
+}
+
+.page-item-fragment {
+	height: 129px;
 }
 
 .page-item-document {
-	border:dotted thin #00ff00;
 }
 
 .page-item-count {

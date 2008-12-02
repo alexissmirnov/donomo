@@ -10,51 +10,10 @@ page jstemplate templates
 		</li>
 	</ol>
 	
-	<div id='full.page.template'>
+	<div id='page.full.template'>
 		<div class='page-item'
-			 jsvalues='id:$this.page.url'
-			 
-			 id='/api/1.0/pages/123/'>
-			
-			<span class='page-item-count'><a href='#'>&raquo;</a>Page <span jscontent='$this.page.position'></span></span>
-			<span class='page-item-status'>Uploaded 1 week ago</span>
-
-			<div class='page-item-fragment' style='height:100%'
-				 jsvalues='id:$this.page.url + "page-item-fragment"'
-					
-				 id='/api/1.0/pages/123/page-item-fragment'>
-				<!-- style="background: url('{{MEDIA_URL}}ui/page/assets/image.jpg') no-repeat;" -->
-				 <img width='100%'
-				 	  jsvalues='id:$this.page.url + "page-item-fragment/img/"; src:$this.page.view'>
-					  
-				 	  <!-- src='{{MEDIA_URL}}ui/page/assets/image.jpg'/> -->
-			</div>
-			<div class='page-item-document-carousel'
-				 jsvalues='id:$this.page.url+"page-item-document-carousel"'
-				 id='page-item-document-carousel' >
-			</div>
-		</div>
-	</div>
-
-	<div id='page.template' jsselect='$this.page'>
-		<div transclude='single.page.template'></div>
-	</div>
-	
-	<div id='single.page.template'>
-		<div class='page-item'
-			 jsvalues='id:$this.url'
-			 
-			 id='/api/1.0/pages/123/'>
-			
-			<div class='page-item-thumbnail'
-				 jsvalues='id:$this.url+"page-item-thumbnail"'
-				 
-				 id='page-item-thumbnail' >
-				 <img width='100%' 
-					jsvalues='src:$this.view'>
-			</div>
-
-			<div class='page-item-fragment'
+			 jsvalues='id:$this.page.url'>	
+			<div class='page-item-full'
 				 jsvalues="id:$this.url + 'page-item-fragment'">
 				 <div jsvalues='id:$this.url + "page-item-fragment/img/"'>
 					<a jsvalues="href:'/view/pages/'+$this.id+'/'">
@@ -64,7 +23,41 @@ page jstemplate templates
 				</div>
 			</div>
 			<span class='page-item-count'><a class='toggle-document-carousel' href='#'>&raquo;</a>Page <span jscontent='$this.position'></span></span>
-			<span class='page-item-status' jsvalues='id:$this.url + "page-item-status"'>Uploaded 1 week ago</span>
+			<span class='page-item-status' jsvalues='id:$this.url + "page-item-status"'></span>
+			<div class='page-item-document-carousel'
+				 jsvalues='id:$this.url+"page-item-document-carousel"'
+				 id='page-item-document-carousel' >
+			</div>
+		</div>
+	</div>
+
+	<div id='page.template' jsselect='$this.page'>
+		<div transclude='single.page.template'></div>
+	</div>
+	
+	<div id='page.fragment.template'>
+		<div class='page-item'
+			 jsvalues='id:$this.url'>
+			
+			<div class='page-item-thumbnail'
+				 jsvalues='id:$this.url+"page-item-thumbnail"'
+				 
+				 id='page-item-thumbnail' >
+				 <img width='100%' 
+					jsvalues='src:$this.view'>
+			</div>
+
+			<div class='page-item-fragment page-item-full'
+				 jsvalues="id:$this.url + 'page-item-fragment'">
+				 <div jsvalues='id:$this.url + "page-item-fragment/img/"'>
+					<a jsvalues="href:'/view/pages/'+$this.id+'/'">
+						<img width='100%' border='0'
+					 	  jsvalues='src:$this.view'>
+					</a>
+				</div>
+			</div>
+			<span class='page-item-count'><a class='toggle-document-carousel' href='#'>&raquo;</a>Page <span jscontent='$this.position'></span></span>
+			<span class='page-item-status' jsvalues='id:$this.url + "page-item-status"'></span>
 			<div class='page-item-document-carousel'
 				 jsvalues='id:$this.url+"page-item-document-carousel"'
 				 id='page-item-document-carousel' >
@@ -72,12 +65,18 @@ page jstemplate templates
 		</div>
 	</div>
 	
-	<div id='pages.template'
+	<div id='pages.fragment.template'
 		jsselect='pages'
 		jsvars="title: $this.position;page_classes:'page-item'; total_pages:$page_count;doc_id: $this.document" 
 		class='panel-item'>
-		<div transclude='single.page.template'></div>
-
+		<div transclude='page.fragment.template'></div>
+	</div>
+	
+	<div id='pages.full.template'
+		jsselect='pages'
+		jsvars="title: $this.position;page_classes:'page-item'; total_pages:$page_count;doc_id: $this.document" 
+		class='panel-item'>
+		<div transclude='page.full.template'></div>
 	</div>
 
 </div>

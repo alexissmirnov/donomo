@@ -130,20 +130,29 @@ String.prototype.format = function() {
     };
 	
 	/**
-	 * 
+	 * Creates page nstances based on a given JSON. The instances of Page class
+	 * will be created around exisging DOM objects.
 	 * @param {Object} el
 	 * @param {Object} json
 	 */
 	Page.createPages = function( el, json ) {
 		var processingContext = new JsEvalContext(json);
-		var template = jstGetTemplate('pages.template');
+		var showFullPage = true;
+		
+		var template;
+		if (showFullPage) {
+			template = jstGetTemplate(Page.CONFIG.ID_PAGES_FULL_TEMPLATE);
+		}
+		else {
+			template = jstGetTemplate(Page.CONFIG.ID_PAGES_FRAGMENT_TEMPLATE);
+		}
 		var container = Dom.get(el);
 		
 		container.appendChild(template);
 		jstProcess(processingContext, template);
 
 		for (var i = 0; i < json.pages.length; i++) {
-			var p = new Page(container, {showDocument: true, showFullPage: true, pageId : json.pages[i].id});
+			var p = new Page(container, {showDocument: true, showFullPage: showFullPage, pageId : json.pages[i].id});
 			p.insert(json.pages[i]);
 		}
 	}
@@ -184,9 +193,13 @@ String.prototype.format = function() {
         API_GET_PAGE: '/api/1.0/pages/{0}/',
 		API_GET_DOCUMENT : '/api/1.0/documents/{0}/',
 		ID_PANEL : 'page-panel',
-		ID_PAGE_TEMPLATE : 'page.template',
-		ID_FULL_PAGE_TEMPLATE : 'full.page.template',
+		
+		ID_PAGES_FULL_TEMPLATE : 'pages.full.template',
+		ID_PAGES_FRAGMENT_TEMPLATE : 'pages.fragment.template',
+		ID_PAGE_FULL_TEMPLATE : 'page.full.template',
+		ID_PAGE_FRAGMENT_TEMPLATE : 'page.fragment.template',
 		ID_DOCUMENT_CAROUSEL_TEMPLATE : 'carousel.template',
+		
 		ID_SUFFIX_THUMBNAIL : 'page-item-thumbnail',
 		ID_SUFFIX_PAGE_ITEM_FRAGMENT : 'page-item-fragment',
 		ID_SUFFIX_FRAGMENT_IMAGE : 'page-item-fragment/img/',
@@ -274,14 +287,31 @@ String.prototype.format = function() {
 		},
 		
 		insert: function(pageJson) {
-			this._createSearchOverlays(pageJson);
-			
+			/*
+			 * If we're showing the document carousel, we have to defer the insertion
+			 * of search overlays until after the document was processed.
+			 * The reason is because the documetnt carousel, when created, will alter the
+			 * height of the DOM node representing the page item. As a result, the subsequent 
+			 * nodes will be offset further.
+			 * If the overlays are added before the carousel is fully created, they will appear
+			 * out of sync with the page layout. 
+			 */
 			if (this._config.showDocument) {
-				Connect.asyncRequest('GET', pageJson.document, {
+				var request = Connect.asyncRequest('GET', pageJson.document, {
 					scope: this,
+					argument: pageJson,
 					faulure: this._processApiFailure,
-					success: this._processGetDocument
+					success: this._processGetDocument,
+					customevents: {
+						onComplete: 
+							function (eventType, args) {
+								this._createSearchOverlays(args[1]);
+							},
+					}
 				});
+			}
+			else {
+				this._createSearchOverlays(pageJson);
 			}
 		},
 		
@@ -344,17 +374,18 @@ String.prototype.format = function() {
 
 			var thbX = Dom.getX(idThumbnail);
 			var thbY = Dom.getY(idThumbnail);
+			console.log('thbX='+thbX+' thbY='+thbY);
 			
 			for (var j = 0; j < pageJson.hits.length; j++) {
-				var x1 = Math.floor(thbX + parseInt(pageJson.hits[j].x1)*widthRatio);
-				var y1 = Math.floor(thbY + parseInt(pageJson.hits[j].y1)*heigthRatio);
-				var x2 = Math.floor(thbX + parseInt(pageJson.hits[j].x2)*widthRatio);
-				var y2 = Math.floor(thbY + parseInt(pageJson.hits[j].y2)*heigthRatio);
-				
+				var x1 = Math.floor(parseInt(pageJson.hits[j].x1)*widthRatio);
+				var y1 = Math.floor(parseInt(pageJson.hits[j].y1)*heigthRatio);
+				var x2 = Math.floor(parseInt(pageJson.hits[j].x2)*widthRatio);
+				var y2 = Math.floor(parseInt(pageJson.hits[j].y2)*heigthRatio);
+				console.log(x1+':'+y1+' '+x2+':'+y2);
 				var hitId = pageJson.url + 'hit/' + x1 + ':' + y1 + ':' + x2 + ':' + y2;
 				var o = new YAHOO.widget.Overlay(hitId, {
-					x: x1,
-					y: y1,
+					x: x1+thbX,
+					y: y1+thbY,
 					visible: true,
 					width: (x2-x1)+'px',
 					height: (y2-y1)+'px'
@@ -387,10 +418,10 @@ String.prototype.format = function() {
 			var processingContext = new JsEvalContext(responseJSON);
 			var template = null;
 			if (this._config.showFullPage) {
-				template = jstGetTemplate(Page.CONFIG.ID_FULL_PAGE_TEMPLATE);
+				template = jstGetTemplate(Page.CONFIG.ID_PAGE_FULL_TEMPLATE);
 			}
 			else {
-				template = jstGetTemplate(Page.CONFIG.ID_PAGE_TEMPLATE);
+				template = jstGetTemplate(Page.CONFIG.ID_FRAGMENT_TEMPLATE);
 			}
 				
 			var panel = Dom.get(Page.CONFIG.ID_PANEL);
@@ -409,7 +440,7 @@ String.prototype.format = function() {
 
 		
 		/**
-		 * 
+		 * Process the API response that returns a document.
 		 * @param {Object} response
 		 * @protected
 		 */
