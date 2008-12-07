@@ -137,7 +137,7 @@ String.prototype.format = function() {
 	 */
 	Page.createPages = function( el, json ) {
 		var processingContext = new JsEvalContext(json);
-		var showFullPage = true;
+		var showFullPage = false;
 		
 		var template;
 		if (showFullPage) {
@@ -217,15 +217,7 @@ String.prototype.format = function() {
         /*
          * Internal variables used within the Page component
          */
-		
-        /**
-         * The original Y position of the fragment element
-         *
-         * @property _pageFragmentOriginalY
-         * @private
-         */
-		_pageFragmentOriginalY : null,
-		
+				
 		_config : null, // TODO: figure out how to use this.get('param')
 		_pageId : null, // full URL id
 		
@@ -358,39 +350,72 @@ String.prototype.format = function() {
          */
 
 		/**
-		 * Creates overnaly objects to display search hits
+		 * Creates overlay objects to display search hits. The size and position
+		 * of each overlay is mapped in proporsiton from the coordinates of the image
+		 * used by OCR to the coordinates of the image being displayed
 		 * @param {Object} pageJson - json from search API
 		 */
 		_createSearchOverlays: function(pageJson) {
-			var idThumbnail = pageJson.url + Page.CONFIG.ID_SUFFIX_FRAGMENT_IMAGE;
-			var thbRegion = Dom.getRegion(idThumbnail);
-			
-			var th = new Element(Dom.get(idThumbnail));
+			// get the element representing the page image
+			var idPageImage = pageJson.url + Page.CONFIG.ID_SUFFIX_FRAGMENT_IMAGE;
+			var elPageImage = new Element(Dom.get(idPageImage));
 
-			var thbWidth = th.get('scrollWidth');
-			var thbHeight = th.get('scrollHeight');
-			var widthRatio = thbWidth/parseInt(pageJson.width);
-			var heigthRatio = thbHeight/parseInt(pageJson.height);
-
-			var thbX = Dom.getX(idThumbnail);
-			var thbY = Dom.getY(idThumbnail);
-			console.log('thbX='+thbX+' thbY='+thbY);
+			// get image width and height
+			var widthPageImage = elPageImage.get('scrollWidth');
+			var heightPageImage = elPageImage.get('scrollHeight');
 			
+			// determine the ratio between the image used by OCR and
+			// the displayed image
+			var widthRatio = widthPageImage/parseInt(pageJson.width);
+			var heigthRatio = heightPageImage/parseInt(pageJson.height);
+
+			/**
+			 * overlay objects use relative position
+			 * (because i could not make absolutute positioned overlays show up on top of the image)
+			 * each appended child overlay adds its height to elPageImage
+			 * as a result i need to compansate for it, by making each subsequent overlay
+			 * include that height.
+			 * 
+			 * I've also tried to re-get the height of the element because 
+			 * we keep adding overlay elements to it in the loop like so
+			 * heightPageImage = elPageImage.get('scrollHeight');
+			 * but it worked only when the page image is shows in full mode, not in fragment
+			 * 
+			 * better solution is welcome
+			 */  
+			var heightCompensation = 0;
+			
+			// iterate across all search hits
 			for (var j = 0; j < pageJson.hits.length; j++) {
+				// map coordinates from OCR image to display image using the
+				// image ratio
 				var x1 = Math.floor(parseInt(pageJson.hits[j].x1)*widthRatio);
 				var y1 = Math.floor(parseInt(pageJson.hits[j].y1)*heigthRatio);
 				var x2 = Math.floor(parseInt(pageJson.hits[j].x2)*widthRatio);
 				var y2 = Math.floor(parseInt(pageJson.hits[j].y2)*heigthRatio);
-				console.log(x1+':'+y1+' '+x2+':'+y2);
+				
+				// generate a unique id for the overlay based the coordinates and page url
+				// eg. the id would look like "/api/1.0/pages/760/hit/86:476:241:491"
 				var hitId = pageJson.url + 'hit/' + x1 + ':' + y1 + ':' + x2 + ':' + y2;
-				var o = new YAHOO.widget.Overlay(hitId, {
-					x: x1+thbX,
-					y: y1+thbY,
-					visible: true,
-					width: (x2-x1)+'px',
-					height: (y2-y1)+'px'
-				});
-				o.render(idThumbnail);
+
+				// create an overlay div
+				var o = document.createElement('div');
+				o.id = hitId;
+				
+				// since the div is appended at the end of the image element
+				// we use a negative Y coordinate to move it up to overlay the image
+				// also add heightCompensation -- a total of heights of every overlay
+				// element appended so far
+				Dom.setStyle(o, 'top', -(heightPageImage-y1+heightCompensation) + 'px');
+				Dom.setStyle(o, 'left', x1 + 'px');
+				Dom.setStyle(o, 'width', (x2-x1)+'px');
+				Dom.setStyle(o, 'height', (y2-y1)+'px');
+				Dom.addClass(o, 'search-hit');
+
+				// append the overlay
+				elPageImage.appendChild(o);
+
+				heightCompensation += (y2-y1);
 			}	
 		},
 		
@@ -478,7 +503,7 @@ String.prototype.format = function() {
 		 * @protected
 		 */
 		_mousemoveEventHandler: function(pos, page) {
-			// Get the element of teh thumbnail - this is where the mouse moves
+			// Get the element of the thumbnail - this is where the mouse moves
 			var th = Dom.get(page._pageId + Page.CONFIG.ID_SUFFIX_THUMBNAIL);
 			
 			// Get the element representing the image fragment
@@ -492,20 +517,13 @@ String.prototype.format = function() {
 			// thumbnail and the current mouse position
 			var offsetPercent = (Dom.getY(th.id) - pos.clientY) / th.clientHeight;
 
-			// store the original Y position of this element - we'll use
-			// this value as the starting point i.e. what the value of Y 
-			// should be at 0% offset
-			if (page._pageFragmentOriginalY === null) {
-				page._pageFragmentOriginalY = Dom.getY(fragment.id);
-			};
-
 			// Calculate the entre height of the scrollable area.
 			// This is the value by which the image will be scrolled when the mouse reaches
 			// the bottom of the thumbnail.
-			var offsetY = fragment.scrollHeight-fragmentContainer.clientHeight;
+			var scollableHeight = fragment.scrollHeight-fragmentContainer.clientHeight;
 
-			// set the value of Y to original plus 
-			Dom.setY(fragment.id, page._pageFragmentOriginalY + offsetY * offsetPercent);
+			// Finnaly, scroll the fragment to the determined persent
+			fragment.scrollTop = -(scollableHeight * offsetPercent);
 		}
     });
 })();

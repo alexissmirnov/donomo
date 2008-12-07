@@ -1,26 +1,31 @@
 /* 1280 = 140 + 1 + 1 + 6 + 100 + 6 + 937 + 6  */
 
 .page-item {
-	border:dotted thin #ff0000;
+	border:dotted thin #cccccc;
 	width: 1049px;
 	overflow:hidden;
 }
 
 .page-item-thumbnail { 
 	float:left;
-	margin:6px 0 3px 3px;
+	margin:0 0 0 3pt;
 	width:100px;
 }
 
 .page-item-full {
 	float: left;
-	margin:6px 0 3px 3px;
+	margin: 0 0 0 3pt;
 	overflow:hidden;
 	width:937px;
 }
 
 .page-item-fragment {
 	height: 129px;
+}
+
+.image-fragment {
+    height:100%;
+    overflow:inherit;
 }
 
 .page-item-document {
@@ -41,5 +46,12 @@
 	
 }
 
-.yui-overlay { border:0px ;padding:0px;margin:0px; background-color: yellow; -moz-opacity: 0.6;}
-
+.search-hit { 
+	background-color: yellow;
+	border:0px ;
+	margin:0px; 
+	padding:0px;
+	position:relative;
+	visibility:visible;
+	-moz-opacity: 0.6;
+}
