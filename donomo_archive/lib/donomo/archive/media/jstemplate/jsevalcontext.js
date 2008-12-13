@@ -348,6 +348,26 @@ function jsEvalToValues(expr) {
   return ret;
 }
 
+/**
+ * Parses the value of the jsselect attribute: splits
+ * it up into a map of labels and expressions, and creates functions
+ * from the expressions that are suitable for execution by
+ * JsEvalContext.jsexec(). All that is returned as a flattened array
+ * of pairs of a String and a Function.
+ * If the expression doesn't include any label/expression pairs this
+ * function assigns the expression to $this label 
+ * @param {string} expr
+ *
+ * @return {Array}
+ */
+function jsSelectEval(expr) {
+	var ret = jsEvalToValues(expr);
+	
+	if (ret.length === 0) {
+		ret.push(VAR_this, jsEvalToFunction(expr))
+	}
+	return ret;
+}
 
 /**
  * Parses the value of the jseval attribute of jstemplates: splits it

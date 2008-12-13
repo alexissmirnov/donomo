@@ -188,7 +188,7 @@ JstProcessor.prepareTemplate_ = function(template) {
  * @type Array.<Array>
  */
 var JST_ATTRIBUTES = [
-    [ ATT_select, jsEvalToFunction ],
+    [ ATT_select, jsSelectEval ],
     [ ATT_display, jsEvalToFunction ],
     [ ATT_values, jsEvalToValues ],
     [ ATT_vars, jsEvalToValues ],
@@ -406,7 +406,20 @@ JstProcessor.prototype.jstProcessOuter_ = function(context, template) {
 
   var select = jstAttributes[ATT_select];
   if (select) {
-    me.jstSelect_(context, template, select);
+  	var select_clause = select;
+  	var values = [];
+  	for(var i = 0, j = 0, I = select.length; i < I && I > 1; i = i + 2) {
+		if( select[i] === '$this' ) {
+			select_clause = select[i+1]
+		} else {
+			values[j] = select[i];
+			values[j+1] = select[i+1];
+			j = j + 2;
+		}		
+	}
+	
+  	me.jstVars_(context, template, values);
+    me.jstSelect_(context, template, select_clause);
   } else {
     me.jstProcessInner_(context, template);
   }
