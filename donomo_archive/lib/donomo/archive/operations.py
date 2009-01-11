@@ -106,13 +106,19 @@ def split_document( document, offset ):
         raise Exception(
             'Cannot split document at position %d' % offset)
 
-    new_document = create_document(document.owner)
-
+    new_document = create_document(document.owner,
+                                   document.title + 
+                                   '/1(%d-%d)' % 
+                                   (offset + 1, document.num_pages))
+    
     for page in document.pages.filter( position__gt=offset ):
         page.document =  new_document
         page.position -= offset
         page.save()
 
+    document.title = document.title + '/2(0-%d)' % offset
+    document.save()
+    
     return new_document
 
 
@@ -149,7 +155,7 @@ def merge_documents( target, source, offset):
         page.save()
 
     #
-    # insert the source doucment into the space
+    # insert the source document into the space
     #
 
     for page in source.pages.all():
@@ -157,6 +163,13 @@ def merge_documents( target, source, offset):
         page.position += offset
         page.save()
 
+    # 
+    if target.title.split('/')[0] == source.title.split('/')[0]:
+        target.title = target.title.split('/')[0]
+    else:
+        target.title = target.title + ':' + source.title
+    target.save()
+        
     #
     # Delete the source document
     #
