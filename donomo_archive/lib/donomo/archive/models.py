@@ -271,6 +271,9 @@ class Document(models.Model):
     get_absolute_url = permalink(
         lambda self : ('document_info', (),  { 'id' : self.pk }))
 
+    class Meta:
+        ordering = ('-title',)
+        
     class Admin:
         pass
     
