@@ -50,6 +50,35 @@
 jstemplate templates
 -->
 <div style='display: none;'>
+	<div id='expanded-document.template' 
+		jsselect='$this:pages;$total_pages:pages.length;$doc_id:url;$tags_string:tags_string' 
+		class='panel-item'>
+		<div 
+			jsvalues="style:'height: ' + $height+'px; width: ' + $width + 'px;';id:$this.url;donomo.tags:$tags_string;donomo-doc-id:$doc_id;class: 'page line-item '  + ( $index == 0 ? 'page-first ' : '' )  + ($index == $total_pages - 1 ? 'page-last ' : '' ) + ( $index > 0 && $index < $total_pages-1 ? 'page-middle ' : '');" 
+			>
+				<a jsvalues="href:'/view/pages/'+$this.id+'/'">
+					<img border='0' height="60%"  width="100%"  jsvalues=".src:$this.view"/>
+				</a>
+				<p>	
+					<a jsvalues="href:$this.url + 'pdf/'" href="#">pdf</a>
+					<span jsdisplay="$index==0">
+						| <a class="doc-tag" jsvalues="id:'doc-tag:' + doc_id;" href="#">tags</a> <span jscontent="$tags_string"></span></span>
+					</span>
+					<div>
+						<a class='doc-collapse' jsvalues="href:'#';id:'collapse:'+$this.url" jscontent="'page ' + $this.position + ' of ' + $total_pages + '  &laquo;'"></a>
+					</div>
+				</p>
+				
+		</div>
+		<div  jsdisplay="($total_pages - $index) != 1" 
+				jsvalues="style:'height: ' + $height+';';donomo-doc-id:doc_id;donomo-split-after-page:$index+1" 
+				class="line-item page-middle page-separator"></div>
+		<div jsdisplay="($total_pages - $index) == 1" 
+			jsvalues="style:'height: ' + $height+';';id:'join:' + $doc_id" 
+			class="line-item doc-separator">
+		</div>
+	</div>
+	
 	<div id="document.template" jsselect="documents" class="panel-item" >
 		<div heigth='300px' 
 				jsdisplay="$this.length > 0" 
@@ -77,36 +106,7 @@ jstemplate templates
 			class="line-item doc-separator">
 		</div>
 	</div>
-
-	<div id="page.template" jsselect="document.pages" class="panel-item">
-		<div 
-			heigth='300px'
-			jsvalues="id:$this.url;donomo.tags:tags_string;donomo-doc-id:doc_id;class: 'page line-item '  + ( $index == 0 ? 'page-first ' : '' )  + ($index == total_pages - 1 ? 'page-last ' : '' ) + ( $index > 0 && $index < total_pages-1 ? 'page-middle ' : '');" 
-			class="page line-item" 
-			donomo-doc-id="parent-doc"
-			>
-				<a jsvalues="href:'/view/pages/'+$this.id+'/'">
-					<img border='0' height="60%"  width="100%"  jsvalues=".src:$this.view"/>
-				</a>
-				<p>	
-					<a jsvalues="href:$this.url + 'pdf/'" href="#">pdf</a>
-					<span jsdisplay="$index==0">
-						| <a class="doc-tag" jsvalues="id:'doc-tag:' + doc_id;" href="#">tags</a> <span jscontent="tags_string"></span></span>
-					</span>
-					<div>
-						<a class='doc-collapse' jsvalues="href:'#';id:'collapse:'+$this.url" jscontent="'page ' + $this.position + ' of ' + total_pages + '  &laquo;'"></a>
-					</div>
-				</p>
-				
-		</div>
-		<div  jsdisplay="(total_pages - $index) != 1" 
-				jsvalues="donomo-doc-id:doc_id;donomo-split-after-page:$index+1" 
-				class="line-item page-middle page-separator"></div>
-		<div jsdisplay="(total_pages - $index) == 1" 
-			jsvalues="id:'join:' + doc_id" 
-			class="line-item doc-separator"></div>
-	</div>
-	
+		
 	<!--
 	Full page view template.
 	Inputs: document json, page_id -- id of the page within a given document that should be shown.
