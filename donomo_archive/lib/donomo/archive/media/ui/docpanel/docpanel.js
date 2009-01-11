@@ -120,7 +120,20 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 				+ '?op=split'
 				+ '&id=' + docId 
 				+ '&split_after_page=' + splitAfterPage, {
-				faulure: onApiFailure
+				faulure: onApiFailure,
+				success: function( response ) {
+					var responseJson = eval('('+response.responseText+')');
+					console.log(responseJson.new_document);
+					// delete tail pages
+					
+					// render expanded document
+					var processingContext = new JsEvalContext(responseJson.new_document);
+					var template = jstGetTemplate('expanded-document.template');
+					
+					Dom.insertAfter(template, elSeparator.parentNode);
+					
+					jstProcess(processingContext, template);
+				}
 			});
 		};
 		
@@ -208,44 +221,7 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 				el.removeChild(el.get('childNodes')[0]);
 			}			
 		}
-		
-		//TODO: remove
-		var loadSearchResults = function(query, startIndex){
-			// Set the load-in-progress flag to prevent re-entry (eg.
-			// while handling onScroll event)
-			// Set it back to false when the response is received
-			//TODO: refactor to user Connect.isCallInProgress
-			documentLoadInProgress = true;
-
-			Connect.asyncRequest(
-				'GET', 
-				"/api/1.0/search/?view_name=thumbnail&q=" + query
-				+ '&start_index='
-				+ startIndex
-				+ '&num_rows='
-				+ config.dynamicPaginationSize, {
-				success: function(r) { 
-					documentLoadInProgress = false;
-					renderSearchResultsJSON(r);
-				},
-				faulure: function(e) {
-					documentLoadInProgress = false;
-					onApiFailure(e);
-				},
-			});
-		};
-		
-		//TODO: remove
-		var renderSearchResultsJSON = function(response) {
-		}
-		
-		//TODO: remove
-		var onSeachStringChanged = function(type, args){
-			currentDocumentIndex = 0;
-			removeChildren(panel);
-			loadPanelContents(currentDocumentIndex);
-		};
-		
+				
 		var onTagSelected = function(type, args) {
 			var tagName = args[0].getAttribute('name');
 			removeChildren(panel);
@@ -365,8 +341,6 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 			eventViewFullPage: eventViewFullPage,
 			eventDocumentTagEditorOpen: eventDocumentTagEditorOpen,
 			eventDocumentsLoaded: eventDocumentsLoaded,
-			renderSearchResultsJSON: renderSearchResultsJSON,
-			onSeachStringChanged: onSeachStringChanged,
 			onTagSelected: onTagSelected
 		};
 }();}
@@ -399,25 +373,24 @@ YAHOO.util.Event.onContentReady("panel", function () {
 function onDocumentExpanded( type, args ) {
 	var doc = args[0];
 	var id = doc.id;
+	var Dom = YAHOO.util.Dom;
+	
 	YAHOO.util.Connect.asyncRequest('GET', doc.id + "?view_name=thumbnail",
 	{ argument : doc,
 	  success : function(o) {
 		  	var doc = o.argument;
 			jsonResponse = eval('('+o.responseText+')');
-			var processingContext = new JsEvalContext(jsonResponse);
-			processingContext.setVariable('title', jsonResponse.document.title);
-			processingContext.setVariable('doc_id', doc.id);
-			processingContext.setVariable('total_pages', jsonResponse.document.pages.length);
-			processingContext.setVariable('search_result', false);
-			processingContext.setVariable('tags_string', jsonResponse.document.tags_string);
-			var template = jstGetTemplate('page.template');
+			var processingContext = new JsEvalContext(jsonResponse.document);
+			processingContext.setVariable('height', Dom.getStyle(doc.parentNode, 'height'));
+			processingContext.setVariable('width', Dom.getStyle(doc.parentNode, 'width'));
+			var template = jstGetTemplate('expanded-document.template');
 			var panel = document.getElementById('panel');
 			
 			
 			// replace a document node with a list of page nodes
 			panel.insertBefore(template, doc.parentNode);
 			// keep the parent node in the Dom so that we can show it when the document is collapsed
-			YAHOO.util.Dom.addClass(doc.parentNode, "hidden-item");
+			Dom.addClass(doc.parentNode, "hidden-item");
 			
 			jstProcess(processingContext, template);
 		},
