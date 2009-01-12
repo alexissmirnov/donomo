@@ -16,8 +16,9 @@ from donomo.archive.utils       import s3, misc
 from donomo.archive.models      import AssetClass
 import urllib
 
-
 logging = logging.getLogger('pdf-utils')
+
+DPI = 200
 
 ##############################################################################
 
@@ -29,8 +30,6 @@ def _draw_page_list(page_list,
     """
     Draw a list of pages into a pdf file.
     
-    
-
     """
 
     if output_buffer is None:
@@ -68,15 +67,20 @@ def _draw_page_list(page_list,
         text_file = urllib.urlretrieve(url)[0]
         
         text = open(text_file,'r').read()
-        text = misc.extract_text_from_html(text)
-        canvas.drawString(0,0, text)
-        canvas.drawInlineImage(
-            image,
-            0,
-            0,
-            8.5 * inch,
-            11 * inch)
+        image_width, image_heigth, text_fragments = misc.extract_text_from_hocr(text)
+        
+        w = (image_width/DPI)*inch
+        h = (image_heigth/DPI)*inch
+        
+        rw = w/image_width
+        rh = h/image_heigth
+        
+        for fragment in text_fragments:
+            canvas.drawString(rw * fragment['x'], h - rh *fragment['y'], fragment['text'])
+        canvas.drawInlineImage( image, 0, 0, w, h)
+        canvas.setPageSize((w,h))
         canvas.showPage()
+        
         os.remove(image_file)
         os.remove(text_file)
         
@@ -131,10 +135,6 @@ def split_pages(input_filename, prefix = None):
     located. It is the caller's responsibility to clean the disk when
     the files are no longer necessary. The best way to do it is to
     call result.rmtree()
-
-    This method assumes pdftk is installed.
-    See http://www.accesspdf.com/pdftk/ for more info
-
     """
     output_dir = None
     try:
@@ -175,7 +175,7 @@ def split_pages(input_filename, prefix = None):
 def convert(
     input_path,
     format = 'jpeg',
-    density = 200,
+    density = DPI,
     quality = 95,
     output_path = None ):
 

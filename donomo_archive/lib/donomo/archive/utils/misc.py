@@ -130,4 +130,54 @@ def extract_text_from_html( html ):
     text = ''.join(body)
 
     return text
+
 ###############################################################################
+def get_hocr_page_dimentions(page_soup):
+    """
+    Returns width and heigth of an HOCR page. Expects an instance 
+    of BeutifulSoup object that represents HOCR file
+    """
+    ocr_page = page_soup.find('div', {'class' : 'ocr_page'})
+    title_parts = ocr_page['title'].split(';')
+    
+    page_width = -1
+    page_height = -1
+    for title_part in title_parts:
+        bbox = title_part.strip().split(' ')
+        
+        if bbox[0] == 'bbox':
+            page_width = int(bbox[3]) - int(bbox[1])
+            page_height = int(bbox[4]) - int(bbox[2])
+    
+    return page_width, page_height
+
+###############################################################################
+def get_hocr_lines(page_soup):
+    """
+    Returns a list of HOCR lines (x,y, text) from an HOCR page. 
+    Expects an instance of BeutifulSoup
+    object that represents HOCR file
+    """
+    lines = list()
+    ocr_lines = page_soup.findAll('span', {'class' : 'ocr_line'})
+    for ocr_line in ocr_lines:
+        if ocr_line.has_key('title'):
+            # HOCR title takes the form of title="bbox 755 909 807 936"
+            ocr_line_title_parts = ocr_line['title'].split(' ') 
+            if ocr_line_title_parts[0] == 'bbox':
+                lines.append(
+                             {'x' : int(ocr_line_title_parts[1]),
+                              'y': int(ocr_line_title_parts[2]),
+                              'text': ocr_line.renderContents()})
+    return lines
+
+###############################################################################
+def extract_text_from_hocr( hocr ):
+    """
+    Returns image size and a list of text fragments from HOCR string
+    """
+    bsoup = BeautifulSoup.BeautifulSoup(hocr)
+
+    h, w = get_hocr_page_dimentions(bsoup)
+    lines = get_hocr_lines(bsoup)
+    return h, w, lines
