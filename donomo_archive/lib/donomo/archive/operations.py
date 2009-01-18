@@ -248,6 +248,29 @@ def initialize_processor(
 
 ###############################################################################
 
+def upload_asset_stream( asset, data_stream ):
+
+    """ Upload an asset stream to S3
+
+    """
+
+    logging.info('Uploading %r' % asset)
+
+    s3.upload_from_stream( asset.s3_key, data_stream, asset.mime_type.name )
+
+###############################################################################
+
+def upload_asset_file( asset, file_name ):
+
+    """ Upload an asset file to S3
+
+    """
+
+    with open(file_name, 'rb') as data_stream:
+        upload_asset_stream(asset, data_stream)
+
+###############################################################################
+
 def create_asset_from_stream( data_stream, **kwargs ):
 
     """ Create a page view work item on the output channel (given by name)
@@ -259,10 +282,6 @@ def create_asset_from_stream( data_stream, **kwargs ):
             '%s=%s' % n_v for n_v in kwargs.iteritems() ) )
 
     asset = manager(Asset).create(**kwargs)
-
-    logging.info('Uploading %r' % asset)
-
-    s3.upload_from_stream( asset.s3_key, data_stream, asset.mime_type.name )
 
     return asset
 
@@ -284,20 +303,44 @@ def create_asset_from_file( file_name, **kwargs ):
 
 ###############################################################################
 
-def publish_work_item( *asset_list ):
+def _enqueue_work_item( is_new, asset_list ):
 
     """ Broadcast messages about the existence or modification of an set
-        of assets to the relevant listening services.sq
+        of assets to the relevant listening services.
 
     """
+
     logging.info(
-        'Queuing work items:%s' % ''.join( '\n  %r' % a for a in asset_list ))
+        '%sueuing work items:%s' % (
+            is_new and 'Q' or 'Re-q',
+            ''.join( '\n  %r' % a for a in asset_list )))
 
     sqs.post_message_list(
         ( {  'Asset-ID'     : asset.pk,
-             'Process-Name' : consumer.name }
+             'Process-Name' : consumer.name,
+             'Is-New'       : is_new and 1 or 0 }
           for asset in asset_list
           for consumer in asset.consumers ) )
+
+###############################################################################
+
+def publish_work_item( *asset_list ):
+
+    """ Inform the processing pipeline about newly added assets.
+
+    """
+
+    _enqueue_work_item( True, asset_list )
+
+###############################################################################
+
+def reprocess_work_item( *asset_list ):
+
+    """ Ask the processing pipeline to re-process existing assets.
+
+    """
+
+    _enqueue_work_item( False, asset_list )
 
 
 ###############################################################################
@@ -325,7 +368,7 @@ def instantiate_asset( asset_id):
             s3.download_to_file(
                 s3_source_path  = asset.s3_key,
                 local_dest_path = os.path.join(temp_dir, asset.file_name)))
-        
+
         logging.info( 'Instantiated %r' % asset )
 
         return meta_data

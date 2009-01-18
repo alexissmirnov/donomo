@@ -58,7 +58,7 @@ class FaxNumber(models.Model):
     __str__ = lambda self : self.number
 
     __unicode__ = __str__
-    
+
     class Admin:
         pass
 
@@ -276,7 +276,7 @@ class Document(models.Model):
         
     class Admin:
         pass
-    
+
 ###############################################################################
 
 class Page(models.Model):
@@ -318,7 +318,7 @@ class Page(models.Model):
             return self.assets.get(asset_class__name = asset_class)
 
         # pylint: enable-msg=E1101
-        
+
     class Admin:
         pass
 
@@ -418,6 +418,8 @@ class Asset(models.Model):
         default = None,
         related_name = 'children')
 
+    child_number = models.IntegerField()
+
     orig_file_name = models.CharField(
         max_length = 255,
         blank      = True )
@@ -471,10 +473,14 @@ class Asset(models.Model):
         self.producer,
         self.asset_class,
         self.mime_type )
-        
+
     class Admin:
         pass
 
+    class Meta:
+        unique_together = [
+            ( 'parent', 'asset_class', 'child_number'),
+            ]
 ###############################################################################
 
 class Query(models.Model):

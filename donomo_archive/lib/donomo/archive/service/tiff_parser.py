@@ -107,6 +107,7 @@ def handle_page(
             file_name    = tiff_original_path,
             related_page = new_page,
             parent       = parent_asset,
+            child_number = page.position,
             mime_type    = models.MimeType.TIFF ),
 
         # The full-res page as a JPEG
@@ -117,6 +118,7 @@ def handle_page(
             file_name    = jpeg_path,
             related_page = new_page,
             parent       = parent_asset,
+            child_number = page.position,
             mime_type    = models.MimeType.JPEG ),
 
         # The thumbnail as a JPEG
@@ -127,7 +129,66 @@ def handle_page(
             file_name    = thumb_path,
             related_page = new_page,
             parent       = parent_asset,
+            child_number = page.position,
             mime_type    = models.MimeType.JPEG ),
         )
+
+##############################################################################
+
+def redo_page(
+    processor,
+    parent_asset,
+    tiff_original_path,
+    position ):
+
+    """ Re-convert the given TIFF file (representing a s single page) to a
+        JPEG and a thumbnail.
+    """
+    try:
+        original = parent_asset.children.get(
+            child_number = position,
+            asset_class = models.AssetClass.PAGE_ORIGINAL)
+
+        image = parent_asset.get(
+            child_number = position,
+            asset_class = models.AssetClass.PAGE_IMAGE)
+
+        thumbnail = parent_asset.get(
+            child_number = position,
+            asset_class = models.AssetClass.PAGE_THUMBNAIL)
+
+    except Asset.DoesNotExist:
+        logging.debug("Skipping deleted page")
+        return
+
+    # Stuff we'll need later
+    base_name    = os.path.splitext(tiff_original_path)[0]
+    rgba_path    = '%s.rgba' % base_name
+    jpeg_path    = '%s.jpeg' % base_name
+    thumb_path   = '%s-thumbnail.jpeg' % base_name
+
+    # Convert original TIFF to RGBA
+    # TODO use convert instead of tiff2rgba
+    os.system('tiff2rgba %r %r' % (tiff_original_path, rgba_path))
+
+    # Save the original as JPEG
+    image.save(
+        image.load(rgba_path),
+        jpeg_path)
+
+    # Save the thumbnail as JPEG
+    image.save(
+        image.thumbnail(
+            image.load(rgba_path),
+            settings.THUMBNAIL_SIZE),
+        thumb_path)
+
+    # Upload the new asset files
+    operations.upload_asset_file( original,  pdf_orig_path )
+    operations.upload_asset_file( image,     jpeg_path     )
+    operations.upload_asset_file( thumbnail, thumb_path    )
+
+    # Put the assets into the work queue
+    operations.reprocess_work_item( original, image, thumbnail )
 
 ##############################################################################

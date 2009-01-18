@@ -69,6 +69,7 @@ def handle_work_item( processor, work_item ):
                 asset_class  = upload_class,
                 file_name    = file_name,
                 parent_asset = parent_asset,
+                child_number = counter,
                 mime_type    = mime_type ))
 
 ##############################################################################
@@ -114,6 +115,8 @@ def process_mail(processor, local_path):
             owner        = _get_owner(local_path),
             producer     = processor,
             asset_class  = AssetClass.UPLOAD,
+            parent_asset = None,
+            child_number = 0,
             mime_type    = MimeType.MAIL ))
 
 ##############################################################################

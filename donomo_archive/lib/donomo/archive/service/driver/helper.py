@@ -19,22 +19,24 @@ def main():
     try:
         name     = sys.argv[1]
         asset_id = sys.argv[2]
+        is_new   = int(sys.argv[3]) != 0
 
         module    = driver.init_module(name)
         processor = driver.init_processor(module)
-    
+
         work_item = {
             'Process-Name' : name,
             'Asset-ID'     : asset_id,
+            'Is-New'       : is_new,
             }
-        
+
         try:
             work_item.update(operations.instantiate_asset(asset_id))
         except models.Asset.DoesNotExist:
-            logging.exception('Failed to instantiate asset: %s' % asset_id)
+            logging.exception('Asset no longer exists: %s' % asset_id)
         else:
             module.handle_work_item(processor, work_item)
-            
+
     except:
         logging.exception('Failed to run processor')
         sys.exit(1)

@@ -65,17 +65,17 @@ def load_modules( name_list ):
 def thread_proc( options, work_item ):
     """ Handle a work item (in a thread) by spawning a helper process
     """
-    
+
     status = -1
     try:
         status = os.system(
             '/usr/bin/env'                                        \
                 ' python -m donomo.archive.service.driver.helper' \
-                ' %(Process-Name)s %(Asset-ID)s' % work_item )
+                ' %(Process-Name)s %(Asset-ID)s %(Is-New)s' % work_item )
     finally:
         operations.close_work_item( work_item, status == 0 )
         options.queue.put(True)
-        
+
 
 ##############################################################################
 
@@ -115,7 +115,7 @@ def check_for_done( options ):
             options.max_concurrency += 1
     except Queue.Empty:
         pass
-        
+
 ##############################################################################
 
 def main():

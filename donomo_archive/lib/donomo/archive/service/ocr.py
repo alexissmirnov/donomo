@@ -63,6 +63,7 @@ def handle_work_item(processor, item):
                 file_name    = image_to_html( item['Local-Path'] ),
                 related_page = parent_asset.related_page,
                 parent       = parent_asset,
+                child_number = 1,
                 mime_type    = models.MimeType.HTML ))
     except OCRFailed:
         logging.warning('OCR failed, dropping from processing chain')
