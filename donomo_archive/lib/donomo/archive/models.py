@@ -78,6 +78,7 @@ class MimeType(models.Model):
     HTML = 'text/html'
     MAIL = 'message/rfc822'
     TIFF = 'image/tiff'
+    BINARY = 'application/octet-stream'
 
     name = models.CharField(
         max_length = 64,
@@ -273,7 +274,7 @@ class Document(models.Model):
 
     class Meta:
         ordering = ('-title',)
-        
+
     class Admin:
         pass
 
@@ -331,6 +332,7 @@ class AssetClass(models.Model):
     """
 
     UPLOAD         = 'upload'
+    DOCUMENT       = 'document'
     PAGE_ORIGINAL  = 'original'
     PAGE_IMAGE     = 'image'
     PAGE_THUMBNAIL = 'thumbnail'
@@ -434,6 +436,12 @@ class Asset(models.Model):
         default      = None,
         related_name = 'assets' )
 
+    related_document = models.ForeignKey(
+        Document,
+        null         = True,
+        default      = None,
+        related_name = 'assets' )
+
     date_created = models.DateTimeField(
         auto_now_add = True )
 
@@ -509,4 +517,5 @@ class Query(models.Model):
 
     class Admin:
         pass
+
 ###############################################################################

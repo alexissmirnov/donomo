@@ -67,4 +67,5 @@ def handle_work_item(processor, item):
                 mime_type    = models.MimeType.HTML ))
     except OCRFailed:
         logging.warning('OCR failed, dropping from processing chain')
+
 ##############################################################################
