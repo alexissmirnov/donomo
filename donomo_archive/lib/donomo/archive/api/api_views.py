@@ -16,6 +16,7 @@ from donomo.archive.utils.basic_auth import logged_in_or_basicauth
 __all__ = (
     'document_list',
     'document_info',
+    'document_zip',
     'document_as_pdf',
     'page_info',
     'page_view',
@@ -64,6 +65,19 @@ def document_info():
         'PUT'    : update_document,
         'DELETE' : delete_document,
         }
+
+###############################################################################
+
+@login_required
+@http_method_dispatcher
+def document_zip():
+    """
+    Get ZIP of a selection of documents
+    """
+    return {
+        'GET' : get_document_zip,
+        }
+
 
 ###############################################################################
 

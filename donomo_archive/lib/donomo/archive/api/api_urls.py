@@ -21,6 +21,10 @@ urlpatterns = patterns(
          document_list,
          name = 'api_document_list' ),
 
+    url( r'^documents/zip/$',
+         document_zip,
+         name = 'api_document_zip' ),
+
     url( r'^documents/(?P<pk>\d+)/$',
          document_info,
          name = 'api_document_info' ),

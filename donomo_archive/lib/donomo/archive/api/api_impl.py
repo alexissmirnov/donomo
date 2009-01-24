@@ -22,6 +22,10 @@ from donomo.archive.utils            import pdf, s3
 from donomo.archive.utils.middleware import json_view
 from donomo.archive.utils.misc       import get_url, param_is_true, guess_mime_type
 import logging
+import zipfile
+import tempfile
+import os
+import shutil
 
 __all__ = (
     'upload_document',
@@ -30,6 +34,7 @@ __all__ = (
     'get_document_list',
     'get_document_info',
     'get_document_pdf',
+    'get_document_zip',
     'update_document',
     'delete_document',
     'get_page_info',
@@ -39,7 +44,6 @@ __all__ = (
     'get_tag_info',
     'delete_tag',
     'tag_documents',
-    'get_document_pdf',
     'get_page_pdf',
     'get_search',
     )
@@ -378,6 +382,62 @@ def get_document_pdf(request, pk):
 
     return response
 
+##############################################################################
+
+def get_document_zip(request):
+    """
+    """
+    temp_dir = ''
+    
+    if request.GET.has_key('ids'):
+        keys = request['ids'].split(',')
+    elif request.GET.has_key('tags'):
+        keys = list()
+        for tag in request['tags'].split(','):
+            tag = request.user.tags.get(label = tag)
+            for doc in tag.documents.all():
+                keys.append(doc.pk)
+
+    logging.info(keys)
+    
+    try:
+        temp_dir = tempfile.mkdtemp(
+            prefix = 'donomo-document-zip-',
+            dir    = settings.TEMP_DIR )
+
+        zip_path_name = os.path.join(temp_dir, 'donomo-documents.zip')
+        zip_file = zipfile.ZipFile(zip_path_name, 'w', zipfile.ZIP_STORED, True)
+
+        for pk in keys:
+            pk = int(pk)
+            document = request.user.documents.get(pk = pk)
+
+            pdf_path_name = os.path.join(temp_dir, 'doc-%s.pdf' % document.pk)
+            
+            pdf_file = open(pdf_path_name, 'w')
+            pdf.render_document(document, pdf_file, request.user.username, str(document.pk))
+            pdf_file.close()
+        
+            logging.info('writing ' + pdf_path_name)
+            zip_file.write(pdf_path_name, os.path.basename(pdf_path_name))
+        
+        zip_file.close()
+        
+        logging.info('responsing with ' + zip_path_name)
+        zip_file = open(zip_path_name, 'r')
+        response = HttpResponse(zip_file)
+        response['Content-Type'] = 'application/x-zip-compressed'
+        response['Content-Disposition'] = \
+            'attachment; filename=donomo-documents.zip'
+        
+        return response
+    
+    except ValueError:
+        return {'error': 'not yet implemented'}
+    finally:
+        if temp_dir and os.path.exists(temp_dir):
+            logging.info('shutil.rmtree(temp_dir)')        
+    
 ##############################################################################
 
 @json_view
