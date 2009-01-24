@@ -27,6 +27,7 @@ from donomo.archive.models              import *
 from donomo.archive.utils               import s3, sqs, misc
 from platform                           import node
 from socket                             import gethostbyname, gaierror
+from cStringIO                          import StringIO
 
 import django.db
 import mimetypes
@@ -62,7 +63,7 @@ __all__ = (
 
 ###############################################################################
 
-def create_document( owner, title = None):
+def create_document( processor, owner, title = None):
     """
     Create a new document
     """
@@ -74,7 +75,18 @@ def create_document( owner, title = None):
 
     logging.info( 'Creating new document for %s: %s' % ( owner, title))
 
-    return manager(Document).create( title = title, owner = owner)
+    document = manager(Document).create( title = title, owner = owner)
+
+    asset = create_asset_from_stream(
+        data_stream = StringIO(''),
+        owner = owner,
+        producer = processor,
+        asset_class = AssetClass.DOCUMENT,
+        related_document = document,
+        child_number = 1,
+        mime_type = MimeType.BINARY )
+
+    return (document, asset)
 
 ###############################################################################
 
@@ -107,10 +119,10 @@ def split_document( document, offset ):
             'Cannot split document at position %d' % offset)
 
     new_document = create_document(document.owner,
-                                   document.title + 
-                                   '/1(%d-%d)' % 
+                                   document.title +
+                                   '/1(%d-%d)' %
                                    (offset + 1, document.num_pages))
-    
+
     for page in document.pages.filter( position__gt=offset ):
         page.document =  new_document
         page.position -= offset
@@ -118,7 +130,7 @@ def split_document( document, offset ):
 
     document.title = document.title + '/2(0-%d)' % offset
     document.save()
-    
+
     return new_document
 
 
@@ -163,13 +175,13 @@ def merge_documents( target, source, offset):
         page.position += offset
         page.save()
 
-    # 
+    #
     if target.title.split('/')[0] == source.title.split('/')[0]:
         target.title = target.title.split('/')[0]
     else:
         target.title = target.title + ':' + source.title
     target.save()
-        
+
     #
     # Delete the source document
     #
