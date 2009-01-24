@@ -9,6 +9,7 @@ from django.conf          import settings
 
 import glob
 import os
+import logging
 
 DEFAULT_INPUTS  = (
     models.AssetClass.UPLOAD,
@@ -42,13 +43,13 @@ def handle_work_item(processor, item):
     pdf.split_pages( local_path, page_prefix )
 
     if is_new:
-        document = operations.create_document(
+        document, doc_asset = operations.create_document(
             owner = asset.owner,
             title = 'Uploaded on %s (%s)' % (
                 asset.date_created,
                 asset.producer.process ))
     else:
-        document = None
+        document, doc_asset = None, None
 
     position = 1
     all_page_files = glob.glob('%s*.pdf' % page_prefix)
@@ -59,6 +60,9 @@ def handle_work_item(processor, item):
         else:
             redo_page( processor, asset, page_pdf_path, position)
         position += 1
+
+    if doc_asset is not None:
+        operations.publish_work_item(doc_asset)
 
 ##############################################################################
 
@@ -74,7 +78,7 @@ def create_page(
     """
 
     # Stuff we'll need later
-    page         = operations.create_page(document, position, parent_aset)
+    page         = operations.create_page(document, position, parent_asset)
     base_name    = os.path.splitext(pdf_orig_path)[0]
     jpeg_path    = pdf.convert(pdf_orig_path, 'jpeg')
     thumb_path   = '%s-thumbnail.jpeg' % base_name
@@ -136,19 +140,21 @@ def redo_page(
         JPEG and a thumbnail.
     """
     try:
-        original = parent_asset.children.get(
-            child_number = position,
-            asset_class = models.AssetClass.PAGE_ORIGINAL)
+        asset = {
+            'original' : parent_asset.children.get(
+                child_number = position,
+                asset_class = models.AssetClass.PAGE_ORIGINAL),
 
-        image = parent_asset.get(
-            child_number = position,
-            asset_class = models.AssetClass.PAGE_IMAGE)
+            'image' : parent_asset.get(
+                child_number = position,
+                asset_class = models.AssetClass.PAGE_IMAGE),
 
-        thumbnail = parent_asset.get(
-            child_number = position,
-            asset_class = models.AssetClass.PAGE_THUMBNAIL)
+            'thumbnail' : parent_asset.get(
+                child_number = position,
+                asset_class = models.AssetClass.PAGE_THUMBNAIL),
+            }
 
-    except Asset.DoesNotExist:
+    except models.Asset.DoesNotExist:
         logging.debug("Skipping deleted page")
         return
 
@@ -165,11 +171,11 @@ def redo_page(
         thumb_path)
 
     # Upload the new asset files
-    operations.upload_asset_file( original,  pdf_orig_path )
-    operations.upload_asset_file( image,     jpeg_path     )
-    operations.upload_asset_file( thumbnail, thumb_path    )
+    operations.upload_asset_file( asset['original'],  pdf_orig_path )
+    operations.upload_asset_file( asset['image'],     jpeg_path     )
+    operations.upload_asset_file( asset['thumbnail'], thumb_path    )
 
     # Put the assets into the work queue
-    operations.reprocess_work_item( original, image, thumbnail )
+    operations.reprocess_work_item( *asset.values() )
 
 ##############################################################################

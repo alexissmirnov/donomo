@@ -15,6 +15,7 @@ DEFAULT_INPUTS  = (
     )
 
 DEFAULT_OUTPUTS = (
+    models.AssetClass.DOCUMENT,
     models.AssetClass.PAGE_ORIGINAL,
     models.AssetClass.PAGE_IMAGE,
     models.AssetClass.PAGE_THUMBNAIL,
@@ -40,7 +41,7 @@ def handle_work_item(processor, item):
 
     os.system( 'tiffsplit %r %r' % (local_path, page_prefix) )
 
-    document = operations.create_document(
+    document, doc_asset = operations.create_document(
         owner = asset.owner,
         title = 'Uploaded on %s (%s)' % (
             asset.date_created,
@@ -57,6 +58,8 @@ def handle_work_item(processor, item):
             page_tiff_path,
             position )
         position += 1
+
+    operations.publish_work_item(doc_asset)
 
 ##############################################################################
 

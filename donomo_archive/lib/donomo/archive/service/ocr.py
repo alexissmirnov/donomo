@@ -65,6 +65,12 @@ def handle_work_item(processor, item):
                 parent       = parent_asset,
                 child_number = 1,
                 mime_type    = models.MimeType.HTML ))
+
+        if not item['Is-New']:
+            operations.publish_work_item(
+                parent_asset.related_page.document.assets.get(
+                    asset_class = models.AssetClass.DOCUMENT,
+                    mime_type   = models.MimeType.BINARY ))
     except OCRFailed:
         logging.warning('OCR failed, dropping from processing chain')
 
