@@ -44,7 +44,8 @@ def handle_work_item(processor, item):
 
     if is_new:
         document, doc_asset = operations.create_document(
-            owner = asset.owner,
+            processor,
+            asset.owner,
             title = 'Uploaded on %s (%s)' % (
                 asset.date_created,
                 asset.producer.process ))
@@ -78,7 +79,7 @@ def create_page(
     """
 
     # Stuff we'll need later
-    page         = operations.create_page(document, position, parent_asset)
+    page         = operations.create_page(document, position)
     base_name    = os.path.splitext(pdf_orig_path)[0]
     jpeg_path    = pdf.convert(pdf_orig_path, 'jpeg')
     thumb_path   = '%s-thumbnail.jpeg' % base_name

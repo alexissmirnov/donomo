@@ -19,7 +19,7 @@ import Queue
 #   C0103 - variables at module scope must be all caps
 #
 
-DEFAULT_PROCESSORS = ( 'pdf_parser', 'tiff_parser', 'ocr', 'indexer' )
+DEFAULT_PROCESSORS = ( 'pdf_parser', 'tiff_parser', 'ocr', 'indexer', 'pdf_generator' )
 
 MUST_SHUT_DOWN = False
 

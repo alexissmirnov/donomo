@@ -24,6 +24,7 @@ def upload_file( processor, user, local_path ):
             file_name    = local_path,
             owner        = user,
             producer     = processor,
+            child_number = 0,
             asset_class  = models.AssetClass.UPLOAD ))
 
 ##############################################################################

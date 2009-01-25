@@ -40,7 +40,7 @@ def handle_work_item(processor, item):
     document = item['Asset-Instance'].related_document
 
     num_ocr_pages = models.Asset.objects.filter(
-        ower = document.owner,
+        owner = document.owner,
         asset_class = models.AssetClass.PAGE_TEXT,
         related_page__document = document )
 
