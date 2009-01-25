@@ -357,15 +357,18 @@ def reprocess_work_item( *asset_list ):
 
 ###############################################################################
 
-def instantiate_asset( asset_id):
+def instantiate_asset(asset_id, parent_temp_dir = None):
 
     """ Lookup the asset referenced by the message and instantiate a local
         copy of it.
     """
 
+    if parent_temp_dir is None:
+        parent_temp_dir = settings.TEMP_DIR
+        
     temp_dir = tempfile.mkdtemp(
-        prefix = 'donomo-work-item-',
-        dir    = settings.TEMP_DIR )
+            prefix = 'donomo-work-item-',
+            dir    =  parent_temp_dir )
 
     try:
         asset = manager(Asset).get( pk = asset_id )

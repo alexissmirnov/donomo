@@ -386,9 +386,15 @@ def get_document_pdf(request, pk):
 
 def get_document_zip(request):
     """
+    Returns .zip archive as an attachment in HTTP response. The archive
+    contains PDFs of documents specified in comma-separated "ids".
+    If "ids" parameter isn't specified, a comma separated "tags" parameter
+    is used to archive all document that belong to any of the tag. 
     """
     temp_dir = ''
     
+    # Get a list of all document IDs we need to pack into an archive
+    # TODO: what is a document is tagged with multiple tags?
     if request.GET.has_key('ids'):
         keys = request['ids'].split(',')
     elif request.GET.has_key('tags'):
@@ -398,32 +404,34 @@ def get_document_zip(request):
             for doc in tag.documents.all():
                 keys.append(doc.pk)
 
-    logging.info(keys)
-    
     try:
         temp_dir = tempfile.mkdtemp(
             prefix = 'donomo-document-zip-',
             dir    = settings.TEMP_DIR )
 
+        # Create a zip file
         zip_path_name = os.path.join(temp_dir, 'donomo-documents.zip')
         zip_file = zipfile.ZipFile(zip_path_name, 'w', zipfile.ZIP_STORED, True)
 
+        # iterate over every document id
         for pk in keys:
             pk = int(pk)
             document = request.user.documents.get(pk = pk)
-
-            pdf_path_name = os.path.join(temp_dir, 'doc-%s.pdf' % document.pk)
             
-            pdf_file = open(pdf_path_name, 'w')
-            pdf.render_document(document, pdf_file, request.user.username, str(document.pk))
-            pdf_file.close()
-        
-            logging.info('writing ' + pdf_path_name)
-            zip_file.write(pdf_path_name, os.path.basename(pdf_path_name))
+            # Get a PDF asset and download it
+            pdf_asset = models.Asset.objects.get(
+                owner = document.owner,
+                asset_class = models.AssetClass.DOCUMENT,
+                mime_type   = models.MimeType.PDF,
+                related_page__document = document )
+
+            pdf_asset_metadata = operations.instanciate_asset(pdf_asset.pk, temp_dir)
+            
+            # add the downloaded file into the archive
+            zip_file.write(pdf_asset_metadata['Local-Path'], 'doc-%s.pdf' % document.pk)
         
         zip_file.close()
         
-        logging.info('responsing with ' + zip_path_name)
         zip_file = open(zip_path_name, 'r')
         response = HttpResponse(zip_file)
         response['Content-Type'] = 'application/x-zip-compressed'
@@ -432,11 +440,9 @@ def get_document_zip(request):
         
         return response
     
-    except ValueError:
-        return {'error': 'not yet implemented'}
     finally:
         if temp_dir and os.path.exists(temp_dir):
-            logging.info('shutil.rmtree(temp_dir)')        
+            shutil.rmtree(temp_dir)    
     
 ##############################################################################
 
