@@ -84,7 +84,7 @@ msg = (
 "\r\n\r\n"
 "%(log_message)s"
 "\r\n"
-"Details: http://trac.donomo.com/changeset/%(revision)s\r\n"
+"Details: https://trac.donomo.com/changeset/%(revision)s\r\n"
 )
 
 msg = msg % locals()
