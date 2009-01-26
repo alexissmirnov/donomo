@@ -89,7 +89,7 @@ function run_shell
 #
 
 case ${1:?} in
-    dbshell|shell)
+    syncdb|dbshell|shell)
 	run_shell $1
 	;;
     start)
@@ -98,7 +98,7 @@ case ${1:?} in
         ;;
     stop)
         /sbin/service nginx stop
-        action "Stopping $prog" killproc -p $pidfile        
+        action "Stopping $prog" killproc -p $pidfile
         ;;
     status)
         status -p $pidfile "$prog"
@@ -109,7 +109,7 @@ case ${1:?} in
         $0 start
         ;;
     *)
-        echo "Usage: $(basename $0) dbshell|shell|start|status|stop|restart"
+        echo "Usage: $(basename $0) syncdb|dbshell|shell|start|status|stop|restart"
         exit 1
         ;;
 esac
