@@ -41,7 +41,7 @@ def handle_work_item(processor, item):
 
     os.system( 'tiffsplit %r %r' % (local_path, page_prefix) )
 
-    document, doc_asset = operations.create_document(
+    document = operations.create_document(
         owner = asset.owner,
         title = 'Uploaded on %s (%s)' % (
             asset.date_created,
@@ -59,7 +59,11 @@ def handle_work_item(processor, item):
             position )
         position += 1
 
-    operations.publish_work_item(doc_asset)
+    if document is not None:
+        operations.publish_work_item(
+            document.assets.get(
+                asset_class__name = AssetClass.DOCUMENT,
+                mime_type__name   = MimeType.BINARY ))
 
 ##############################################################################
 

@@ -63,7 +63,7 @@ __all__ = (
 
 ###############################################################################
 
-def create_document( processor, owner, title = None):
+def create_document( owner, title = None):
     """
     Create a new document
     """
@@ -77,16 +77,15 @@ def create_document( processor, owner, title = None):
 
     document = manager(Document).create( title = title, owner = owner)
 
-    asset = create_asset_from_stream(
+    create_asset_from_stream(
         data_stream = StringIO(''),
         owner = owner,
-        producer = processor,
         asset_class = AssetClass.DOCUMENT,
         related_document = document,
         child_number = 1,
         mime_type = MimeType.BINARY )
 
-    return (document, asset)
+    return document
 
 ###############################################################################
 
@@ -118,10 +117,9 @@ def split_document( document, offset ):
         raise Exception(
             'Cannot split document at position %d' % offset)
 
-    new_document = create_document(document.owner,
-                                   document.title +
-                                   '/1(%d-%d)' %
-                                   (offset + 1, document.num_pages))
+    new_document = create_document(
+        owner = document.owner,
+        title = '%s/1(%d-%d)' % (document.title, offset + 1, document.num_pages))
 
     for page in document.pages.filter( position__gt=offset ):
         page.document =  new_document

@@ -43,14 +43,14 @@ def handle_work_item(processor, item):
     pdf.split_pages( local_path, page_prefix )
 
     if is_new:
-        document, doc_asset = operations.create_document(
+        document = operations.create_document(
             processor,
             asset.owner,
             title = 'Uploaded on %s (%s)' % (
                 asset.date_created,
                 asset.producer.process ))
     else:
-        document, doc_asset = None, None
+        document = None, None
 
     position = 1
     all_page_files = glob.glob('%s*.pdf' % page_prefix)
@@ -62,8 +62,12 @@ def handle_work_item(processor, item):
             redo_page( processor, asset, page_pdf_path, position)
         position += 1
 
-    if doc_asset is not None:
-        operations.publish_work_item(doc_asset)
+    if document is not None:
+        operations.publish_work_item(
+            document.assets.get(
+                asset_class__name = AssetClass.DOCUMENT,
+                mime_type__name   = MimeType.BINARY ))
+
 
 ##############################################################################
 

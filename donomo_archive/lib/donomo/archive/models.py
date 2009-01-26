@@ -408,6 +408,8 @@ class Asset(models.Model):
 
     producer = models.ForeignKey(
         Processor,
+        null = True,
+        default = None,
         related_name = 'created_assets')
 
     asset_class = models.ForeignKey(

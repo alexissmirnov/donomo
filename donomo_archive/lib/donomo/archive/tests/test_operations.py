@@ -52,7 +52,7 @@ class DocumentOperations(unittest.TestCase):
         return operations.initialize_processor(
             name                        = MODULE_NAME + '_producer',
             default_inputs              = [],
-            default_outputs             = ['test_data'],
+            default_outputs             = [ AssetClass.DOCUMENT, 'test_data' ],
             default_accepted_mime_types = [] )
 
     # ------------------------------------------------------------------------
@@ -61,9 +61,9 @@ class DocumentOperations(unittest.TestCase):
     def _init_consumer():
         return operations.initialize_processor(
             name                        = MODULE_NAME + '_consumer',
-            default_inputs              = ['test_data'],
+            default_inputs              = [AssetClass.DOCUMENT, 'test_data'],
             default_outputs             = [],
-            default_accepted_mime_types = ['text/plain'] )
+            default_accepted_mime_types = [ MimeType.TEXT, MimeType.BINARY ] )
 
     # ------------------------------------------------------------------------
 
@@ -139,6 +139,7 @@ class DocumentOperations(unittest.TestCase):
             asset_class  = 'test_data',
             data_stream  = StringIO(TEST_DATA),
             file_name    = 'create_asset_from_string.txt',
+            child_number = 0,
             mime_type    = 'text/plain' )
 
         operations.publish_work_item(asset)
@@ -158,6 +159,7 @@ class DocumentOperations(unittest.TestCase):
                 producer     = self.producer,
                 asset_class  = 'test_data',
                 file_name    = temp_file_name,
+                child_number = 0,
                 mime_type    = 'text/plain' )
 
         finally:

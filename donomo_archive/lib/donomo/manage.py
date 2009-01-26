@@ -31,7 +31,7 @@ def main():
     """
     try:
         if sys.argv[1] == 'test':
-            os.environ['USE_TEST_SETTINGS'] = 'yes'
+            os.environ['DONOMO_MODE'] = 'test'
 
         settings = get_module(DJANGO_SETTINGS_MODULE)
     except ImportError:
