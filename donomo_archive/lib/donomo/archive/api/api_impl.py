@@ -290,14 +290,15 @@ def upload_document(request):
                 'Unsupported content type: %s' % content_type)
 
         upload = operations.create_asset_from_stream(
-            data_stream  = StringIO(the_file.read()),
+            data_stream  = None,
             owner        = request.user,
             producer     = gateway,
             asset_class  = models.AssetClass.UPLOAD,
             file_name    = the_file.name,
-            parent_asset = None,
             child_number = 0,
             mime_type    = content_type)
+
+        operations.upload_asset_stream( upload, StringIO(the_file.read()) )
 
         operations.publish_work_item(upload)
 
@@ -389,10 +390,10 @@ def get_document_zip(request):
     Returns .zip archive as an attachment in HTTP response. The archive
     contains PDFs of documents specified in comma-separated "ids".
     If "ids" parameter isn't specified, a comma separated "tags" parameter
-    is used to archive all document that belong to any of the tag. 
+    is used to archive all document that belong to any of the tag.
     """
     temp_dir = ''
-    
+
     # Get a list of all document IDs we need to pack into an archive
     # TODO: what is a document is tagged with multiple tags?
     if request.GET.has_key('ids'):
@@ -417,7 +418,7 @@ def get_document_zip(request):
         for pk in keys:
             pk = int(pk)
             document = request.user.documents.get(pk = pk)
-            
+
             # Get a PDF asset and download it
             pdf_asset = models.Asset.objects.get(
                 owner = document.owner,
@@ -426,24 +427,24 @@ def get_document_zip(request):
                 related_page__document = document )
 
             pdf_asset_metadata = operations.instanciate_asset(pdf_asset.pk, temp_dir)
-            
+
             # add the downloaded file into the archive
             zip_file.write(pdf_asset_metadata['Local-Path'], 'doc-%s.pdf' % document.pk)
-        
+
         zip_file.close()
-        
+
         zip_file = open(zip_path_name, 'r')
         response = HttpResponse(zip_file)
         response['Content-Type'] = 'application/x-zip-compressed'
         response['Content-Disposition'] = \
             'attachment; filename=donomo-documents.zip'
-        
+
         return response
-    
+
     finally:
         if temp_dir and os.path.exists(temp_dir):
-            shutil.rmtree(temp_dir)    
-    
+            shutil.rmtree(temp_dir)
+
 ##############################################################################
 
 @json_view

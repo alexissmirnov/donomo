@@ -44,11 +44,12 @@ def handle_work_item(processor, item):
 
     if is_new:
         document = operations.create_document(
-            processor,
-            asset.owner,
-            title = 'Uploaded on %s (%s)' % (
-                asset.date_created,
-                asset.producer.process ))
+            asset.producer,
+            asset.owner)
+#,
+#            title = 'Uploaded on %s (%s)' % (
+#                asset.date_created,
+#                asset.producer.process ))
     else:
         document = None, None
 

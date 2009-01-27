@@ -287,9 +287,9 @@ def create_asset_from_stream( data_stream, **kwargs ):
         from the passed data stream.
 
     """
-    logging.debug(
-        'Creating Asset<%s>' % ', '.join(
-            '%s=%s' % n_v for n_v in kwargs.iteritems() ) )
+#    logging.debug(
+#        'Creating Asset<%s>' % ', '.join(
+#            '%s=%s' % n_v for n_v in kwargs.iteritems() ) )
 
     asset = manager(Asset).create(**kwargs)
 
@@ -363,7 +363,7 @@ def instantiate_asset(asset_id, parent_temp_dir = None):
 
     if parent_temp_dir is None:
         parent_temp_dir = settings.TEMP_DIR
-        
+
     temp_dir = tempfile.mkdtemp(
             prefix = 'donomo-work-item-',
             dir    =  parent_temp_dir )
@@ -388,7 +388,7 @@ def instantiate_asset(asset_id, parent_temp_dir = None):
 
     except:
         logging.exception(
-            "Failed to retrieve work item: %(Asset-ID)s" % message)
+            "Failed to retrieve work item: %s" % asset_id)
         shutil.rmtree(temp_dir)
         raise
 
