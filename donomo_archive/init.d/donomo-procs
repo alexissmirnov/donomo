@@ -16,8 +16,8 @@ function start
     pid=$(pidofproc -p "$pidfile" "$prog")
     if [[ -n "$pid" ]]
     then
-	echo -n "- Already running: pid=$pid"
-	return 1
+        echo -n "- Already running: pid=$pid"
+        return 1
     fi
 
     source /root/.donomo/db_pwd_donomo.sh
@@ -40,8 +40,8 @@ case ${1:?} in
         action "Stopping $prog" killproc -p $pidfile
         ;;
     status)
-	status -p $pidfile "$prog"
-	;;
+        status -p $pidfile "$prog"
+        ;;
     restart)
         $0 stop
         $0 start

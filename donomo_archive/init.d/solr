@@ -16,8 +16,8 @@ function start
     pid=$(pidofproc -p "$pidfile" "$prog")
     if [[ -n "$pid" ]]
     then
-	echo -n "- Already running: pid=$pid"
-	return 1
+        echo -n "- Already running: pid=$pid"
+        return 1
     fi
 
     export USER=solr
@@ -42,14 +42,14 @@ function stop
 
 case ${1:-blah} in
     start)
-	action "Starting $prog" start
+        action "Starting $prog" start
         ;;
     stop)
         action "Stopping $prog" stop
         ;;
     status)
-	status -p $pidfile $prog
-	;;
+        status -p $pidfile $prog
+        ;;
     restart)
         $0 stop
         $0 start

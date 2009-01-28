@@ -90,8 +90,8 @@ function run_shell
 
 case ${1:?} in
     syncdb|dbshell|shell)
-	run_shell $1
-	;;
+        run_shell $1
+        ;;
     start)
         action "Starting $prog" start
         /sbin/service nginx start

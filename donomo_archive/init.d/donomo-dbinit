@@ -7,37 +7,40 @@ source /etc/rc.d/init.d/functions
 
 workdir=/home/donomo
 logfile=/var/log/donomo/dbinit.log
-initfile=/etc/sysconfig/donomo.db
-prog="Donomo DB Init"
+prog="Donomo Database"
 
 function init_db_i
 {
-    if [[ ! -e $initfile ]]
-    then
-	return 0
-    fi
-
     source /root/.donomo/db_pwd_root.sh
     source /root/.donomo/db_pwd_donomo.sh
 
-    mysqladmin -u root password "$ROOT_PASSWORD"
-
-    mysql -u root "-p$ROOT_PASSWORD" mysql <<SQL
-create database donomo;
-grant all on donomo.* to 'donomo'@'%' identified by '$DATABASE_PASSWORD';
-flush privileges;
-SQL
-    mysqladmin -u root "-p$ROOT_PASSWORD" reload
-
+    sentinel=/etc/sysconfig/donomo_${DONOMO_MODE:?}.db
+    database=donomo_${DONOMO_MODE:?}
     export USER=donomo
     export LOGNAME=$USER
     export HOME=/home/$USER
 
-    su -c "/home/donomo/bin/application syncdb --noinput" donomo 1>&2
+
+    if [[ ! -f "$sentinel" ]]
+    then
+        echo -n "... $database already loaded"
+        return 0
+    fi
+
+    mysqladmin -u root password "$ROOT_PASSWORD"
+
+    mysql -u root "-p$ROOT_PASSWORD" mysql <<SQL
+create database $database;
+grant all on $database.* to '$USER'@'%' identified by '$DATABASE_PASSWORD';
+flush privileges;
+SQL
+    mysqladmin -u root "-p$ROOT_PASSWORD" reload
+
+    su -c "$HOME/bin/application syncdb --noinput" $USER
 
     if [[ $? -eq 0 ]]
     then
-	rm -f $initfile
+        rm -f "$sentinel"
     fi
 
     return $?
@@ -45,15 +48,15 @@ SQL
 
 function init_db
 {
-    init_db_i 2 >>$logfile
+    init_db_i 2 2>&1 | tee -a "$logfile"
 }
 
 case ${1:-blah} in
     start)
-	action "Starting: $prog" init_db
+    action "Starting: $prog" init_db
         ;;
     stop)
-	action "Stopping: $prog" /bin/true
+    action "Stopping: $prog" /bin/true
         ;;
     restart)
         $0 stop
