@@ -120,7 +120,7 @@ logging.getLogger('boto').setLevel(logging.INFO)
 #
 
 DATABASE_ENGINE    = 'mysql'
-DATABASE_NAME      = 'donomo'
+DATABASE_NAME      = 'donomo_%s' % MODE
 DATABASE_USER      = 'donomo'
 DATABASE_PASSWORD  = os.environ.get('DATABASE_PASSWORD', '8d85bcc668074be7ae4be08deae11705')
 #DATABASE_HOST      = os.environ.get('DATABASE_HOST', 'db.donomo.com')

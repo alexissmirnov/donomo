@@ -172,6 +172,8 @@ def main():
     options.processes = load_modules(process_names)
     options.queue     = Queue.Queue()
 
+    operations.initialize_infrastructure()
+
     # pylint: disable-msg=W0702
     #   -> no exception type given
     while not must_shut_down():
