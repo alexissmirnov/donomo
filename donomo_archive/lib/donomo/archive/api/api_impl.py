@@ -297,7 +297,7 @@ def upload_document(request):
             file_name    = the_file.name,
             child_number = 0,
             mime_type    = content_type)
-
+        
         operations.upload_asset_stream( upload, StringIO(the_file.read()) )
 
         operations.publish_work_item(upload)
