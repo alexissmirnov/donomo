@@ -420,19 +420,22 @@ def get_document_zip(request):
             # Get a PDF asset and download it
             pdf_asset = models.Asset.objects.get(
                 owner = document.owner,
-                asset_class = models.AssetClass.DOCUMENT,
-                mime_type   = models.MimeType.PDF,
+                asset_class__name = models.AssetClass.DOCUMENT,
+                mime_type__name   = models.MimeType.PDF,
                 related_page__document = document )
 
-            pdf_asset_metadata = operations.instanciate_asset(pdf_asset.pk, temp_dir)
+            pdf_asset_metadata = operations.instantiate_asset(pdf_asset.pk, temp_dir)
 
             # add the downloaded file into the archive
             zip_file.write(pdf_asset_metadata['Local-Path'], 'doc-%s.pdf' % document.pk)
 
         zip_file.close()
 
-        zip_file = open(zip_path_name, 'r')
         response = HttpResponse(zip_file)
+        
+        response['Content-Length'] = os.stat(zip_path_name).st_size
+        
+        zip_file = open(zip_path_name, 'rb')
         response['Content-Type'] = 'application/x-zip-compressed'
         response['Content-Disposition'] = \
             'attachment; filename=donomo-documents.zip'
