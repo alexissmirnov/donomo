@@ -418,11 +418,9 @@ def get_document_zip(request):
             document = request.user.documents.get(pk = pk)
 
             # Get a PDF asset and download it
-            pdf_asset = models.Asset.objects.get(
-                owner = document.owner,
+            pdf_asset = document.assets.get(
                 asset_class__name = models.AssetClass.DOCUMENT,
-                mime_type__name   = models.MimeType.PDF,
-                related_page__document = document )
+                mime_type__name   = models.MimeType.PDF)
 
             pdf_asset_metadata = operations.instantiate_asset(pdf_asset.pk, temp_dir)
 
