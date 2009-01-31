@@ -80,7 +80,7 @@ def create_document( owner, title = None):
     create_asset_from_stream(
         data_stream = StringIO('empty'),
         owner = owner,
-        asset_class = AssetClass.DOCUMENT,
+        asset_class = manager(AssetClass).get( name = AssetClass.DOCUMENT ),
         related_document = document,
         child_number = 1,
         mime_type = MimeType.BINARY )
@@ -397,7 +397,7 @@ def instantiate_asset(asset_id, parent_temp_dir = None):
 ###############################################################################
 
 def retrieve_work_item(
-    visibility_timeout = 300,
+    visibility_timeout = None,
     max_wait_time      = None,
     interrupt_func     = None,
     auto_get_asset     = True ):
@@ -407,6 +407,9 @@ def retrieve_work_item(
     """
 
     try:
+
+        if visibility_timeout is None:
+            visibility_timeout = settings.SQS_VISIBILITY_TIMEOUT
 
         message = sqs.get_message(
             visibility_timeout = visibility_timeout,

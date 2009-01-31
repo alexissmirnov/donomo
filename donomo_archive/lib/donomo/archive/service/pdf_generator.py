@@ -39,10 +39,8 @@ def handle_work_item(processor, item):
     """
     document = item['Asset-Instance'].related_document
 
-    num_ocr_pages = models.Asset.objects.filter(
-        owner = document.owner,
-        asset_class = models.AssetClass.PAGE_TEXT,
-        related_page__document = document )
+    num_ocr_pages = document.pages.filter(
+        assets__asset_class__name = models.AssetClass.PAGE_TEXT ).count()
 
     if document.num_pages != num_ocr_pages:
         raise NotReadyException(
@@ -53,11 +51,11 @@ def handle_work_item(processor, item):
             document,
             output_buffer = StringIO(),
             username = document.owner.username,
-            title = document.title ).get_value() )
+            title = document.title ).getvalue() )
 
     pdf_assets = document.assets.filter(
-        asset_class = models.AssetClass.DOCUMENT,
-        mime_type   = models.MimeType.PDF )
+        asset_class__name = models.AssetClass.DOCUMENT,
+        mime_type__name   = models.MimeType.PDF )
 
     if len(pdf_assets) != 0:
         pdf_asset = pdf_assets[0]
