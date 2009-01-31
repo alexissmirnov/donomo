@@ -429,11 +429,11 @@ def get_document_zip(request):
 
         zip_file.close()
 
-        response = HttpResponse(zip_file)
-        
-        response['Content-Length'] = os.stat(zip_path_name).st_size
-        
+        zip_file_size = os.stat(zip_path_name).st_size
         zip_file = open(zip_path_name, 'rb')
+        
+        response = HttpResponse(zip_file)
+        response['Content-Length'] = zip_file_size
         response['Content-Type'] = 'application/x-zip-compressed'
         response['Content-Disposition'] = \
             'attachment; filename=donomo-documents.zip'
