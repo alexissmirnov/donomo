@@ -65,7 +65,7 @@ def handle_work_item(processor, item):
         operations.publish_work_item(
             document.assets.get(
                 asset_class__name = models.AssetClass.DOCUMENT,
-                mime_type__name   = MimeType.BINARY ))
+                mime_type__name   = models.MimeType.BINARY ))
 
 
 ##############################################################################
