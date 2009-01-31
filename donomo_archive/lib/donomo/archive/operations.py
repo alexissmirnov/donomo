@@ -78,7 +78,7 @@ def create_document( owner, title = None):
     document = manager(Document).create( title = title, owner = owner)
 
     create_asset_from_stream(
-        data_stream = StringIO(''),
+        data_stream = StringIO('empty'),
         owner = owner,
         asset_class = AssetClass.DOCUMENT,
         related_document = document,
