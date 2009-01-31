@@ -290,15 +290,13 @@ def upload_document(request):
                 'Unsupported content type: %s' % content_type)
 
         upload = operations.create_asset_from_stream(
-            data_stream  = None,
+            data_stream  = StringIO(the_file.read()),
             owner        = request.user,
             producer     = gateway,
             asset_class  = models.AssetClass.UPLOAD,
             file_name    = the_file.name,
             child_number = 0,
             mime_type    = content_type)
-        
-        operations.upload_asset_stream( upload, StringIO(the_file.read()) )
 
         operations.publish_work_item(upload)
 

@@ -293,6 +293,8 @@ def create_asset_from_stream( data_stream, **kwargs ):
 
     asset = manager(Asset).create(**kwargs)
 
+    upload_asset_stream(asset, data_stream)
+
     return asset
 
 ###############################################################################
@@ -387,7 +389,7 @@ def instantiate_asset(asset_id, parent_temp_dir = None):
         return meta_data
 
     except:
-        logging.exception(
+        logging.error(
             "Failed to retrieve work item: %s" % asset_id)
         shutil.rmtree(temp_dir)
         raise

@@ -6,12 +6,14 @@
 from donomo.archive         import models
 from donomo.archive         import operations
 from donomo.archive.service import driver
-
+from django.db              import transaction
+from boto.exception         import S3ResponseError
 import logging
 import sys
 import os
 import shutil
 
+@transaction.commit_on_success
 def main():
     """ Run the process on the given asset where both the process and the
         asset id are given on the command line.
@@ -33,7 +35,13 @@ def main():
         try:
             work_item.update(operations.instantiate_asset(asset_id))
         except models.Asset.DoesNotExist:
-            logging.exception('Asset no longer exists: %s' % asset_id)
+            logging.error('Asset no longer exists: %s' % asset_id)
+        except S3ResponseError, error:
+            if error.status == 404:
+                logging.error('Could not find asset in S3: %s' % asset_id)
+            else:
+                logging.exception('Unexpected error!')
+                raise
         else:
             module.handle_work_item(processor, work_item)
 
