@@ -261,8 +261,9 @@ def upload_document(request):
     username = request.POST['user']
     password = request.POST['password']
     logging.debug('username=%s'%username)
-    user = authenticate(username=username, password=password)
-    if user is None or not user.is_active:
+    request.user = authenticate(username=username, password=password)
+
+    if request.user is None or not request.user.is_active:
         raise ValidationError('account disabled')
         
     gateway      = _init_processor()[0]
