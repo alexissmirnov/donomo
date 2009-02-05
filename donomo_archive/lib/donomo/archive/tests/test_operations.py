@@ -289,7 +289,7 @@ class DocumentOperations(unittest.TestCase):
         doc1 = operations.create_document( owner = self.user )
         
         now = datetime.date.fromtimestamp(time.time())
-        pdf_generator.classify_document(doc1, now, datetime.timedelta(0, 1))
+        pdf_generator.classify_document(doc1, datetime.timedelta(0, 1))
         
         asset1 = operations.create_asset_from_stream(
             owner        = self.user,
@@ -313,7 +313,7 @@ class DocumentOperations(unittest.TestCase):
         
         doc2 = operations.create_document( owner = self.user )
         now = datetime.date.fromtimestamp(time.time())
-        pdf_generator.classify_document(doc2, now, datetime.timedelta(0, 1))
+        pdf_generator.classify_document(doc2, datetime.timedelta(0, 1))
         # is the second document tagged in the different tag?
         self.assert_( doc2.tags.all().count() == 1 )
         
@@ -339,7 +339,7 @@ class DocumentOperations(unittest.TestCase):
         
         doc3 = operations.create_document( owner = self.user )
         now = datetime.date.fromtimestamp(time.time())
-        pdf_generator.classify_document(doc3, now, datetime.timedelta(0, 10))
+        pdf_generator.classify_document(doc3, datetime.timedelta(0, 10))
         
         # did this one got tagged with a same tag?
         self.assert_( doc2.tags.all().count() == 1 )

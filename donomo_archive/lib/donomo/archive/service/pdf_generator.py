@@ -92,7 +92,7 @@ def classify_document(document, treshold):
     
     If no close-by tag is found, create one and tag this document with it
     """
-    logging.debug('Classifying %s created on %s with treshold %s' %(document, treshold))
+    logging.debug('Classifying %s with treshold %s' %(document, treshold))
     
     try:
         now = datetime.datetime.fromtimestamp(time.time())
