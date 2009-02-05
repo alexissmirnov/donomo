@@ -215,6 +215,8 @@ class TagManager( models.Manager ):
 ###############################################################################
 
 class Tag(models.Model):
+    USER             = 'user'
+    UPLOAD_AGGREGATE = 'upload'
 
     """ Documents can be tagged """
 
@@ -229,6 +231,12 @@ class Tag(models.Model):
         blank = False,
         null = False,
         db_index = True )
+
+    tag_class = models.CharField(
+        max_length = 64,
+        core       = True,
+        db_index   = True,
+        help_text  = 'Class of this tag' )
 
     __str__ = lambda self : self.label
 
