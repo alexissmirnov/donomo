@@ -17,10 +17,13 @@ import unittest
 import traceback
 import tempfile
 from donomo.archive.models import *
-from donomo.archive import operations
+from donomo.archive import operations, models
 import os
 from cStringIO import StringIO
 from time import sleep
+import datetime
+import time
+
 
 MODULE_NAME = os.path.splitext(os.path.basename(__file__))[0]
 
@@ -264,3 +267,91 @@ class DocumentOperations(unittest.TestCase):
         for i in xrange(8, 10):
             self.assert_(pages[i-5].pk == doc1.pages.get(position=i+1).pk)
 
+    # ------------------------------------------------------------------------
+
+    def test_classify_documents_by_time(self):
+        # create an unclassified document
+        doc0 = operations.create_document( owner = self.user )
+        
+        asset0 = operations.create_asset_from_stream(
+            owner        = self.user,
+            producer     = self.producer,
+            asset_class  = models.AssetClass.DOCUMENT,
+            data_stream  = StringIO('some pdf'),
+            file_name    = 'create_asset_from_string.txt',
+            child_number = 1,
+            related_document = doc0,
+            mime_type        = models.MimeType.PDF )
+
+        sleep(2)
+        
+        doc1 = operations.create_document( owner = self.user )
+        
+        now = datetime.date.fromtimestamp(time.time())
+        pdf_generator.classify_document(doc1, now, datetime.timedelta(0, 1))
+        
+        asset1 = operations.create_asset_from_stream(
+            owner        = self.user,
+            producer     = self.producer,
+            asset_class  = models.AssetClass.DOCUMENT,
+            data_stream  = StringIO('some pdf'),
+            file_name    = 'create_asset_from_string.txt',
+            child_number = 1,
+            related_document = doc1,
+            mime_type        = models.MimeType.PDF )
+        
+        # do we have a new tag?
+        self.assert_( doc1.tags.all().count() == 1 )
+        
+        tag1 = doc1.tags.all()[0]
+        
+        self.assert_(tag1.tag_class == models.Tag.UPLOAD_AGGREGATE)
+        
+        # sleep 3 sec
+        sleep(3)
+        
+        doc2 = operations.create_document( owner = self.user )
+        now = datetime.date.fromtimestamp(time.time())
+        pdf_generator.classify_document(doc2, now, datetime.timedelta(0, 1))
+        # is the second document tagged in the different tag?
+        self.assert_( doc2.tags.all().count() == 1 )
+        
+        tag2 = doc2.tags.all()[0]
+        
+        self.assert_(tag2.label != tag1.label)
+
+        asset2 = operations.create_asset_from_stream(
+            owner        = self.user,
+            producer     = self.producer,
+            asset_class  = models.AssetClass.DOCUMENT,
+            data_stream  = StringIO('some pdf'),
+            file_name    = 'create_asset_from_string.txt',
+            child_number = 1,
+            related_document = doc2,
+            mime_type        = models.MimeType.PDF )
+        
+
+        
+        # sleep another 3 seconds and create the 3rd document,
+        # but with a longer threshold
+        sleep(3)
+        
+        doc3 = operations.create_document( owner = self.user )
+        now = datetime.date.fromtimestamp(time.time())
+        pdf_generator.classify_document(doc3, now, datetime.timedelta(0, 10))
+        
+        # did this one got tagged with a same tag?
+        self.assert_( doc2.tags.all().count() == 1 )
+        self.assert_( tag2 == doc3.tags.all()[0] )
+
+        asset3 = operations.create_asset_from_stream(
+            owner        = self.user,
+            producer     = self.producer,
+            asset_class  = models.AssetClass.DOCUMENT,
+            data_stream  = StringIO('some pdf'),
+            file_name    = 'create_asset_from_string.txt',
+            child_number = 1,
+            related_document = doc3,
+            mime_type        = models.MimeType.PDF )
+        
+        

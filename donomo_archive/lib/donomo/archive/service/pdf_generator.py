@@ -10,6 +10,10 @@ itno a PDF FILE.
 from donomo.archive import operations, models
 from donomo.archive.utils import pdf
 from cStringIO import StringIO
+import datetime
+import time
+import logging
+logging    = logging.getLogger('donomo-archive')
 
 DEFAULT_INPUTS  = (
     models.AssetClass.DOCUMENT,
@@ -46,6 +50,9 @@ def handle_work_item(processor, item):
         raise NotReadyException(
             "Postponing PDF generation, OCR not complete for pages")
 
+    # classify the document based on the creation time of its PDF asset
+    classify_document(document, datetime.timedelta(0, 180))
+
     pdf_stream = StringIO(
         pdf.render_document(
             document,
@@ -61,10 +68,8 @@ def handle_work_item(processor, item):
         pdf_asset = pdf_assets[0]
         pdf_asset.producer = processor,
         operations.upload_asset_stream(pdf_asset, pdf_stream)
-        operations.publish_work_item(pdf_asset)
     else:
-        operations.publish_work_item(
-            operations.create_asset_from_stream(
+        pdf_asset = operations.create_asset_from_stream(
                 data_stream      = pdf_stream,
                 owner            = item['Owner'],
                 producer         = processor,
@@ -72,6 +77,61 @@ def handle_work_item(processor, item):
                 related_document = document,
                 parent           = item['Asset-Instance'],
                 child_number     = 1,
-                mime_type        = models.MimeType.PDF ))
+                mime_type        = models.MimeType.PDF )
+    
+       
+    operations.publish_work_item(pdf_asset)
+    
+
+##############################################################################
+def classify_document(document, treshold):
+    """
+    Find the most recently created upload tag.
+    Check to see if the current time is close enough for this document to be part
+    of this tag. If so, tag it.
+    
+    If no close-by tag is found, create one and tag this document with it
+    """
+    logging.debug('Classifying %s created on %s with treshold %s' %(document, treshold))
+    
+    try:
+        now = datetime.datetime.fromtimestamp(time.time())
+        
+        # get the document with most recently created PDF asset
+        most_recent_existing_asset = models.Asset.objects.filter(
+                        mime_type__name = models.MimeType.PDF,
+                        asset_class__name = models.AssetClass.DOCUMENT).order_by(
+                            '-date_created')[0]
+                            
+        if most_recent_existing_asset.date_created + treshold > now:
+            # latest asset is recent, let's use its tag then
+            
+            # to get the tag, let's get asset's document      
+            most_recent_document = most_recent_existing_asset.related_document
+        
+            # get the tag object of class "upload aggregate" of this document
+            upload_aggregate_tag = most_recent_document.tags.filter(
+                                            tag_class = models.Tag.UPLOAD_AGGREGATE)
+            
+            if len(upload_aggregate_tag) == 0:
+                raise models.Asset.DoesNotExist()
+            else:
+                upload_aggregate_tag = upload_aggregate_tag[0]
+        else:
+            # pass the control to exception handling to create a new tag object
+            raise models.Asset.DoesNotExist()
+        
+    except models.Asset.DoesNotExist, e:
+        logging.debug('Creating new UPLOAD_AGGREGATE tag for time %s' % now)
+        # create a tag with current time and tag a given document with it
+        upload_aggregate_tag = models.Tag.objects.create(
+                                owner = document.owner,
+                                label = '%s' % now, 
+                                tag_class = models.Tag.UPLOAD_AGGREGATE)
+        pass
+    
+    # tag a given document with this tag
+    document.tags.add(upload_aggregate_tag)
+    document.save()
 
 ##############################################################################
