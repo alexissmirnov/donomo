@@ -590,7 +590,8 @@ def tag_documents(request, label):
 
     tag = models.Tag.objects.get_or_create(
         owner = request.user,
-        label = label.lower()) [0]
+        label = label.lower(),
+        tag_class = models.Tag.USER) [0]
 
     tag.documents.add(documents)
 
