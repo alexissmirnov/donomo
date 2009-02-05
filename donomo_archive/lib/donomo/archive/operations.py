@@ -117,9 +117,10 @@ def split_document( document, offset ):
         raise Exception(
             'Cannot split document at position %d' % offset)
 
-    new_document = create_document(
-        owner = document.owner,
-        title = '%s/1(%d-%d)' % (document.title, offset + 1, document.num_pages))
+    new_document = create_document(document.owner,
+                                   document.title +
+                                   '/1(%d-%d)' %
+                                   (offset + 1, document.num_pages))
 
     for page in document.pages.filter( position__gt=offset ):
         page.document =  new_document
