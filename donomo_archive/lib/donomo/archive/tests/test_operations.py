@@ -18,6 +18,7 @@ import traceback
 import tempfile
 from donomo.archive.models import *
 from donomo.archive import operations, models
+from donomo.archive.service import pdf_generator
 import os
 from cStringIO import StringIO
 from time import sleep
