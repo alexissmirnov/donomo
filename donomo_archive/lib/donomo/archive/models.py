@@ -234,6 +234,8 @@ class Tag(models.Model):
 
     tag_class = models.CharField(
         max_length = 64,
+        blank      = True,
+        default    = '',
         core       = True,
         db_index   = True,
         help_text  = 'Class of this tag' )
