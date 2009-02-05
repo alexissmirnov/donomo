@@ -36,7 +36,7 @@ def delete_all_queues(request = None):
     for queue in [ sqs._get_queue() ]:
         if queue is not None:
             queue.delete()
-    return HttpResponse('OK')
+    return HttpResponse('All queues deleted')
 
 ###############################################################################
 
@@ -98,8 +98,8 @@ def wipe_everything(request):
 
     delete_all_queues(request)
     delete_search_index()
-    delete_bucket_contents()
-    return HttpResponse('everything deleted')
+    objects_count = delete_bucket_contents()
+    return HttpResponse('All queues deleted. Search Index deleted. Database contents deleted. %d objects from S3 deleted.' % objects_count)
 
 
 ###############################################################################
@@ -126,5 +126,10 @@ def delete_bucket_contents():
     Documentation goes here
 
     """
+    i = 0
     for key in s3._get_bucket().get_all_keys():
+        i = i + 1
         key.delete()
+    
+    logging.critical('Deleted %d objects from S3' % i)
+    return i
