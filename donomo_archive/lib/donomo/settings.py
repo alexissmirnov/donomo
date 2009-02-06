@@ -83,6 +83,7 @@ SQS_QUEUE_NAME        = '%sarchive-donomo-com' % AWS_PREFIX.replace('.', '-')
 SOLR_HOST             = '127.0.0.1:8983'
 S3_ACCESS_WINDOW      = 300
 SQS_MAX_BACKOFF       = int(os.environ.get('SQS_MAX_BACKOFF', 300))
+SQS_VISIBILITY_TIMEOUT = int(os.environ.get('SQS_VISIBILITY_TIMEOUT', 120))
 
 # Thumbnail settings
 THUMBNAIL_SIZE        = ( 340, 440 ) # 8.5" x 11.0" scaled to 40 ppi
