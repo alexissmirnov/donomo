@@ -120,13 +120,13 @@ def classify_document(document, treshold):
         else:
             # pass the control to exception handling to create a new tag object
             raise models.Asset.DoesNotExist()
-        
-    except models.Asset.DoesNotExist, e:
+
+    except (IndexError, models.Asset.DoesNotExist):
         logging.debug('Creating new UPLOAD_AGGREGATE tag for time %s' % now)
         # create a tag with current time and tag a given document with it
         upload_aggregate_tag = models.Tag.objects.create(
                                 owner = document.owner,
-                                label = '%s' % now, 
+                                label = '$%s' % now, 
                                 tag_class = models.Tag.UPLOAD_AGGREGATE)
         pass
     
