@@ -49,7 +49,7 @@ urlpatterns = patterns(
          tag_list,
          name = 'api_tag_list' ),
 
-    url( r'^tags/(?P<label>[-a-zA-Z0-9_]+)/$',
+    url( r'^tags/(?P<label>[-a-zA-Z0-9_:. \$]+)/$',
          tag_info,
          name = 'api_tag_info' ),
          
