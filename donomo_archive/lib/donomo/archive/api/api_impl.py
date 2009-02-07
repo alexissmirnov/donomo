@@ -161,7 +161,7 @@ def tag_as_json_dict(
 
     """
     if relative_time and tag.tag_class == models.Tag.UPLOAD_AGGREGATE:
-        days = days_since(datetime.datetime.strptime(tag.label[1:].split('.')[0], '%Y-%m-%d %H:%M:%S'))
+        days = days_since(datetime.datetime.strptime(tag.label.split('.')[0], '%Y-%m-%d %H:%M:%S'))
         if days == 0:
             name = 'Today'
         elif days == 1:
