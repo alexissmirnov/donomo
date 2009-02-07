@@ -19,14 +19,14 @@
 </script>
 			
 <p>
-	<b>TAGS</b>
+	<b>UPLOADS</b>
 	<div id='tag.panel'></div>
 </p>
 
 <div style='display: none;'>
 	<div class='tag-item' id='tags.template'
 		jsselect='tags' jsdisplay='$this.document_count > 0' 
-		jsvalues='name:$this.name;'>
-			<span jscontent='$this.name + "(" + $this.document_count + ")"'></span> <a jsvalues='href:"/api/1.0/documents/zip/?tags="+$this.name'>zip</a></br> 
+		jsvalues='name:$this.label;'>
+			<span jscontent='$this.name + "(" + $this.document_count + ")"'></span> <a jsvalues='href:"/api/1.0/documents/zip/?tags="+$this.label'>zip</a></br> 
 	</div>
 </div>

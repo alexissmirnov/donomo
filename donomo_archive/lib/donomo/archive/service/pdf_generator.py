@@ -126,7 +126,7 @@ def classify_document(document, treshold):
         # create a tag with current time and tag a given document with it
         upload_aggregate_tag = models.Tag.objects.create(
                                 owner = document.owner,
-                                label = '$%s' % now, 
+                                label = '%s' % now, 
                                 tag_class = models.Tag.UPLOAD_AGGREGATE)
         pass
     

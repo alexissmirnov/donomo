@@ -20,12 +20,13 @@ from donomo.archive                  import models, operations
 from donomo.archive.service          import indexer
 from donomo.archive.utils            import pdf, s3
 from donomo.archive.utils.middleware import json_view
-from donomo.archive.utils.misc       import get_url, param_is_true, guess_mime_type
+from donomo.archive.utils.misc       import get_url, param_is_true, guess_mime_type, days_since
 import logging
 import zipfile
 import tempfile
 import os
 import shutil
+import datetime
 
 __all__ = (
     'upload_document',
@@ -151,6 +152,7 @@ def tag_as_json_dict(
     show_doc_count = False,
     show_documents = False,
     show_url       = False,
+    relative_time  = False,
     view_name      = models.AssetClass.PAGE_THUMBNAIL ):
 
     """
@@ -158,7 +160,26 @@ def tag_as_json_dict(
     conversion to JSON.
 
     """
-    out_dict  = { 'name' : tag.label }
+    if relative_time and tag.tag_class == models.Tag.UPLOAD_AGGREGATE:
+        days = days_since(datetime.datetime.strptime(tag.label[1:].split('.')[0], '%Y-%m-%d %H:%M:%S'))
+        if days == 0:
+            name = 'Today'
+        elif days == 1:
+            name = 'Yesterday'
+        elif days < 8:
+            name = 'This week'
+        elif days < 14:
+            name = 'Last Week'
+        elif days < 31:
+            name = 'This month'
+        elif days < 62:
+            name = 'Last Month'
+        else:
+            name = 'Over two months ago'
+    else:
+        name = tag.label
+        
+    out_dict  = { 'name' : name, 'label' : tag.label }
 
     if show_url:
         out_dict.update( url = get_url('api_tag_info', label = tag.label) )
@@ -551,6 +572,7 @@ def get_tag_list(request):
     prefix     = request.GET.get('startswith', None)
     show_count = param_is_true(request.GET.get('doc_count', 'false'))
     show_url   = param_is_true(request.GET.get('url', 'false'))
+    relative_time = param_is_true(request.GET.get('relative_time', 'true'))
 
     if prefix:
         tag_set = request.user.tags.filter(istartswith=prefix.lower())
@@ -562,8 +584,9 @@ def get_tag_list(request):
             tag_as_json_dict(
                 tag,
                 show_doc_count = show_count,
+                show_documents = False,
                 show_url       = show_url,
-                show_documents = False )
+                relative_time  = relative_time )
             for tag in tag_set ],
         }
 
@@ -609,7 +632,8 @@ def get_tag_info(request, label):
         request.user.tags.get(label = label.rstrip().lower()),
         show_doc_count = True,
         show_documents = True,
-        show_url       = param_is_true(request.GET.get('show_url', 'false')))
+        show_url       = param_is_true(request.GET.get('show_url', 'false')),
+        relative_time  = param_is_true(request.GET.get('relative_time', 'true')))
 
 
 ##############################################################################

@@ -181,3 +181,34 @@ def extract_text_from_hocr( hocr ):
     h, w = get_hocr_page_dimentions(bsoup)
     lines = get_hocr_lines(bsoup)
     return h, w, lines
+
+
+def days_since(d, now=None):
+    """                                                                                                                                     
+    Takes two datetime objects and returns the number of days between them.                                                                 
+    If d occurs after now, then 0 is returned.                                                                                              
+                                                                                                                                            
+    Adapted from django.utils.timesince                                                                                                     
+    """
+    import time
+    import datetime
+    from django.utils.tzinfo import LocalTimezone
+
+    # Convert datetime.date to datetime.datetime for comparison                                                                             
+    if d.__class__ is not datetime.datetime:
+        d = datetime.datetime(d.year, d.month, d.day)
+    if now:
+        t = now.timetuple()
+    else:
+        t = time.localtime()
+    if d.tzinfo:
+        tz = LocalTimezone(d)
+    else:
+        tz = None
+    now = datetime.datetime(t[0], t[1], t[2], t[3], t[4], t[5], tzinfo=tz)
+
+    # ignore microsecond part of 'd' since we removed it from 'now'                                                                         
+    delta = now - (d - datetime.timedelta(0, 0, d.microsecond))
+    if delta.days <= 0:
+        return 0
+    
