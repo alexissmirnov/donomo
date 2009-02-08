@@ -372,6 +372,14 @@ EOF
     chown root:root /etc/nginx/*
     chmod 644 /etc/nginx/*
 
+    # --- SSL Certificate ---
+    mkdir -p /etc/ssl/certs
+    mkdir -p /etc/ssl/private
+    chmod -R 700 /etc/ssl
+    cp ${source_tree}/xen/priv/donomo.crt /etc/ssl/certs/
+    cp ${source_tree}/xen/priv/donomo.key /etc/ssl/private/
+    chmod 600 /etc/ssl/certs/* /etc/ssl/private/*
+
     path=/home/donomo/lib/donomo/archive/media
     find $path -type f -print0 | xargs -0 chmod 644
     find $path -type d -print0 | xargs -0 chmod 755
