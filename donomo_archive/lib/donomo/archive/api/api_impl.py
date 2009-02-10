@@ -389,11 +389,27 @@ def get_document_pdf(request, pk):
 
     """
     document = request.user.documents.get(pk = pk)
+    assets = document.assets.filter(
+        asset_class__name = models.AssetClass.DOCUMENT,
+        mime_type__name   = models.MimeType.PDF )
 
-    response = HttpResponse(content_type = 'application/pdf')
-    response['Content-Disposition'] = \
+    if len(assets) != 0:
+        meta = operations.instantiate_asset(assets[0])
+        try:
+            response = HttpResponse(open(meta['Local-Path'], 'rb'))
+            response['Content-Disposition'] = \
+                'attachment; filename=doc-%d.pdf' % document.pk
+            response['Content-Type']   = meta['Content-Type']
+            response['Content-Length'] = os.stat(meta['Local-Path']).st_size
+            response['ETag' ]          = meta['ETag' ]
+            response['Last-Modified']  = meta['Last-Modified']
+        finally:
+            shutil.rmtree(os.path.dirname(meta['Local-Path']))
+    else:
+        response = HttpResponse(content_type = 'application/pdf')
+        response['Content-Disposition'] = \
         'attachment; filename=doc-%d.pdf' % document.pk
-    pdf.render_document(document, response, request.user.username, str(document.pk))
+        pdf.render_document(document, response, request.user.username, str(document.pk))
 
     return response
 
@@ -438,7 +454,7 @@ def get_document_zip(request):
                 asset_class__name = models.AssetClass.DOCUMENT,
                 mime_type__name   = models.MimeType.PDF)
 
-            pdf_asset_metadata = operations.instantiate_asset(pdf_asset.pk, temp_dir)
+            pdf_asset_metadata = operations.instantiate_asset(pdf_asset, temp_dir)
 
             # add the downloaded file into the archive
             zip_file.write(pdf_asset_metadata['Local-Path'], 'doc-%s.pdf' % document.pk)
