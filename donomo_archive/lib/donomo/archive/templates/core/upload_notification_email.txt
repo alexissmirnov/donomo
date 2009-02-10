@@ -1,0 +1,9 @@
+Hello {{user}},
+
+The scans you recently uploaded to Cloud OCR are ready.
+
+You can download a ZIP archive dontaining searchable PDFs here:
+
+"https://{{site}}/api/1.0/documents/zip/?tags={{tag}}"
+
+Cloud OCR by Donomo

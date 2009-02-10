@@ -108,6 +108,13 @@ class DocumentOperations(unittest.TestCase):
         self.producer = self._init_producer() [0]
         self.consumer = self._init_consumer() [0]
 
+    # ------------------------------------------------------------------------
+
+    def tearDown(self):
+        models.Process.get(name = MODULE_NAME + '_producer').delete()
+        models.Process.get(name = MODULE_NAME + '_consumer').delete()
+        models.AssetClass.get(name = 'test_data').delete()
+        
 
     # ------------------------------------------------------------------------
 
@@ -270,9 +277,9 @@ class DocumentOperations(unittest.TestCase):
 
     # ------------------------------------------------------------------------
 
-    def test_classify_documents_by_time(self):
+    def test_tag_documents_by_time(self):
         # create an unclassified document
-        doc0 = operations.create_document( owner = self.user )
+        doc0 = operations.tag_document( owner = self.user )
         
         asset0 = operations.create_asset_from_stream(
             owner        = self.user,
@@ -286,7 +293,7 @@ class DocumentOperations(unittest.TestCase):
 
         sleep(2)
         
-        doc1 = operations.create_document( owner = self.user )
+        doc1 = operations.tag_document( owner = self.user )
         
         now = datetime.date.fromtimestamp(time.time())
         pdf_generator.classify_document(doc1, datetime.timedelta(0, 1))
@@ -311,7 +318,7 @@ class DocumentOperations(unittest.TestCase):
         # sleep 3 sec
         sleep(3)
         
-        doc2 = operations.create_document( owner = self.user )
+        doc2 = operations.tag_document( owner = self.user )
         now = datetime.date.fromtimestamp(time.time())
         pdf_generator.classify_document(doc2, datetime.timedelta(0, 1))
         # is the second document tagged in the different tag?
@@ -337,7 +344,7 @@ class DocumentOperations(unittest.TestCase):
         # but with a longer threshold
         sleep(3)
         
-        doc3 = operations.create_document( owner = self.user )
+        doc3 = operations.tag_document( owner = self.user )
         now = datetime.date.fromtimestamp(time.time())
         pdf_generator.classify_document(doc3, datetime.timedelta(0, 10))
         

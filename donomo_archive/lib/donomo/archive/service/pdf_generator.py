@@ -9,11 +9,15 @@ itno a PDF FILE.
 
 from donomo.archive import operations, models
 from donomo.archive.utils import pdf
+from donomo.archive.service import NotReadyException
+
 from cStringIO import StringIO
 import datetime
 import time
 import logging
 logging    = logging.getLogger('donomo-archive')
+
+UPLOAD_AGGREGATE_TIME_TRESHOLD = 240 # 4 minutes
 
 DEFAULT_INPUTS  = (
     models.AssetClass.DOCUMENT,
@@ -26,10 +30,6 @@ DEFAULT_OUTPUTS = (
 DEFAULT_ACCEPTED_MIME_TYPES = (
     models.MimeType.BINARY,
     )
-
-class NotReadyException(Exception):
-    """ Raised when a document is not ready to have a pdf generated for it """
-    pass
 
 ##############################################################################
 
@@ -51,7 +51,7 @@ def handle_work_item(processor, item):
             "Postponing PDF generation, OCR not complete for pages")
 
     # classify the document based on the creation time of its PDF asset
-    classify_document(document, datetime.timedelta(0, 180))
+    tag_document(document, datetime.timedelta(0, UPLOAD_AGGREGATE_TIME_TRESHOLD))
 
     pdf_stream = StringIO(
         pdf.render_document(
@@ -84,7 +84,7 @@ def handle_work_item(processor, item):
     
 
 ##############################################################################
-def classify_document(document, treshold):
+def tag_document(document, treshold):
     """
     Find the most recently created upload tag.
     Check to see if the current time is close enough for this document to be part
@@ -92,6 +92,10 @@ def classify_document(document, treshold):
     
     If no close-by tag is found, create one and tag this document with it
     """
+    
+    # A document can have only one such tag
+    if document.tags.filter(tag_class = models.Tag.UPLOAD_AGGREGATE).count() > 0:
+        return
     logging.debug('Classifying %s with treshold %s' %(document, treshold))
     
     try:

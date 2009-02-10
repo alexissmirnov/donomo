@@ -12,6 +12,7 @@ import logging
 import optparse
 import os
 import Queue
+from django.conf import settings
 
 #
 # pylint: disable-msg=C0103
@@ -19,7 +20,12 @@ import Queue
 #   C0103 - variables at module scope must be all caps
 #
 
-DEFAULT_PROCESSORS = ( 'pdf_parser', 'tiff_parser', 'ocr', 'indexer', 'pdf_generator' )
+DEFAULT_PROCESSORS = ( 'pdf_parser', 
+                       'tiff_parser', 
+                       'ocr', 
+                       'indexer', 
+                       'pdf_generator',
+                       'upload_notifier' )
 
 MUST_SHUT_DOWN = False
 
@@ -164,7 +170,7 @@ def main():
         finally:
             pidfile.close()
 
-    logging.info("Starting")
+    logging.info("Starting processing queue %s " % settings.SQS_QUEUE_NAME)
 
     if len(process_names) == 0:
         process_names = DEFAULT_PROCESSORS

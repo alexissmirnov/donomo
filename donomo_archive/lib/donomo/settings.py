@@ -239,6 +239,7 @@ APPEND_SLASH = False
 
 ACCOUNT_ACTIVATION_DAYS=7 # Used by registration
 DEFAULT_FROM_EMAIL='Donomo Registration <registration@donomo.com>'
+UPLOAD_NOTIFICATION_EMAIL='Donomo Cloud OCR <noreply.donomo.com>'
 EMAIL_HOST_USER='registration@donomo.com'
 EMAIL_HOST_PASSWORD='8d85bcc'
 EMAIL_HOST='smtp.gmail.com'
