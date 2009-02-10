@@ -9,7 +9,17 @@ source /etc/rc.d/init.d/functions
 workdir=/var/lib/donomo
 pidfile=/var/run/donomo/processors.pid
 logfile=/var/log/donomo/processors.log
-prog="Donomo Services"
+prog="Donomo-Processors"
+
+function setup_env
+{
+    source /root/.donomo/db_pwd_donomo.sh
+    source /root/.donomo/aws.sh
+
+    export USER=donomo
+    export LOGNAME=$USER
+    export HOME=/home/$USER
+}
 
 function start
 {
@@ -20,34 +30,79 @@ function start
         return 1
     fi
 
-    source /root/.donomo/db_pwd_donomo.sh
-    source /root/.donomo/aws.sh
-
-    export USER=donomo
-    export LOGNAME=$USER
-    export HOME=/home/$USER
-
-    nice su -c "/home/donomo/bin/processors --daemonize --pidfile=$pidfile --logfile=$logfile --workdir=$workdir" donomo
+    nice su -c "$HOME/bin/processors --daemonize --pidfile=$pidfile --logfile=$logfile --workdir=$workdir" $USER
 
     return $?
 }
+
+function stop
+{
+    killproc -p $pidfile
+}
+
+function queue_length
+{
+    su -c "$HOME/bin/queue-length" $USER
+}
+
+function is_running {
+    local svc=$1
+    local name=${2:-$1}
+    service ${svc:?} status | grep -c -E "$name \\(pid *( [0-9]+)+\\) is running..."
+}
+
+function stop_if_idle {
+    local solr=$(is_running solr)
+    local app=$(is_running nginx)
+    local db=$(is_running mysqld)
+
+    if [[ $(( solr + app + db )) -gt 0 ]]
+    then
+        echo "... other modules are running"
+        return 1
+    fi
+
+    local pending=$(queue_length)
+    if [[ $pending -gt 50 ]]
+    then
+        echo "... $pending pending jobs"
+        return 1
+    fi
+
+    while [[ $(is_running "$(basename $0)" "$prog") -gt 0 ]]
+    do
+        echo -n "."
+        stop
+        sleep 5
+    done
+
+    /sbin/shutdown -h now
+}
+
+setup_env
 
 case ${1:?} in
     start)
         action "Starting $prog" start
         ;;
     stop)
-        action "Stopping $prog" killproc -p $pidfile
+        action "Stopping $prog" stop
         ;;
     status)
         status -p $pidfile "$prog"
         ;;
     restart)
-        $0 stop
-        $0 start
+        "$0" stop
+        "$0" start
+        ;;
+    pending)
+        queue_length
+        ;;
+    prune)
+        action "Pruning processing node" stop_if_idle
         ;;
     *)
-        echo "Usage: $(basename $0) start|status|stop|restart"
+        echo "Usage: $(basename $0) start|status|stop|restart|pending|prune"
         exit 1
         ;;
 esac
