@@ -96,7 +96,7 @@ def handle_work_item(processor, item):
     # In all other cases we keep this work item in the queue
     # by raising NotReady exception
     raise NotReadyException( 
-            "Not Ready. Latest %s in upload aggregate tag %s was created"\
+            "Not Ready. Latest %s in upload aggregate tag %s was created "\
             "%s ago, but needs to be older than %s to warrant sending notification yet." % 
                     (document, 
                      upload_aggregate_tag, 
