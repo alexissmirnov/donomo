@@ -178,7 +178,7 @@ def tag_as_json_dict(
             name = 'Over two months ago'
     else:
         name = tag.label
-        
+
     out_dict  = { 'name' : name, 'label' : tag.label }
 
     if show_url:
@@ -286,7 +286,7 @@ def upload_document(request):
 
     if request.user is None or not request.user.is_active:
         raise ValidationError('account disabled')
-        
+
     gateway      = _init_processor()[0]
     logging.debug(str(gateway))
 
@@ -447,7 +447,7 @@ def get_document_zip(request):
 
         zip_file_size = os.stat(zip_path_name).st_size
         zip_file = open(zip_path_name, 'rb')
-        
+
         response = HttpResponse(zip_file)
         response['Content-Length'] = zip_file_size
         response['Content-Type'] = 'application/x-zip-compressed'
@@ -520,11 +520,16 @@ def get_page_view(request, pk, view_name):
 
     """
     page = request.user.pages.get(pk = int(pk))
-
-    return HttpResponseRedirect(
-        s3.generate_url(
-            page.assets.get(asset_class__name = view_name).s3_key,
-            expires_in = settings.S3_ACCESS_WINDOW ))
+    asset = page.assets.get(asset_class__name = view_name)
+    data = operations.instantiate_asset(asset)
+    stream = open(data['Local-Path'], 'rb')
+    resp = HttpResponse(stream)
+    resp['Content-Type'] = data['Content-Type']
+    resp['ETag' ] = data['ETag' ]
+    resp['Content-Length'] = os.stat(data['Local-Path']).st_size
+    resp['Last-Modified'] = data['Last-Modified']
+    shutil.rmtree(os.path.dirname(data['Local-Path']))
+    return resp
 
 ##############################################################################
 

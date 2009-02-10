@@ -43,9 +43,9 @@ def join_and_normalize( *path_components ):
 #
 
 MODE             = os.environ.get('DONOMO_MODE', 'dev').lower()
-TEST_MODE        = (MODE == 'test')
-DEVELOPMENT_MODE = (MODE == 'dev')
-PRODUCTION_MODE  = (MODE == 'prod')
+TEST_MODE        = ( MODE.find('test') != -1 )
+PRODUCTION_MODE  = ( MODE == 'prod' )
+DEVELOPMENT_MODE = not (TEST_MODE or PRODUCTION_MODE)
 DEBUG            = DEVELOPMENT_MODE or os.environ.get('DEBUG', False)
 TEMPLATE_DEBUG   = DEBUG
 OS_USER_NAME     = os.environ.get('LOGNAME', None) or os.getlogin()
@@ -72,8 +72,8 @@ CACHE_PATH  = os.environ.get('DONOMO_CACHE_PATH', '/var/lib/donomo/cache')
 
 AWS_ACCESS_KEY_ID      = os.environ.get('AWS_ACCESS_KEY_ID', '13Q9QPDKZE5BBGJHK7R2')
 AWS_SECRET_ACCESS_KEY  = os.environ.get('AWS_SECRET_ACCESS_KEY', 'om9OUC3onE699qGCw2Z70xay0hnqFssLq+jwMCXx')
-AWS_MODE_PREFIX        = TEST_MODE and 'test' or (DEVELOPMENT_MODE and 'dev' or None)
-AWS_PREFIX             = AWS_MODE_PREFIX and ("%s.%s." % (AWS_MODE_PREFIX, OS_USER_NAME)) or ''
+AWS_MODE_PREFIX        = (TEST_MODE or DEVELOPMENT_MODE) and MODE or None
+AWS_PREFIX             = PRODUCTION_MODE and '' or ("%s.%s." % (MODE, OS_USER_NAME))
 S3_HOST                = os.environ.get('S3_HOST', 's3.amazonaws.com')
 S3_IS_SECURE           = os.environ.get('S3_IS_SECURE', 'yes').lower() in ('yes', 'true', '1')
 S3_BUCKET_NAME         = '%sarchive.donomo.com' % AWS_PREFIX
@@ -121,12 +121,14 @@ logging.getLogger('boto').setLevel(logging.INFO)
 # [ Database, Cache, etc. ]
 #
 
-DATABASE_ENGINE    = 'mysql'
+DATABASE_ENGINE    = (MODE != 'unittest') and 'mysql' or 'sqlite3'
 DATABASE_NAME      = 'donomo_%s' % MODE
 DATABASE_USER      = 'donomo'
 DATABASE_PASSWORD  = os.environ.get('DATABASE_PASSWORD', '8d85bcc668074be7ae4be08deae11705')
-#DATABASE_HOST      = os.environ.get('DATABASE_HOST', 'db.donomo.com')
+#DATABASE_HOST      = os.environ.get('DATABASE_HOST', 'archive.donomo.com')
 #DATABASE_PORT      = 3306
+ENCRYPTION_PREFIX  = os.environ.get('KEY_PREFIX', '')
+
 
 if DEVELOPMENT_MODE or TEST_MODE:
     MEDIA_ROOT         = join_and_normalize(DONOMO_PATH, 'archive', 'media/')
@@ -253,3 +255,5 @@ RECAPTCHA_PRIVATE_KEY = "6LdwQwMAAAAAAJCZP67vaWH8WiDN5nkOT8pm2D9x"
 
 BASIC_AUTH_REALM = 'donomo.com'
 
+#for k in os.environ.keys():
+#    del os.environ[k]

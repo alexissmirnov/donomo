@@ -66,8 +66,6 @@ def post_message_list( msg_list ):
         @returns: None
 
     """
-    logging.info(msg_list)
-    
     queue = _get_queue()
     for msg in msg_list:
         logging.info('writing %s into queue %s' % (msg, settings.SQS_QUEUE_NAME))
@@ -128,7 +126,7 @@ def get_message(
     sleep_duration = 1
     sqs_queue      = _get_queue()
     start_time     = time()
-    
+
     if sqs_queue is None:
         return None
 

@@ -111,10 +111,10 @@ class DocumentOperations(unittest.TestCase):
     # ------------------------------------------------------------------------
 
     def tearDown(self):
-        models.Process.get(name = MODULE_NAME + '_producer').delete()
-        models.Process.get(name = MODULE_NAME + '_consumer').delete()
-        models.AssetClass.get(name = 'test_data').delete()
-        
+        models.Process.objects.get(name = MODULE_NAME + '_producer').delete()
+        models.Process.objects.get(name = MODULE_NAME + '_consumer').delete()
+        models.AssetClass.objects.get(name = 'test_data').delete()
+
 
     # ------------------------------------------------------------------------
 
@@ -153,6 +153,8 @@ class DocumentOperations(unittest.TestCase):
             child_number = 0,
             mime_type    = 'text/plain' )
 
+        self.assert_( asset is not None )
+
         operations.publish_work_item(asset)
 
         self._validate_consumer(asset, TEST_DATA)
@@ -172,6 +174,8 @@ class DocumentOperations(unittest.TestCase):
                 file_name    = temp_file_name,
                 child_number = 0,
                 mime_type    = 'text/plain' )
+
+            self.assert_( asset is not None )
 
         finally:
             if fd is not None:
@@ -280,7 +284,7 @@ class DocumentOperations(unittest.TestCase):
     def test_tag_documents_by_time(self):
         # create an unclassified document
         doc0 = operations.tag_document( owner = self.user )
-        
+
         asset0 = operations.create_asset_from_stream(
             owner        = self.user,
             producer     = self.producer,
@@ -292,12 +296,12 @@ class DocumentOperations(unittest.TestCase):
             mime_type        = models.MimeType.PDF )
 
         sleep(2)
-        
+
         doc1 = operations.tag_document( owner = self.user )
-        
+
         now = datetime.date.fromtimestamp(time.time())
         pdf_generator.classify_document(doc1, datetime.timedelta(0, 1))
-        
+
         asset1 = operations.create_asset_from_stream(
             owner        = self.user,
             producer     = self.producer,
@@ -307,25 +311,25 @@ class DocumentOperations(unittest.TestCase):
             child_number = 1,
             related_document = doc1,
             mime_type        = models.MimeType.PDF )
-        
+
         # do we have a new tag?
         self.assert_( doc1.tags.all().count() == 1 )
-        
+
         tag1 = doc1.tags.all()[0]
-        
+
         self.assert_(tag1.tag_class == models.Tag.UPLOAD_AGGREGATE)
-        
+
         # sleep 3 sec
         sleep(3)
-        
+
         doc2 = operations.tag_document( owner = self.user )
         now = datetime.date.fromtimestamp(time.time())
         pdf_generator.classify_document(doc2, datetime.timedelta(0, 1))
         # is the second document tagged in the different tag?
         self.assert_( doc2.tags.all().count() == 1 )
-        
+
         tag2 = doc2.tags.all()[0]
-        
+
         self.assert_(tag2.label != tag1.label)
 
         asset2 = operations.create_asset_from_stream(
@@ -337,17 +341,17 @@ class DocumentOperations(unittest.TestCase):
             child_number = 1,
             related_document = doc2,
             mime_type        = models.MimeType.PDF )
-        
 
-        
+
+
         # sleep another 3 seconds and create the 3rd document,
         # but with a longer threshold
         sleep(3)
-        
+
         doc3 = operations.tag_document( owner = self.user )
         now = datetime.date.fromtimestamp(time.time())
         pdf_generator.classify_document(doc3, datetime.timedelta(0, 10))
-        
+
         # did this one got tagged with a same tag?
         self.assert_( doc2.tags.all().count() == 1 )
         self.assert_( tag2 == doc3.tags.all()[0] )
@@ -361,5 +365,5 @@ class DocumentOperations(unittest.TestCase):
             child_number = 1,
             related_document = doc3,
             mime_type        = models.MimeType.PDF )
-        
-        
+
+

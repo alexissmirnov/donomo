@@ -72,7 +72,7 @@ def initialize():
 
 ##############################################################################
 
-def generate_url(
+def hidden_generate_url(
     s3_path,
     expires_in,
     method     = 'GET',

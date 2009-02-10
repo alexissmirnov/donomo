@@ -30,11 +30,11 @@ from socket                             import gethostbyname, gaierror
 from cStringIO                          import StringIO
 
 import django.db
-import mimetypes
 import os
 import tempfile
 import shutil
 import logging
+import subprocess
 from time import gmtime, strftime
 
 logging    = logging.getLogger('donomo-archive')
@@ -79,10 +79,11 @@ def create_document( owner, title = None):
 
     create_asset_from_stream(
         data_stream = StringIO('empty'),
+        file_name = 'empty.bin',
         owner = owner,
         asset_class = manager(AssetClass).get( name = AssetClass.DOCUMENT ),
         related_document = document,
-        child_number = 1,
+        child_number = 0,
         mime_type = MimeType.BINARY )
 
     return document
@@ -259,44 +260,81 @@ def initialize_processor(
 
 ###############################################################################
 
-def upload_asset_stream( asset, data_stream ):
+ENCRYPT = 1
+DECRYPT = 2
 
-    """ Upload an asset stream to S3
-
+def secure_file( base_key, op, in_file_name, out_file_name ):
+    """ Encrypt or decrypt a file on disk
     """
+    passphrase = '%s-%s-%s' % (
+        settings.ENCRYPTION_PREFIX,
+        settings.MODE,
+        base_key )
 
-    logging.info('Uploading %r' % asset)
+    params = {
+        'cipher' : 'aes-192-cbc',
+        'in'     : in_file_name,
+        'out'    : out_file_name,
+        'op'     : { ENCRYPT : 'e', DECRYPT : 'd' }[op],
+        }
 
-    s3.upload_from_stream( asset.s3_key, data_stream, asset.mime_type.name )
+    process = subprocess.Popen(
+        "openssl enc -%(op)s -%(cipher)s -pass stdin -in '%(in)s' -out '%(out)s' -salt" % params,
+        shell     = True,
+        stdin     = subprocess.PIPE,
+        stdout    = subprocess.PIPE,
+        stderr    = subprocess.PIPE,
+        close_fds = True)
+
+    (stdout, stderr) = process.communicate(passphrase)
+
+    if process.returncode != 0:
+        raise Exception(
+            "Failed to %scrypt file\nOutput:\n%s\nError:\n%s" % (
+                { ENCRYPT : 'en', DECRYPT : 'de' }[op],
+                stdout,
+                stderr ))
 
 ###############################################################################
 
-def upload_asset_file( asset, file_name ):
-
-    """ Upload an asset file to S3
-
+def upload_asset_file( asset, orig_file_name ):
+    """ Upload an asset file
     """
+    keys = asset.owner.encryption_keys.all()
+    if len(keys) == 0:
+        file_name = orig_file_name
+        logging.warn("%s is not secure" % asset.owner)
+    else:
+        file_name = '%s.enc' % orig_file_name
+        secure_file(
+            keys[0].value,
+            ENCRYPT,
+            orig_file_name,
+            file_name )
 
-    with open(file_name, 'rb') as data_stream:
-        upload_asset_stream(asset, data_stream)
+    s3.upload_from_file(
+        asset.s3_key,
+        file_name,
+        asset.mime_type.name )
+
+    if file_name != orig_file_name:
+        os.remove(file_name)
 
 ###############################################################################
 
 def create_asset_from_stream( data_stream, **kwargs ):
-
-    """ Create a page view work item on the output channel (given by name)
-        from the passed data stream.
-
+    """ Create an asset given a file stream
     """
-#    logging.debug(
-#        'Creating Asset<%s>' % ', '.join(
-#            '%s=%s' % n_v for n_v in kwargs.iteritems() ) )
+    on_disk = tempfile.NamedTemporaryFile()
+    try:
+        on_disk.write(data_stream.read())
+        on_disk.flush()
 
-    asset = manager(Asset).create(**kwargs)
-
-    upload_asset_stream(asset, data_stream)
-
-    return asset
+        kwargs.setdefault('orig_file_name', kwargs.get('file_name'))
+        kwargs['file_name'] = on_disk.name
+        return create_asset_from_file( **kwargs )
+    finally:
+        on_disk.close()
 
 ###############################################################################
 
@@ -306,13 +344,14 @@ def create_asset_from_file( file_name, **kwargs ):
         from the contents of the file denoted by path.
 
     """
-
     kwargs = kwargs.copy()
-    kwargs.setdefault('orig_file_name', file_name)
+    kwargs.setdefault('orig_file_name', os.path.basename(file_name))
     kwargs.setdefault('mime_type', misc.guess_mime_type(file_name))
 
-    with open(file_name, 'rb') as data_stream:
-        return create_asset_from_stream( data_stream, **kwargs )
+    asset = manager(Asset).create(**kwargs)
+    upload_asset_file( asset, file_name)
+
+    return asset
 
 ###############################################################################
 
@@ -355,10 +394,9 @@ def reprocess_work_item( *asset_list ):
 
     _enqueue_work_item( False, asset_list )
 
-
 ###############################################################################
 
-def instantiate_asset(asset_id, parent_temp_dir = None):
+def instantiate_asset(asset, parent_temp_dir = None):
 
     """ Lookup the asset referenced by the message and instantiate a local
         copy of it.
@@ -372,7 +410,8 @@ def instantiate_asset(asset_id, parent_temp_dir = None):
             dir    =  parent_temp_dir )
 
     try:
-        asset = manager(Asset).get( pk = asset_id )
+        if not isinstance(asset, Asset):
+            asset = manager(Asset).get( pk = asset )
 
         meta_data = {
             'Asset-Instance' : asset,
@@ -380,10 +419,26 @@ def instantiate_asset(asset_id, parent_temp_dir = None):
             'Owner'          : asset.owner,
             }
 
+        file_name = os.path.join(temp_dir, asset.file_name)
+
         meta_data.update(
             s3.download_to_file(
                 s3_source_path  = asset.s3_key,
-                local_dest_path = os.path.join(temp_dir, asset.file_name)))
+                local_dest_path = file_name ))
+
+        keys = asset.owner.encryption_keys.all()
+        if len(keys) == 0:
+            logging.warn("%s is not secure" % asset.owner)
+        else:
+            enc_name = '%s.enc' % file_name
+            shutil.move(file_name, enc_name)
+            secure_file(
+                keys[0].value,
+                DECRYPT,
+
+                enc_name,
+                file_name )
+            os.remove(enc_name)
 
         logging.info( 'Instantiated %r' % asset )
 
@@ -391,7 +446,7 @@ def instantiate_asset(asset_id, parent_temp_dir = None):
 
     except:
         logging.error(
-            "Failed to retrieve work item: %s" % asset_id)
+            "Failed to retrieve work item: %s" % asset)
         shutil.rmtree(temp_dir)
         raise
 

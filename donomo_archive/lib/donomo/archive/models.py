@@ -531,3 +531,15 @@ class Query(models.Model):
         pass
 
 ###############################################################################
+
+class EncryptionKey(models.Model):
+    owner = models.ForeignKey(
+        User,
+        unique = True,
+        null   = False,
+        related_name = 'encryption_keys' )
+
+    value = models.CharField(
+        max_length = 64,
+        blank      = False,
+        null       = False )

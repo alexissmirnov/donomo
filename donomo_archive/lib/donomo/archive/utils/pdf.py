@@ -14,6 +14,7 @@ import os
 import logging
 from donomo.archive.utils       import s3, misc
 from donomo.archive.models      import AssetClass
+from donomo.archive.operations  import instantiate_asset
 import urllib
 
 logging = logging.getLogger('pdf-utils')
@@ -22,33 +23,33 @@ DPI = 200
 
 ##############################################################################
 
-def _draw_page_list(page_list, 
+def _draw_page_list(page_list,
                     output_buffer = None,
                     username = None,
                     title = None,
                     view_type = None):
     """
     Draw a list of pages into a pdf file.
-    
+
     """
 
     if output_buffer is None:
         output_buffer = StringIO()
 
     canvas = Canvas(output_buffer)
-    
+
     if username is not None:
         canvas.setAuthor(username)
-    
+
     if title is not None:
         canvas.setTitle(title)
-    
+
     if view_type is None:
         view_type = AssetClass.PAGE_IMAGE
-        
+
     view_asset_class = AssetClass.objects.get(name = view_type)
     text_asset_class = AssetClass.objects.get(name = AssetClass.PAGE_TEXT)
-    
+
     for page in page_list:
         # For each page, get S3 URL for an image and HTML representation
         # extract text from the HTML
@@ -58,42 +59,40 @@ def _draw_page_list(page_list,
         # holds the image and the text
         image_stream = StringIO()
         image_asset = page.get_asset(view_asset_class)
-        url = s3.generate_url(image_asset.s3_key, 1000)
-        image_file = urllib.urlretrieve(url)[0]
+        image_file = instantiate_asset(image_asset)['Local-Path']
         image = Image.open(image_file)
-        
+
         text_asset = page.get_asset(text_asset_class)
-        url = s3.generate_url(text_asset.s3_key, 1000)
-        text_file = urllib.urlretrieve(url)[0]
-        
+        text_file = instantiate_asset(text_asset)['Local-Path']
+
         text = open(text_file,'r').read()
         image_width, image_heigth, text_fragments = misc.extract_text_from_hocr(text)
-        
+
         w = (image_width/DPI)*inch
         h = (image_heigth/DPI)*inch
-        
+
         rw = w/image_width
         rh = h/image_heigth
-        
+
         for fragment in text_fragments:
             canvas.drawString(rw * fragment['x'], h - rh *fragment['y'], fragment['text'])
         canvas.drawInlineImage( image, 0, 0, w, h)
         canvas.setPageSize((w,h))
         canvas.showPage()
-        
+
         os.remove(image_file)
         os.remove(text_file)
-        
+
     canvas.save()
 
     return output_buffer
 
 ##############################################################################
 
-def render_document(document, 
-                    output_buffer = None, 
-                    username = None, 
-                    title = None, 
+def render_document(document,
+                    output_buffer = None,
+                    username = None,
+                    title = None,
                     view_type = None):
 
     """
@@ -109,10 +108,10 @@ def render_document(document,
 
 ##############################################################################
 
-def render_page(page, 
-                output_buffer = None, 
-                username = None, 
-                title = None, 
+def render_page(page,
+                output_buffer = None,
+                username = None,
+                title = None,
                 view_type = None):
     """
     Renders a page as a PDF file
