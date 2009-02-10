@@ -68,7 +68,7 @@ def main():
     parser.add_option("-u", "--user", help="User's email address", dest="user")
     parser.add_option("-p", "--password", help="User's password", dest="password")
     parser.add_option("-d", "--delete", help="Delete files after they were uploaded", dest="delete", default=False, action="store_true", )
-    parser.add_option("--domain", help="Domain name of the donomo server. May include port number after :", dest="domain", default="www.donomo.com" )
+    parser.add_option("--domain", help="Domain name of the donomo server. May include port number after :", dest="domain", default="https://archive.donomo.com" )
     
     (options, files) = parser.parse_args()
 
@@ -81,7 +81,7 @@ def main():
     for file_to_upload in files:
         with open(file_to_upload, 'rb') as f:
             print "Uploading %s ..." % file_to_upload
-            uploaded = post_multipart("http://%s/api/1.0/documents/" % options.domain, 
+            uploaded = post_multipart("%s/api/1.0/documents/" % options.domain, 
                                       ((file_to_upload, file_to_upload, f.read()),), 
                                       (('user', options.user), ('password', options.password),))
         print "Uploaded? %s" % uploaded
