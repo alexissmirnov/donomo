@@ -16,7 +16,7 @@ authconfig --enableshadow --useshadow --enablemd5 --updateall
 # Set default root password on instance;
 #
 chpasswd <<EOF
-root:a3838ca654494710945b31b13561aec2
+root:$(uuidgen)
 EOF
 
 cat > /etc/hosts <<EOF
@@ -255,7 +255,7 @@ then
     useradd solr
 
     chpasswd <<EOF
-solr:87b0e98dca2546d5b73f27c4a577d35c
+solr:$(uuidgen)
 EOF
 
     /bin/cp -rf ${source_tree}/donomo_archive/solr/* /home/solr/
@@ -293,7 +293,7 @@ then
     useradd donomo
 
     chpasswd <<EOF
-donomo:7a7b08c0472b437b925840e949ead8a5
+donomo:$(uuidgen)
 EOF
 
     /bin/cp -rf ${source_tree}/donomo_archive/* /home/donomo/
@@ -311,6 +311,7 @@ EOF
     /bin/cp -f ${source_tree}/xen/aws/aws.sh /root/.donomo/aws.sh
     cat > /root/.donomo/db_pwd_donomo.sh <<EOF
 export DATABASE_PASSWORD=146eb0938ee346ad8b35d6e1397fe82d
+export KEY_PREFIX=a08cbac931354474b0c8f3fb5abbfadd
 EOF
 fi
 
