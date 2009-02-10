@@ -70,20 +70,21 @@ CACHE_PATH  = os.environ.get('DONOMO_CACHE_PATH', '/var/lib/donomo/cache')
 # TODO: Fix SOLR host information
 #
 
-AWS_ACCESS_KEY_ID     = os.environ.get('AWS_ACCESS_KEY_ID', '13Q9QPDKZE5BBGJHK7R2')
-AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', 'om9OUC3onE699qGCw2Z70xay0hnqFssLq+jwMCXx')
-AWS_MODE_PREFIX       = TEST_MODE and 'test' or (DEVELOPMENT_MODE and 'dev' or None)
-AWS_PREFIX            = AWS_MODE_PREFIX and ("%s.%s." % (AWS_MODE_PREFIX, OS_USER_NAME)) or ''
-S3_HOST               = os.environ.get('S3_HOST', 's3.amazonaws.com')
-S3_IS_SECURE          = os.environ.get('S3_IS_SECURE', 'yes').lower() in ('yes', 'true', '1')
-S3_BUCKET_NAME        = '%sarchive.donomo.com' % AWS_PREFIX
-SQS_HOST              = os.environ.get('SQS_HOST', 'queue.amazonaws.com')
-SQS_IS_SECURE         = os.environ.get('SQS_IS_SECURE', 'yes').lower() in ('yes', 'true', '1')
-SQS_QUEUE_NAME        = '%sarchive-donomo-com' % AWS_PREFIX.replace('.', '-')
-SOLR_HOST             = '127.0.0.1:8983'
-S3_ACCESS_WINDOW      = 300
-SQS_MAX_BACKOFF       = int(os.environ.get('SQS_MAX_BACKOFF', 300))
+AWS_ACCESS_KEY_ID      = os.environ.get('AWS_ACCESS_KEY_ID', '13Q9QPDKZE5BBGJHK7R2')
+AWS_SECRET_ACCESS_KEY  = os.environ.get('AWS_SECRET_ACCESS_KEY', 'om9OUC3onE699qGCw2Z70xay0hnqFssLq+jwMCXx')
+AWS_MODE_PREFIX        = TEST_MODE and 'test' or (DEVELOPMENT_MODE and 'dev' or None)
+AWS_PREFIX             = AWS_MODE_PREFIX and ("%s.%s." % (AWS_MODE_PREFIX, OS_USER_NAME)) or ''
+S3_HOST                = os.environ.get('S3_HOST', 's3.amazonaws.com')
+S3_IS_SECURE           = os.environ.get('S3_IS_SECURE', 'yes').lower() in ('yes', 'true', '1')
+S3_BUCKET_NAME         = '%sarchive.donomo.com' % AWS_PREFIX
+SQS_HOST               = os.environ.get('SQS_HOST', 'queue.amazonaws.com')
+SQS_IS_SECURE          = os.environ.get('SQS_IS_SECURE', 'yes').lower() in ('yes', 'true', '1')
+SQS_QUEUE_NAME         = '%sarchive-donomo-com' % AWS_PREFIX.replace('.', '-')
+SOLR_HOST              = '127.0.0.1:8983'
+S3_ACCESS_WINDOW       = 300
+SQS_MAX_BACKOFF        = int(os.environ.get('SQS_MAX_BACKOFF', 30))
 SQS_VISIBILITY_TIMEOUT = int(os.environ.get('SQS_VISIBILITY_TIMEOUT', 120))
+
 
 # Thumbnail settings
 THUMBNAIL_SIZE        = ( 340, 440 ) # 8.5" x 11.0" scaled to 40 ppi

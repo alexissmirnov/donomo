@@ -11,6 +11,7 @@ from donomo.archive import operations, models
 from donomo.archive.utils import pdf
 from donomo.archive.service import NotReadyException
 
+
 from cStringIO import StringIO
 import datetime
 import time
@@ -78,10 +79,10 @@ def handle_work_item(processor, item):
                 parent           = item['Asset-Instance'],
                 child_number     = 1,
                 mime_type        = models.MimeType.PDF )
-    
-       
+
+
     operations.publish_work_item(pdf_asset)
-    
+
 
 ##############################################################################
 def tag_document(document, treshold):
@@ -89,34 +90,34 @@ def tag_document(document, treshold):
     Find the most recently created upload tag.
     Check to see if the current time is close enough for this document to be part
     of this tag. If so, tag it.
-    
+
     If no close-by tag is found, create one and tag this document with it
     """
-    
+
     # A document can have only one such tag
     if document.tags.filter(tag_class = models.Tag.UPLOAD_AGGREGATE).count() > 0:
         return
     logging.debug('Classifying %s with treshold %s' %(document, treshold))
-    
+
     try:
         now = datetime.datetime.fromtimestamp(time.time())
-        
+
         # get the document with most recently created PDF asset
         most_recent_existing_asset = models.Asset.objects.filter(
                         mime_type__name = models.MimeType.PDF,
                         asset_class__name = models.AssetClass.DOCUMENT).order_by(
                             '-date_created')[0]
-                            
+
         if most_recent_existing_asset.date_created + treshold > now:
             # latest asset is recent, let's use its tag then
-            
-            # to get the tag, let's get asset's document      
+
+            # to get the tag, let's get asset's document
             most_recent_document = most_recent_existing_asset.related_document
-        
+
             # get the tag object of class "upload aggregate" of this document
             upload_aggregate_tag = most_recent_document.tags.filter(
                                             tag_class = models.Tag.UPLOAD_AGGREGATE)
-            
+
             if len(upload_aggregate_tag) == 0:
                 raise models.Asset.DoesNotExist()
             else:
@@ -130,10 +131,10 @@ def tag_document(document, treshold):
         # create a tag with current time and tag a given document with it
         upload_aggregate_tag = models.Tag.objects.create(
                                 owner = document.owner,
-                                label = '%s' % now, 
+                                label = '%s' % now,
                                 tag_class = models.Tag.UPLOAD_AGGREGATE)
         pass
-    
+
     # tag a given document with this tag
     document.tags.add(upload_aggregate_tag)
     document.save()

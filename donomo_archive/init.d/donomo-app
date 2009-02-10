@@ -10,7 +10,7 @@ workdir=/var/lib/donomo
 pidfile=/var/run/donomo/application.pid
 logfile=/var/log/donomo/application.log
 socket=$workdir/fcgi.sock
-prog="Donomo Web App"
+prog="Donomo-WebApp"
 
 ##############################################################################
 #
@@ -57,20 +57,29 @@ function start
     chown donomo:nginx $socket
     if [[ $? -ne 0 ]]
     then
-        killproc -p $pidfile
+        stop
         return 3
     fi
 
     chmod 770 $socket
     if  [[ $? -ne 0 ]]
     then
-        killproc -p $pidfile
+        stop
         return 4
     fi
 
     return 0
 }
 
+##############################################################################
+#
+#
+#
+
+function stop
+{
+    killproc -p $pidfile
+}
 ##############################################################################
 #
 # Run an application shell or database shell
@@ -98,7 +107,7 @@ case ${1:?} in
         ;;
     stop)
         /sbin/service nginx stop
-        action "Stopping $prog" killproc -p $pidfile
+        action "Stopping $prog" stop
         ;;
     status)
         status -p $pidfile "$prog"

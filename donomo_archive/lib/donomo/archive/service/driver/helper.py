@@ -49,6 +49,7 @@ def main():
     except NotReadyException, e:
         logging.info(e)
         sys.exit(1)
+
     except:
         logging.exception('Failed to run processor')
         sys.exit(1)

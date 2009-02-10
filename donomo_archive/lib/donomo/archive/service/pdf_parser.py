@@ -42,30 +42,23 @@ def handle_work_item(processor, item):
 
     pdf.split_pages( local_path, page_prefix )
 
-    if is_new:
-        document = operations.create_document(
-            asset.owner,
-            title = 'Uploaded on %s (%s)' % (
-                asset.date_created,
-                asset.producer.process ))
-    else:
-        document = None, None
+    document = operations.create_document(
+        asset.owner,
+        title = 'Uploaded on %s (%s)' % (
+            asset.date_created,
+            asset.producer.process ))
 
     position = 1
     all_page_files = glob.glob('%s*.pdf' % page_prefix)
     all_page_files.sort()
     for page_pdf_path in all_page_files:
-        if is_new:
-            create_page( processor, asset, document, page_pdf_path,position )
-        else:
-            redo_page( processor, asset, page_pdf_path, position)
+        create_page( processor, asset, document, page_pdf_path,position )
         position += 1
 
-    if document is not None:
-        operations.publish_work_item(
-            document.assets.get(
-                asset_class__name = models.AssetClass.DOCUMENT,
-                mime_type__name   = models.MimeType.BINARY ))
+    operations.publish_work_item(
+        document.assets.get(
+            asset_class__name = models.AssetClass.DOCUMENT,
+            mime_type__name   = models.MimeType.BINARY ))
 
 
 ##############################################################################
