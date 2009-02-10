@@ -76,6 +76,7 @@ def handle_work_item(processor, item):
                 producer         = processor,
                 asset_class      = models.AssetClass.DOCUMENT,
                 related_document = document,
+                file_name        = document.title,
                 parent           = item['Asset-Instance'],
                 child_number     = 1,
                 mime_type        = models.MimeType.PDF )
