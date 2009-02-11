@@ -2,7 +2,7 @@ Hello {{user}},
 
 The scans of {{document_count}} documents you recently uploaded to Cloud OCR have been successfully processed.
 
-You can download a ZIP archive containing {{document_count}} searchable PDFs here:
+You can download a ZIP archive containing {{document_count}} searchable PDF{{document_count|pluralize}} here:
 
 https://{{site}}/api/1.0/documents/zip/?tags={{tag|urlencode}}
 
