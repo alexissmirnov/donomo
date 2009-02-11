@@ -1,1 +1,1 @@
-{{document_count}} documents are ready for download.
+{{document_count}} document{{document_count|pluralize}} ready for download.
