@@ -1,1 +1,1 @@
-Your documents are ready at {{site}}
+{{document_count}} documents are ready for download.

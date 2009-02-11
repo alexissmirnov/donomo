@@ -105,18 +105,21 @@ def handle_work_item(processor, item):
 ##############################################################################
 
 def send_notification(owner, upload_arrregate):
-        logging.debug('email about %s to %s' % (upload_arrregate, owner))
+        logging.info('Email %s about %s' % (owner, upload_arrregate))
         
         current_site = Site.objects.get_current()
+        document_count = upload_arrregate.documents.count()
         
         subject = render_to_string('core/upload_notification_email_subject.txt',
-                                   { 'site': current_site })
+                                   { 'site': current_site,
+                                    'document_count' : document_count })
         # Email subject *must not* contain newlines
         subject = ''.join(subject.splitlines())
         
         message = render_to_string('core/upload_notification_email.txt',
                                    { 'user': owner.email,
                                      'tag': upload_arrregate.label,
+                                     'document_count' : document_count,
                                      'site': current_site.domain })
         
         send_mail(subject, message, settings.UPLOAD_NOTIFICATION_EMAIL, [owner.email])
