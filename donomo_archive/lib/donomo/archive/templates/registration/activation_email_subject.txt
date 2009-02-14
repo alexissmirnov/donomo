@@ -1,1 +1,1 @@
-Activate your Cloud OCR account at {{ site }}
+Activate your Cloud OCR account

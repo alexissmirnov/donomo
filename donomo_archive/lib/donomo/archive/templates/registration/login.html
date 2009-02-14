@@ -1,8 +1,54 @@
 {% extends "ui/base.html" %}
+{% block head %}
+<!-- YUI_include button grids fonts reset -->
+<style type="text/css">
+#custom-doc { width: 100%; min-width: 250px; }
+</style>
+
+<link rel="stylesheet" type="text/css" href="/media/skins/donomo/style.css" />
+{% endblock %}
+{% block title %}Login to Cloud OCR{% endblock %}
+
 {% block body %}
+<div id="custom-doc" class="yui-t7">
+   <div id="hd">
+   	<h1>Donomo <b>Cloud OCR</b></h1>
+   </div>
+   <div id="bd">
+	<div class="yui-gf">
+    <div class="yui-u first">
+    </div>
+    <div class="yui-u">
+		<h2>Log in to Cloud OCR account.</h2>
+		<p></p>
        <form action="{%url auth_login%}?next=/" method="post">
-        	email: <input class="username" type="text" name="username" value=""><br/>
-			password: <input class="password" type='password' name='password'><br/>
-			<input type="submit" value="Sign in">
+       	<table>
+       		<tbody>
+       			<tr>
+	       			<th>
+	       				<label for="id_email">Email address:</label> 
+	       			</th>
+					<td>
+						<input class="username" type="text" name="username" value="{{account}}">
+					</td>
+				</tr>
+       			<tr>
+	       			<th>
+	       				<label for="id_password">Password:</label> 
+	       			</th>
+					<td>
+						<input class="password" type='password' name='password'>
+					</td>
+				</tr>
+       		</tbody>
+       	</table>
+		<input type="submit" value="Login">
         </form>
+    </div>
+</div>
+
+	</div>
+   <div id="ft"><a href="mailto:support@donomo.com">Support</a> | <a href="http://donomo.com">Donomo</a> | <a href="mailto:webmaster@donomo.com">Contact</a></div>
+</div>
+
 {% endblock %}

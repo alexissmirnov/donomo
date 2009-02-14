@@ -2,5 +2,5 @@
 
 export DJANGO_SETTINGS_MODULE=donomo.settings
 python -m donomo.manage syncdb
-exec python -m donomo.manage runserver '0.0.0.0:8000'
+exec python -m donomo.manage runserver '127.0.0.1:8001'
 

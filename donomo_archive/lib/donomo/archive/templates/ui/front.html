@@ -1,23 +1,32 @@
 {% extends "ui/base.html" %}
-{% block title %}archive{% endblock %}
+{% block head %}
+<!-- YUI_include button grids fonts reset -->
+<style type="text/css">
+#custom-doc { width: 100%; min-width: 250px; }
+</style>
+
+<link rel="stylesheet" type="text/css" href="/media/skins/donomo/style.css" />
+{% endblock %}
+{% block title %}Donomo Cloud OCR{% endblock %}
+
 {% block body %}
-	<!-- YUI_include fonts grids -->
-   <div id="hd" align='left' color='greed'><i><b>donomo</b></i></div>
+<div id="custom-doc" class="yui-t7">
+   <div id="hd">
+   	<h1>Donomo <b>Archive</b></h1>
+   </div>
    <div id="bd">
-	<div class="yui-g">
-		<div style="background-image: url({{MEDIA_URL}}img/home.gif); height: 352px; width: 750px;">
-			<h1>Your papers. Safe, organised and searchable.</h1>
-		</div>
+	<div class="yui-gf">
+    <div class="yui-u first">
+    </div>
+    <div class="yui-u">
+		<h2>Your papers. Safe and organized.</h2>
+		<p><a href="/account/register/">Sign up</a></p>
+		<p><a href="/account/login/">Login</a></p>
+    </div>
+</div>
+
 	</div>
-	<div class="yui-g">
-		<p>New user? <a href="/account/register/">Sign Up</a>
-		</p>
-        <p>Already a user? Signin here:
-        <form action="/account/login/?next=/" method="post">
-        	email: <input class="username" type="text" name="username"><br/>
-			password: <input class="password" type='password' name='password'><br/>
-			<input type="submit" value="Sign in">
-        </form>
-	</div>
-	</div>
+   <div id="ft"><a href="mailto:support@donomo.com">Support</a> | <a href="http://donomo.com">Donomo</a> | <a href="mailto:webmaster@donomo.com">Contact</a></div>
+</div>
+
 {% endblock %}
