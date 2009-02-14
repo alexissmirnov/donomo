@@ -1,1 +1,11 @@
-Please click here to activate your account: {{ site }}{% url registration_activate activation_key %}
+Thank you for registering with Donomo Cloud OCR, the fastest and easiest online OCR service.
+
+This email confirms the creation of your account. To start using this account you need to activate it. Please click here to activate your account: {{ site }}{% url registration_activate activation_key %}
+
+If you haven't already done so, don't forget to install Cloud OCR uploader - a small desktop software that you will need to upload scans to Cloud OCR:
+Windows Vista & XP: http://www.donomo.com/media/downloads/uploader.msi
+Apple Mac OS X 10.5 & 10.4: http://www.donomo.com/media/downloads/uploader.dmg
+
+
+Team Donomo
+

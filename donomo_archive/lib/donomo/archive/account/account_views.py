@@ -93,14 +93,16 @@ class RegistrationForm(RecaptchaForm):
     """
     email = forms.EmailField(widget=forms.TextInput(attrs=dict(attrs_dict,
                                                                maxlength=75)),
-                             label=_(u'email address'))
+                             label=_(u'Email address (must already exist)'),
+                             help_text=_(u"You'll use this address to log in Donomo. We'll use this address to send you notifications when your documents are processed. We will never share it with third parties without your permission."))
     password1 = forms.CharField(widget=forms.PasswordInput(attrs=attrs_dict, render_value=False),
-                                label=_(u'password'))
+                                label=_(u'Enter Password'))
     password2 = forms.CharField(widget=forms.PasswordInput(attrs=attrs_dict, render_value=False),
-                                label=_(u'password (again)'))
+                                label=_(u'Retype Password'))
     
     captcha = RecaptchaFieldPlaceholder(widget=RecaptchaWidget(theme='white'),
-                                        label='Are you a human?')
+                                        label=_(u'Word Verification'),
+                                        help_text=_(u"Type the characters you see in the picture"))
  
     def clean_username(self):
         """
