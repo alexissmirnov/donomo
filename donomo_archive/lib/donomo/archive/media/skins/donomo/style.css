@@ -1,15 +1,28 @@
-body {
-	color:#222222;
+html {
+	background: #ECECEC;
 }
 
+body #header {
+	color:#222222;
+	background: #ECECEC url(images/body.gif) repeat-x scroll center top;
+}
+
+
+
 h1 {
+	color: #777777;
 	font-size: 17px;
 	font-weight: normal;
 	line-height: 73px;
 	margin-left: 68px;
 }
 
+h1 a {
+	text-decoration: none;
+	color: #777777;
+}
 h2 {
+	color: #444444;
 	font-size: 24px;
 	font-weight: bold;
 }
@@ -33,17 +46,112 @@ input {
 	vertical-align: middle;
 }
 #hd {
-	background: #ECECEC url(images/header.gif) repeat-x scroll center top;
-	height: 151px;
+	background: url(images/top.jpg) no-repeat scroll center top;
+	height: 56px;
+	padding: 25px 0 0;
+	text-align: left;
 }
+
+.content {
+	clear:both;
+	background:url(images/contentbg.gif) top left repeat-x #f5f5f5;
+	-moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+	border:1px solid #e1e1e1;
+	padding:40px 40px;
+	margin-top: 10px;
+	margin-right: 100px;
+}
+.contentshade {
+	clear:both;
+	background:url(images/bottomshade.jpg) center top no-repeat;
+	height:32px;
+}
+
 
 #bd {
 	background: #ECECEC;
 }
 
+
 #ft {
-	background: #ECECEC url(images/header.gif) repeat-x scroll center top;
-	height: 151px;
-	line-height: 130px;
-	text-align: center;
+	clear:both;
+	font-size:14px;
+	list-style-image:none;
+	list-style-position: outside;
+	list-style-type: none;
+	margin:0 20px 20px 70px;
+	padding-top: 15px;
+}
+
+#ft li {
+	display: inline;
+	margin: 0 20px 0 0;
+}
+#ft a{
+	color:#666;
+	text-decoration: none;
+}
+
+
+
+.lb_br div{
+       background: url(images/modern_c_br.png) top right no-repeat;
+       width:17px;
+       height:20px;
+}
+.lb_bl div{
+       background: url(images/modern_c_bl.png) top left  no-repeat;
+       width:17px;
+       height:20px;
+}
+
+.lb_sr{
+       background: url(images/modern_s_r.png) top left repeat-y;
+       width:17px;
+}
+.lb_sl{
+       background: url(images/modern_s_l.png) top right repeat-y;
+       width:17px;
+}
+.lb_sr div{
+       width:17px;
+       height:17px;
+}
+.lb_sl div{
+       width:17px;
+       height:17px;}
+.lb_tr div{
+       background: url(images/modern_c_tr.png) top left  no-repeat;
+       width:17px;
+       height:17px;
+}
+.lb_tl div{
+       background: url(images/modern_c_tl.png) top left  no-repeat;
+       width:17px;
+       height:17px;
+}
+.lb_ts div{
+       background: url(images/modern_s_t.png) repeat-x bottom;
+       height:17px;
+}
+
+.lb_br,
+.lb_bl,
+.lb_sr,
+.lb_sl,
+.lb_tr,
+.lb_tl,
+.lb_ts{
+font-size:0;
+}
+
+.lb_br div,
+.lb_bl div,
+.lb_sr div,
+.lb_sl div,
+.lb_tr div,
+.lb_tl div,
+.lb_ts div{
+font-size:0;
 }

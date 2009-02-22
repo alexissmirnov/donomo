@@ -1,0 +1,39 @@
+{% extends "ui/base.html" %}
+{% block title %}{% endblock %}
+{% block head %}
+<!-- YUI_include button grids fonts reset -->
+<style type="text/css">
+#custom-doc { width: 100%; min-width: 250px; }
+</style>
+
+<link rel="stylesheet" type="text/css" href="/media/skins/donomo/style.css" />
+{% endblock %}
+
+{% block body %}
+<div id="custom-doc" class="yui-t7">
+	<div id="header"/>
+   	<div id="hd">
+   		<h1><a href='/'>Donomo <b>Cloud OCR</b></a></h1>
+   	</div>
+   <div id="bd">
+	<div class="yui-gf">
+    <div class="yui-u first">
+    </div>
+    <div class="yui-u content">
+    	{% block content %}{% endblock %}
+    </div>
+	<div class="contentshade"/>
+</div>
+
+	</div>
+   <div id="ft">
+   		<ul>
+   			<li><a href="mailto:support@donomo.com">Support</a></li>
+			<li><a href="http://donomo.com">Donomo</a></li>
+			<li><a href="mailto:webmaster@donomo.com">Contact</a></li>
+		</ul>
+	</div>
+</div>
+{% endblock %}
+
+

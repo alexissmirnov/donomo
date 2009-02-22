@@ -254,6 +254,6 @@ RECAPTCHA_PUBLIC_KEY = "6LdwQwMAAAAAAGORYDLYzn9w8SniEL2X14o6SBNO"
 RECAPTCHA_PRIVATE_KEY = "6LdwQwMAAAAAAJCZP67vaWH8WiDN5nkOT8pm2D9x"
 
 BASIC_AUTH_REALM = 'donomo.com'
-
+LOGIN_URL='/account/login/'
 #for k in os.environ.keys():
 #    del os.environ[k]

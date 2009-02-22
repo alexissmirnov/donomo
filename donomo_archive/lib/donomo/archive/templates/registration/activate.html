@@ -1,24 +1,8 @@
-{% extends "ui/base.html" %}
-{% block head %}
-<!-- YUI_include button grids fonts reset -->
-<style type="text/css">
-#custom-doc { width: 100%; min-width: 250px; }
-</style>
+{% extends "ui/base_static.html" %}
 
-<link rel="stylesheet" type="text/css" href="/media/skins/donomo/style.css" />
-{% endblock %}
 {% block title %}Signup to Cloud OCR{% endblock %}
 
-{% block body %}
-<div id="custom-doc" class="yui-t7">
-   <div id="hd">
-   	<h1>Donomo <b>Cloud OCR</b></h1>
-   </div>
-   <div id="bd">
-	<div class="yui-gf">
-    <div class="yui-u first">
-    </div>
-    <div class="yui-u">
+{% block content %}
 		<h2>Your Cloud OCR account is created.</h2>
 		<p>
 			<b>Check your email for and actvation link.</b><br/>
@@ -29,17 +13,9 @@
 		</p>
 		
 		<p>
-			<a href="/media/download/uploader.msi"><img class="inline-icon" src='/media/img/icon-vista.jpg'> Windows Vista & XP: <b>Download</b> (3MB)</a>
+			<a href="/media/download/uploader.msi"><img class="inline-icon" src='/media/img/icon-vista.png'> Windows Vista & XP: <b>Download</b> (3MB)</a>
 		</p>
 		<p>
-			<a href="/media/download/uploader.dmg"><img class="inline-icon" src='/media/img/icon-apple.jpg'> Apple Mac OS X 10.5 & 10.4 <b>Download</b> (10MB)</a>
+			<a href="/media/download/uploader.dmg"><img class="inline-icon" src='/media/img/icon-apple.png'> Apple Mac OS X 10.5 & 10.4 <b>Download</b> (10MB)</a>
 		</p>
-    </div>
-</div>
-
-	</div>
-   <div id="ft"><a href="mailto:support@donomo.com">Support</a> | <a href="http://donomo.com">Donomo</a> | <a href="mailto:webmaster@donomo.com">Contact</a></div>
-</div>
-
 {% endblock %}
-

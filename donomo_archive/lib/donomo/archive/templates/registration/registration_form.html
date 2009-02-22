@@ -1,25 +1,8 @@
-{% extends "ui/base.html" %}
-{% autoescape off %}
-{% block head %}
-<!-- YUI_include button grids fonts reset -->
-<style type="text/css">
-#custom-doc { width: 100%; min-width: 250px; }
-</style>
+{% extends "ui/base_static.html" %}
 
-<link rel="stylesheet" type="text/css" href="/media/skins/donomo/style.css" />
-{% endblock %}
 {% block title %}Signup to Cloud OCR{% endblock %}
 
-{% block body %}
-<div id="custom-doc" class="yui-t7">
-   <div id="hd">
-   	<h1>Donomo <b>Cloud OCR</b></h1>
-   </div>
-   <div id="bd">
-	<div class="yui-gf">
-    <div class="yui-u first">
-    </div>
-    <div class="yui-u">
+{% block content %}
 		<h2>Signup to Cloud OCR</h2>
 		<p>
 			Signup to Cloud OCR is fast and easy. Complete the form below and you'll be processing document scans in minutes! 
@@ -28,12 +11,4 @@
 			<table>{{form.as_table}}</table>
 			<input id="submitbutton1" type="submit" name="submitfield1" value="Continue">
 		</form>
-    </div>
-</div>
-
-	</div>
-   <div id="ft"><a href="mailto:support@donomo.com">Support</a> | <a href="http://donomo.com">Donomo</a> | <a href="mailto:webmaster@donomo.com">Contact</a></div>
-</div>
-
 {% endblock %}
-{% endautoescape %}

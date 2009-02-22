@@ -3,7 +3,7 @@
 
 from django.conf.urls.defaults     import patterns, url
 from django.views.generic.simple   import direct_to_template
-from donomo.archive.ui.ui_views    import front_page
+from donomo.archive.ui.ui_views    import front_page, download_tags
 
 #
 # pylint: disable-msg=C0103
@@ -18,6 +18,11 @@ urlpatterns = patterns(
         view   = direct_to_template,
         kwargs = { 'template' : 'ui/page.html' },
         name   = 'ui_view_page' ),
+
+    url(
+        regex  = r'^view/download/$',
+        view   = download_tags,
+        name   = 'ui_download_tags' ),
 
     url(
         regex  = r'^view/search/$',

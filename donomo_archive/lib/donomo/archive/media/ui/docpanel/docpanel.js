@@ -232,6 +232,15 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 			});		
 		};
 		
+		var getRequestParams = function() {
+			result = {}
+			var params = location.search.substring(1).split('&');
+			for(var i = 0; i < params.length; i++) {
+				var p = params[i].split('=');
+				result[p[0]] = p[1];
+			}
+			return result;
+		};
 		
 		var loadPanelContents = function(startIndex) {
 			if (lastDocumentLoadCount == 0) {
@@ -245,7 +254,16 @@ if (YAHOO.donomo.Panel == undefined) { YAHOO.donomo.Panel = function(){
 				loadSearchResults(postHashPathParts[2], startIndex);
 			}
 			else {
-				loadDocuments(startIndex);
+				var batch = getRequestParams().batch
+				if (batch === undefined) {
+					loadDocuments(startIndex);
+				} else {
+					YAHOO.util.Connect.asyncRequest('GET', '/api/1.0/tags/' + batch + '/?view_name=thumbnail',
+					{ 	success : renderDocumentsJSON,
+						faulure : onApiFailure
+					});		
+				}
+				
 			}
 
 			// increase the document index to be used next time we load more documents

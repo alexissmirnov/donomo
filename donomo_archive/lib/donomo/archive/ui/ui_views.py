@@ -1,6 +1,7 @@
 from donomo.archive.models import Document, Page, manager
 from django.template import RequestContext
 from django.shortcuts import render_to_response
+from django.contrib.auth.decorators  import login_required
 
 # ---------------------------------------------------------------------------
 
@@ -21,3 +22,10 @@ def front_page(request):
             context_instance = RequestContext(request))
 
 # ---------------------------------------------------------------------------
+@login_required
+def download_tags(request):
+    """Download processed batch. Landing page.
+    """
+    return render_to_response('ui/download.html',
+                              {'batch' : request.GET.get('batch','')},
+                              context_instance = RequestContext(request))

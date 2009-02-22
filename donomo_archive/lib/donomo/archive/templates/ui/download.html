@@ -1,0 +1,78 @@
+{% extends "ui/base.html" %}
+{% block title %}{{user.username}}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" type="text/css" href="/media/skins/donomo/style.css" />
+<style>
+	#download {
+		font-size: 30px;
+		margin-left: 68px;
+		margin-bottom: 30px;
+	}
+	
+	#info {
+		margin-left: 68px;
+	}
+	
+	.yui-skin-sam .yui-layout .yui-layout-unit div.yui-layout-bd-nohd {
+		border: 1px;
+	}
+	.yui-skin-sam .yui-layout .yui-layout-unit div.yui-layout-hd {
+		border: none;
+	}
+</style>
+{% endblock %}
+
+{% block body %}
+<!-- YUI_include fonts grids dom event dragdrop logger button -->
+<div id='header-wrapper'>
+	<div id='header'/>
+	<div id='hd'>
+		<h1><a href='/'>Donomo <b>Cloud OCR</b></a></h1>
+		<p id='info'>
+			Batch {{batch}}
+		</p>
+		<a id='download' href='/api/1.0/documents/zip/?tags={{batch}}'>Download</a>
+	</div>
+</div>
+<div id='main'>
+	{% include 'ui/archive.panel.html' %}
+</div>
+<div id='footer'>
+	{% include 'ui/slider.panel.html' %}
+</div>
+
+<script>
+
+(function() {
+    var Dom = YAHOO.util.Dom,
+        Event = YAHOO.util.Event;
+
+    Event.onDOMReady(function() {
+		{% if settings.DEBUG %}
+		YAHOO.widget.Logger.enableBrowserConsole();
+		{% endif %}
+
+ 		var layout = new YAHOO.widget.Layout({
+            units: [
+                { position: 'top', height: 300, body: 'header-wrapper', collapse: false, resize: false },
+                { position: 'bottom', height: 35, resize: false, body: 'footer', collapse: false },
+                { position: 'center', body: 'panel-scroll-container', scroll: true }
+            ]
+        });
+		
+		var oDownloadButton = new YAHOO.widget.Button(
+					"download", 
+					{ value: "download" });	
+
+		// Initialize the main panel only when Layout widget is created.
+		// We need to do this because init() assumes YUI's emenent yui-layout-bd is created.
+		// This element provides the scroll bar that Panel needs to subscribe to
+		layout.subscribe('render', YAHOO.donomo.Panel.init);
+
+        layout.render();
+    });
+})();
+</script>
+{% endblock %}
+
