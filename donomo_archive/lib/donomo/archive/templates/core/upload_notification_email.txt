@@ -4,6 +4,6 @@ The scans of {{document_count}} documents you recently uploaded to Cloud OCR hav
 
 You can download a ZIP archive containing {{document_count}} searchable PDF{{document_count|pluralize}} here:
 
-https://{{site}}/api/1.0/documents/zip/?tags={{tag|urlencode}}
+https://{{site}}/view/download/?batch={{tag|urlencode}}
 
-Cloud OCR by Donomo
+Team Donomo
