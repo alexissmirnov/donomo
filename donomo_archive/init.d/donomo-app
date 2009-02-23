@@ -20,12 +20,12 @@ prog="Donomo-WebApp"
 
 function setup_env
 {
-    source /root/.donomo/db_pwd_donomo.sh
-    source /root/.donomo/aws.sh
-
     export USER=donomo
     export LOGNAME=$USER
     export HOME=/home/$USER
+    export DONOMO_HOME=$HOME
+
+    source $DONOMO_HOME/bin/env.sh
 }
 
 ##############################################################################

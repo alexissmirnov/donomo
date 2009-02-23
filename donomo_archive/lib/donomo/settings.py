@@ -4,11 +4,11 @@ Django settings for the Donomo project.
 """
 
 import os
-import os.path
 import platform
 import logging
 import sys
 import tempfile
+import pwd
 
 #
 # pylint: disable-msg=W0142
@@ -38,18 +38,61 @@ def join_and_normalize( *path_components ):
     return os.path.normpath(os.path.join(*path_components))
 
 ##############################################################################
+
+def query_env(
+    variables,
+    default = None,
+    delete = True ):
+
+    """ Helper function to query the environment for settings.
+
+        If found the settings will be removed from the environment by default.
+    """
+
+    def retrieve( key ):
+        value = os.environ.get(key, None)
+        if delete and value is not None:
+            del os.environ[key]
+        return value
+
+    if isinstance(variables, basestring):
+        variables = [ variables ]
+
+    value = None
+    for name in variables:
+        v1 = retrieve(name)
+        v2 = retrieve('EC2_%s' % name.upper())
+        if value is None:
+            value = v1 or v2
+
+    value = value or default
+
+    if value is None:
+        raise KeyError(
+            'Environment: %s' % ', '.join(variables))
+
+    return value
+
+##############################################################################
+
+def is_affirmative( flag ):
+    return flag.lower() in ( 'true', 'on', 'yes', '1', 1 )
+
+
+##############################################################################
 #
 # Debugging Status
 #
 
-MODE             = os.environ.get('DONOMO_MODE', 'dev').lower()
+MODE             = query_env( 'DEPLOYMENT_MODE', 'dev').lower()
 TEST_MODE        = ( MODE.find('test') != -1 )
 PRODUCTION_MODE  = ( MODE == 'prod' )
 DEVELOPMENT_MODE = not (TEST_MODE or PRODUCTION_MODE)
-DEBUG            = DEVELOPMENT_MODE or os.environ.get('DEBUG', False)
+OS_USER_NAME     = query_env( 'LOGNAME', pwd.getpwuid(os.getuid())[0])
+TEMP_DIR         = query_env('TEMP_DIR', tempfile.gettempdir())
+
+DEBUG            = DEVELOPMENT_MODE or is_affirmative(query_env('DEBUG','no'))
 TEMPLATE_DEBUG   = DEBUG
-OS_USER_NAME     = os.environ.get('LOGNAME', None) or os.getlogin()
-TEMP_DIR         = tempfile.gettempdir()
 
 ##############################################################################
 #
@@ -60,30 +103,34 @@ TEMP_DIR         = tempfile.gettempdir()
 
 DONOMO_PATH = get_module_dir('donomo')
 DJANGO_PATH = get_module_dir('django')
-LOG_PATH    = os.environ.get('DONOMO_LOG_PATH', '/var/log/donomo')
-CACHE_PATH  = os.environ.get('DONOMO_CACHE_PATH', '/var/lib/donomo/cache')
+LOG_PATH    = query_env('DONOMO_LOG_PATH', '/var/log/donomo')
+CACHE_PATH  = query_env('DONOMO_CACHE_PATH', '/var/lib/donomo/cache')
 
 ##############################################################################
 #
 # Info and credentials for external services
 #
-# TODO: Fix SOLR host information
-#
 
-AWS_ACCESS_KEY_ID      = os.environ.get('AWS_ACCESS_KEY_ID', '13Q9QPDKZE5BBGJHK7R2')
-AWS_SECRET_ACCESS_KEY  = os.environ.get('AWS_SECRET_ACCESS_KEY', 'om9OUC3onE699qGCw2Z70xay0hnqFssLq+jwMCXx')
+AWS_ACCESS_KEY_ID      = query_env('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY  = query_env('AWS_SECRET_ACCESS_KEY')
 AWS_MODE_PREFIX        = (TEST_MODE or DEVELOPMENT_MODE) and MODE or None
-AWS_PREFIX             = PRODUCTION_MODE and '' or ("%s.%s." % (MODE, OS_USER_NAME))
-S3_HOST                = os.environ.get('S3_HOST', 's3.amazonaws.com')
-S3_IS_SECURE           = os.environ.get('S3_IS_SECURE', 'yes').lower() in ('yes', 'true', '1')
+AWS_PREFIX             = query_env('AWS_PREFIX', PRODUCTION_MODE and '' or ("%s.%s." % (MODE, OS_USER_NAME)))
+
+S3_HOST                = query_env('S3_HOST', 's3.amazonaws.com')
+S3_IS_SECURE           = is_affirmative(query_env('S3_IS_SECURE', 'yes'))
 S3_BUCKET_NAME         = '%sarchive.donomo.com' % AWS_PREFIX
-SQS_HOST               = os.environ.get('SQS_HOST', 'queue.amazonaws.com')
-SQS_IS_SECURE          = os.environ.get('SQS_IS_SECURE', 'yes').lower() in ('yes', 'true', '1')
+S3_ACCESS_WINDOW       = int(query_env('S3_ACCESS_WINDOW', 300))
+
+SQS_HOST               = query_env('SQS_HOST', 'queue.amazonaws.com')
+SQS_IS_SECURE          = is_affirmative(query_env('SQS_IS_SECURE', 'yes'))
 SQS_QUEUE_NAME         = '%sarchive-donomo-com' % AWS_PREFIX.replace('.', '-')
-SOLR_HOST              = '127.0.0.1:8983'
-S3_ACCESS_WINDOW       = 300
-SQS_MAX_BACKOFF        = int(os.environ.get('SQS_MAX_BACKOFF', 30))
-SQS_VISIBILITY_TIMEOUT = int(os.environ.get('SQS_VISIBILITY_TIMEOUT', 120))
+SQS_MAX_BACKOFF        = int(query_env('SQS_MAX_BACKOFF', 30))
+SQS_VISIBILITY_TIMEOUT = int(query_env('SQS_VISIBILITY_TIMEOUT', 120))
+
+SOLR_HOST              = query_env('SOLR_HOST', '127.0.0.1')
+SOLR_PORT              = int(query_env('SOLR_PORT', 8983))
+SOLR_IS_SECURE         = is_affirmative(query_env('SOLR_IS_SECURE', 'no'))
+
 
 
 # Thumbnail settings
@@ -124,11 +171,9 @@ logging.getLogger('boto').setLevel(logging.INFO)
 DATABASE_ENGINE    = (MODE != 'unittest') and 'mysql' or 'sqlite3'
 DATABASE_NAME      = 'donomo_%s' % MODE
 DATABASE_USER      = 'donomo'
-DATABASE_PASSWORD  = os.environ.get('DATABASE_PASSWORD', '8d85bcc668074be7ae4be08deae11705')
-#DATABASE_HOST      = os.environ.get('DATABASE_HOST', 'archive.donomo.com')
-#DATABASE_PORT      = 3306
-ENCRYPTION_PREFIX  = os.environ.get('KEY_PREFIX', '')
-
+DATABASE_PASSWORD  = query_env('DATABASE_PASSWORD')
+DATABASE_HOST      = query_env('DATABASE_HOST', '')
+DATABASE_PORT      = query_env('DATABASE_PORT', '')
 
 if DEVELOPMENT_MODE or TEST_MODE:
     MEDIA_ROOT         = join_and_normalize(DONOMO_PATH, 'archive', 'media/')
@@ -182,7 +227,7 @@ MEDIA_URL = '/media/'
 
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = os.environ.get('DONOMO_SECRET_KEY', 'gpx4_jy)xmr#z@%zqpnco@34s!#nb82003e2nv^k-kzc0m$x*z')
+SECRET_KEY = query_env('SECRET_KEY', 'gpx4_jy)xmr#z@%zqpnco@34s!#nb82003e2nv^k-kzc0m$x*z')
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -255,5 +300,3 @@ RECAPTCHA_PRIVATE_KEY = "6LdwQwMAAAAAAJCZP67vaWH8WiDN5nkOT8pm2D9x"
 
 BASIC_AUTH_REALM = 'donomo.com'
 LOGIN_URL='/account/login/'
-#for k in os.environ.keys():
-#    del os.environ[k]

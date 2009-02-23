@@ -266,10 +266,10 @@ DECRYPT = 2
 def secure_file( base_key, op, in_file_name, out_file_name ):
     """ Encrypt or decrypt a file on disk
     """
-    passphrase = '%s-%s-%s' % (
-        settings.ENCRYPTION_PREFIX,
-        settings.MODE,
-        base_key )
+    passphrase = hmac.new(
+        key = settings.SECRET_KEY,
+        msg = '%s:%s' % (settings.MODE, base_key),
+        digestmod = hashlib.sha1 ).hexdigest()
 
     params = {
         'cipher' : 'aes-192-cbc',

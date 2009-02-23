@@ -13,12 +13,14 @@ prog="Donomo-Processors"
 
 function setup_env
 {
-    source /root/.donomo/db_pwd_donomo.sh
-    source /root/.donomo/aws.sh
-
     export USER=donomo
     export LOGNAME=$USER
     export HOME=/home/$USER
+    export DONOMO_HOME=$HOME
+
+    source $DONOMO_HOME/bin/env.sh
+
+    threshold=${DONOMO_PROC_THRESHOLD:-20}
 }
 
 function start
@@ -63,7 +65,7 @@ function stop_if_idle {
     fi
 
     local pending=$(queue_length)
-    if [[ $pending -gt 50 ]]
+    if [[ $pending -gt $threshold ]]
     then
         echo "... $pending pending jobs"
         return 1
@@ -77,6 +79,18 @@ function stop_if_idle {
     done
 
     /sbin/shutdown -h now
+}
+
+function spawn_if_overloaded
+{
+    source /root/.donomo/ec2.sh
+
+    local pending=$(queue_length)
+    echo "... $pending pending"
+    if [[ $pending -gt $threshold ]]
+    then
+        ec2-run-instances ${DONOMO_PROC_AMI:?} -n $(( 1 + pending / threshold / 2 ))
+    fi
 }
 
 setup_env
@@ -101,6 +115,9 @@ case ${1:?} in
     prune)
         action "Pruning processing node" stop_if_idle
         ;;
+    spawn)
+        action "Spawning processing node" spawn_if_overloaded
+
     *)
         echo "Usage: $(basename $0) start|status|stop|restart|pending|prune"
         exit 1

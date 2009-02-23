@@ -53,9 +53,13 @@ SOLR_UPDATE_TEMPLATE = Template(
        {% endautoescape %}
        {% endspaceless %}""")
 
-SOLR_UPDATE_URL = 'http://%s/solr/update/?commit=true' % settings.SOLR_HOST
+SOLR_SERVER = 'http%s://%s:%s' % (
+    settings.SOLR_IS_SECURE and 's' or '',
+    settings.SOLR_HOST,
+    settings.SOLR_PORT)
 
-SOLR_QUERY_URL = 'http://%s/solr/select/' % settings.SOLR_HOST
+SOLR_UPDATE_URL = '%s/solr/update/?commit=true' % SOLR_SERVER
+SOLR_QUERY_URL  = '%s/solr/select/' % SOLR_SERVER
 
 ##############################################################################
 
@@ -121,7 +125,7 @@ def _index_page_from_string( page, text ):
 
     # solr 1.3 doesnt like it when commit is sent as part of
     # the POST with <add> element
-    # its XML parser complains about 
+    # its XML parser complains about
     # "Illegal to have multiple roots (start tag in epilog?)"
     # send commit command in a separate POST
     response, content = http_client.request(
@@ -220,7 +224,7 @@ def query( user,
 
     for doc in res['response']['docs']:
         page_id = doc['page_id']
-        
+
         # find the dimentions of the page's image
         # we need this to make sense of coordinates of
         # bounding boxes
@@ -230,11 +234,11 @@ def query( user,
         doc['page_width'], doc['page_height'] = misc.get_hocr_page_dimentions(page_soup)
         doc['hits'] = list()
 
-        
+
         for snippet in res['highlighting'][page_id]['text']:
             soup = BeautifulSoup.BeautifulSoup(snippet)
             hits = soup.findAll('em')
-            
+
             for hit in hits:
                 #FIXME
                 # sometimes HOCR doesn't include the bounding box
@@ -242,15 +246,15 @@ def query( user,
                 if hit.parent.has_key('title'):
                     coords = hit.parent['title'].split(' ')
                 else:
-                    coords = ['', '0','0','20','20'] 
-                hit = {'fragment' : hit.parent.renderContents(), 
-                       'x1' : coords[1], 
-                       'y1' : coords[2], 
-                       'x2' : coords[3], 
+                    coords = ['', '0','0','20','20']
+                hit = {'fragment' : hit.parent.renderContents(),
+                       'x1' : coords[1],
+                       'y1' : coords[2],
+                       'x2' : coords[3],
                        'y2' : coords[4],
                        'text' : hit.renderContents()}
-                
-                doc['hits'].append(hit) 
+
+                doc['hits'].append(hit)
 
     return {
         'query'       : query_string,

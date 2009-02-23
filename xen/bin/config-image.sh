@@ -85,9 +85,20 @@ cat > /var/spool/cron/root << EOF
 # Default environment for cronjobs
 #
 SHELL=/bin/sh
-MAILTO=root
-PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin:/usr/local/pi/bin
+PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
 HOME=/root
+EOF
+
+if [[ $processors -gt $(( database + application + solr )) ]]
+then
+    cat >> /var/spool/cron/root <<EOF
+*/5 * * * * service donomo-procs prune
+EOF
+
+if [[ $database -gt 0 ]]
+then
+    cat >> /var/spool/cron/root <<EOF
+*/5 * * * * service donomo-procs spawn
 EOF
 
 # Change local time to GMT
@@ -95,11 +106,20 @@ EOF
 mv /etc/localtime /etc/localtime.orig
 ln -sf /usr/share/zoneinfo/GMT0 /etc/localtime
 
+ln -sf /opt/rightscale/etc/init.d/rightscale /etc/init.d/rightscale
+chmod +x /opt/rightscale/etc/init.d/rightscale
+chmod +x /etc/init.d/rightscale
+
+echo "Modifying Services"
+
+
 #
 # Boot environment
 #
 set +e
 
+chkconfig rightscale on
+chkconfig getsshkey on
 chkconfig haldaemon on
 chkconfig iptables on
 chkconfig network on
@@ -273,11 +293,11 @@ EOF
     chown -R solr:solr /var/run/solr
 
     cat >> /etc/sysconfig/iptables << EOF
-#-A INPUT -m state --state NEW -m tcp -p tcp --dport 8983 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 8983 -j ACCEPT
 EOF
 
     cat >> /etc/sysconfig/system-config-securitylevel << EOF
-#--port=8983
+--port=8983
 EOF
 
     /bin/cp -f ${source_tree}/donomo_archive/init.d/solr /etc/init.d/solr
@@ -488,7 +508,6 @@ cat > /root/.emacs <<EOF
   (setq indent-tabs-mode nil)
   (setq c-indent-level 4))
 
-
 (add-hook 'c++-mode-hook 'my-c++-mode-hook)
 
 (setq auto-mode-alist
@@ -498,5 +517,7 @@ cat > /root/.emacs <<EOF
 ;; Delete trailing whitspace from files
 (add-hook 'write-file-functions 'delete-trailing-whitespace)
 
+;; Use shift-arrows to navigate
+(windmove-default-keybindings)
 EOF
 updatedb

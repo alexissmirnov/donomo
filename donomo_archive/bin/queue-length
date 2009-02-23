@@ -1,11 +1,6 @@
 #!/bin/sh -e
 
-source $(dirname $0)/env.sh
-
-exec python - <<EOF
-from donomo.archive.utils import sqs
-print sqs._get_queue().count()
-EOF
+exec python -m donomo.archive.tools.queue_length "$@"
 
 
 

@@ -155,10 +155,15 @@ ${YUM} install boost-devel ImageMagick-devel ImageMagick-c++-devel
 ${YUM} install scons
 #${YUM_DBG} openssl
 
-wget -N -O "$UPDATES/xen-kernel.tgz" \
+curl -o "$UPDATES/xen-kernel.tgz" \
     "http://ec2-downloads.s3.amazonaws.com/ec2-modules-2.6.18-xenU-ec2-v1.0-i686.tgz"
 
-tar -C ${mount_point} -xvzf "$UPDATES/xen-kernel.tgz"
+tar -C "${mount_point}" -xvzf "$UPDATES/xen-kernel.tgz"
+
+curl -o "$UPDATES/rightscale_scripts.tgz" \
+    "http://s3.amazonaws.com/rightscale_scripts/rightscale_scripts.tgz"
+
+tar -C "${mount_point}/opt/" -xvzf "$UPDATES/rightscale_scripts.tgz"
 
 #
 # Java
