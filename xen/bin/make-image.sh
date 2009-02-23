@@ -233,7 +233,7 @@ then
     ${YUM} --enablerepo=updates-testing --enablerepo=updates-testing-newkey install MySQL-python
     ${YUM} install libtiff
 
-    ( cd $UPDATES && wget 'http://download.fedora.redhat.com/pub/fedora/linux/development/i386/os/Packages/pyPdf-1.12-1.fc10.noarch.rpm' )
+    ( cd $UPDATES && wget 'http://download.fedora.redhat.com/pub/fedora/linux/releases/10/Everything/i386/os/Packages/pyPdf-1.12-1.fc10.noarch.rpm' )
 
     ( cd $UPDATES && wget "http://iulib.googlecode.com/files/iulib-0.3.tar.gz" && tar -xvzf iulib-0.3.tar.gz )
 

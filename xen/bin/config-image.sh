@@ -64,7 +64,7 @@ chmod 600 /root/.ssh/*
 # and set proper default crontab env. variables
 #
 
-cat > /var/spool/cron/root << EOF
+cat > /var/spool/cron/root <<EOF
 ######################################################################
 # Crontab Syntax
 #
@@ -87,6 +87,7 @@ cat > /var/spool/cron/root << EOF
 SHELL=/bin/sh
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
 HOME=/root
+
 EOF
 
 if [[ $processors -gt $(( database + application + solr )) ]]
@@ -94,12 +95,14 @@ then
     cat >> /var/spool/cron/root <<EOF
 */5 * * * * service donomo-procs prune
 EOF
+fi
 
 if [[ $database -gt 0 ]]
 then
     cat >> /var/spool/cron/root <<EOF
 */5 * * * * service donomo-procs spawn
 EOF
+fi
 
 # Change local time to GMT
 #
@@ -292,11 +295,11 @@ EOF
     chown -R solr:solr /var/log/solr
     chown -R solr:solr /var/run/solr
 
-    cat >> /etc/sysconfig/iptables << EOF
+    cat >> /etc/sysconfig/iptables <<EOF
 -A INPUT -m state --state NEW -m tcp -p tcp --dport 8983 -j ACCEPT
 EOF
 
-    cat >> /etc/sysconfig/system-config-securitylevel << EOF
+    cat >> /etc/sysconfig/system-config-securitylevel <<EOF
 --port=8983
 EOF
 
@@ -339,12 +342,12 @@ if [[ $database -eq 1 ]]
 then
 
     # --- IP Tables ---
-    cat >> /etc/sysconfig/iptables << EOF
+    cat >> /etc/sysconfig/iptables <<EOF
 -A INPUT -m state --state NEW -m tcp -p tcp --dport 3306 -j ACCEPT
 EOF
 
     # --- SE Linus ---
-    cat >> /etc/sysconfig/system-config-securitylevel << EOF
+    cat >> /etc/sysconfig/system-config-securitylevel <<EOF
 --port=3306
 EOF
 
@@ -378,7 +381,7 @@ then
 EOF
 
     # --- SE Linux ---
-    cat >> /etc/sysconfig/system-config-securitylevel << EOF
+    cat >> /etc/sysconfig/system-config-securitylevel <<EOF
 --port=80
 --port=443
 EOF
