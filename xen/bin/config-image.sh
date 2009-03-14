@@ -124,7 +124,8 @@ set +e
 chkconfig rightscale on
 chkconfig getsshkey on
 chkconfig haldaemon on
-chkconfig iptables on
+#chkconfig iptables on
+chkconfig iptables off
 chkconfig network on
 chkconfig sshd on
 chkconfig syslog on
@@ -331,11 +332,11 @@ EOF
     chown -R donomo:donomo /var/log/donomo
     chown -R donomo:donomo /var/run/donomo
 
-    /bin/cp -f ${source_tree}/xen/aws/aws.sh /root/.donomo/aws.sh
-    cat > /root/.donomo/db_pwd_donomo.sh <<EOF
-export DATABASE_PASSWORD=146eb0938ee346ad8b35d6e1397fe82d
-export KEY_PREFIX=a08cbac931354474b0c8f3fb5abbfadd
-EOF
+#    /bin/cp -f ${source_tree}/xen/aws/aws.sh /root/.donomo/aws.sh
+#    cat > /root/.donomo/db_pwd_donomo.sh <<EOF
+#export DATABASE_PASSWORD=146eb0938ee346ad8b35d6e1397fe82d
+#export KEY_PREFIX=a08cbac931354474b0c8f3fb5abbfadd
+#EOF
 fi
 
 if [[ $database -eq 1 ]]
@@ -523,4 +524,5 @@ cat > /root/.emacs <<EOF
 ;; Use shift-arrows to navigate
 (windmove-default-keybindings)
 EOF
+
 updatedb
