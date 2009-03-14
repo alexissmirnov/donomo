@@ -55,8 +55,8 @@ sed -r -i 's/^.*ClientAliveCountMax\s+[0-9]+/ClientAliveCountMax 240/g' /etc/ssh
 #
 mkdir -p /root/.ssh
 cat ${source_tree}/xen/ssh/* > /root/.ssh/authorized_keys
-chmod 700 /root/.ssh
-chmod 600 /root/.ssh/*
+chmod -f 700 /root/.ssh
+chmod -f 600 /root/.ssh/*
 
 #
 # Document /var/spool/cron/root crontab file for root. (include fields
@@ -110,8 +110,8 @@ mv /etc/localtime /etc/localtime.orig
 ln -sf /usr/share/zoneinfo/GMT0 /etc/localtime
 
 ln -sf /opt/rightscale/etc/init.d/rightscale /etc/init.d/rightscale
-chmod +x /opt/rightscale/etc/init.d/rightscale
-chmod +x /etc/init.d/rightscale
+chmod -f +x /opt/rightscale/etc/init.d/rightscale
+chmod -f +x /etc/init.d/rightscale
 
 echo "Modifying Services"
 
@@ -306,7 +306,7 @@ EOF
 
     /bin/cp -f ${source_tree}/donomo_archive/init.d/solr /etc/init.d/solr
     chown root:root /etc/init.d/solr
-    chmod 750 /etc/init.d/solr
+    chmod -f 750 /etc/init.d/solr
 
     chkconfig solr on
 fi
@@ -321,9 +321,9 @@ donomo:$(uuidgen)
 EOF
 
     /bin/cp -rf ${source_tree}/donomo_archive/* /home/donomo/
-    find /home/donomo -type d -print0 | xargs -0 chmod 750
-    find /home/donomo -type f -print0 | xargs -0 chmod 640
-    chmod 750 /home/donomo/bin/*
+    find /home/donomo -type d -print0 | xargs -0 chmod -f 750
+    find /home/donomo -type f -print0 | xargs -0 chmod -f 640
+    chmod -f 750 /home/donomo/bin/*
     mkdir -p /var/lib/donomo/cache
     mkdir -p /var/log/donomo
     mkdir -p /var/run/donomo
@@ -360,12 +360,12 @@ EOF
     # --- Use Transactional Tables ---
     /bin/cp -f ${source_tree}/donomo_archive/mysqld/my.cnf /etc/my.cnf
     chown root:root /etc/my.cnf
-    chmod 644 /etc/my.cnf
+    chmod -f 644 /etc/my.cnf
 
     # --- Init Script ---
     /bin/cp -f ${source_tree}/donomo_archive/init.d/donomo-dbinit /etc/init.d/
     chown root:root /etc/init.d/donomo-dbinit
-    chmod 750 /etc/init.d/donomo-dbinit
+    chmod -f 750 /etc/init.d/donomo-dbinit
 
     # --- Start services automatically ---
     touch /etc/sysconfig/donomo.db
@@ -390,27 +390,27 @@ EOF
     # --- Init Script ---
     /bin/cp -f ${source_tree}/donomo_archive/init.d/donomo-app /etc/init.d/
     chown root:root /etc/init.d/donomo-app
-    chmod 750 /etc/init.d/donomo-app
+    chmod -f 750 /etc/init.d/donomo-app
 
     # --- Config Files ---
     /bin/cp -f /home/donomo/nginx/* /etc/nginx/
     chown root:root /etc/nginx/*
-    chmod 644 /etc/nginx/*
+    chmod -f 644 /etc/nginx/*
 
     # --- SSL Certificate ---
     mkdir -p /etc/ssl/certs
     mkdir -p /etc/ssl/private
-    chmod -R 700 /etc/ssl
+    chmod -f -R 700 /etc/ssl
     cp ${source_tree}/xen/priv/donomo.crt /etc/ssl/certs/
     cp ${source_tree}/xen/priv/donomo.key /etc/ssl/private/
-    chmod 600 /etc/ssl/certs/* /etc/ssl/private/*
+    chmod -f 600 /etc/ssl/certs/* /etc/ssl/private/*
 
     path=/home/donomo/lib/donomo/archive/media
-    find $path -type f -print0 | xargs -0 chmod 644
-    find $path -type d -print0 | xargs -0 chmod 755
+    find $path -type f -print0 | xargs -0 chmod -f 644
+    find $path -type d -print0 | xargs -0 chmod -f 755
     until [[ "$path" = "/home" ]]
     do
-        chmod o+x $path
+        chmod -f o+x $path
         path=$(dirname $path)
     done
 
@@ -427,7 +427,7 @@ then
     # --- Init Script ---
     /bin/cp -f ${source_tree}/donomo_archive/init.d/donomo-procs /etc/init.d/
     chown root:root /etc/init.d/donomo-procs
-    chmod 750 /etc/init.d/donomo-procs
+    chmod -f 750 /etc/init.d/donomo-procs
 
     # -- Turn on Services ---
     chkconfig donomo-procs on
@@ -439,8 +439,8 @@ cat >> /etc/sysconfig/iptables << "EOF"
 COMMIT
 EOF
 
-chmod 600 /etc/sysconfig/iptables
-chmod 644 /etc/sysconfig/system-config-securitylevel
+chmod -f 600 /etc/sysconfig/iptables
+chmod -f 644 /etc/sysconfig/system-config-securitylevel
 
 #
 # Compile the bits that don't come as packages
@@ -461,7 +461,7 @@ fi
 
 /bin/cp -f ${source_tree}/donomo_archive/init.d/rc.local /etc/rc.d/
 chown root:root /etc/rc.d/rc.local
-chmod 750 /etc/rc.d/rc.local
+chmod -f 750 /etc/rc.d/rc.local
 
 #
 # Clean up /home/donomo
@@ -478,13 +478,13 @@ chmod 750 /etc/rc.d/rc.local
 #
 /bin/rm -rf /root/*
 chown -R root:root /root/.donomo
-chmod 700 /root/.donomo
-chmod 600 /root/.donomo/*
+chmod -f 700 /root/.donomo
+chmod -f 600 /root/.donomo/*
 
 /bin/cp -f /home/donomo/.bash* /root/
 echo -n '' > /root/.bash_history
 chown root:root /root/.bash*
-chmod 640 /root/.bash*
+chmod -f 640 /root/.bash*
 
 cat > /root/.emacs <<EOF
 ;;disable splash screen and startup message
