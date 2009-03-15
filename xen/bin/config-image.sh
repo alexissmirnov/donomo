@@ -51,13 +51,6 @@ sed -r -i 's/^.*UseDNS\s+[a-zA-Z\-\_]+/UseDNS no/g' /etc/ssh/sshd_config
 sed -r -i 's/^.*ClientAliveInterval\s+[0-9]+/ClientAliveInterval 60/g' /etc/ssh/sshd_config
 sed -r -i 's/^.*ClientAliveCountMax\s+[0-9]+/ClientAliveCountMax 240/g' /etc/ssh/sshd_config
 
-# Create and populate /root/.ssh directory
-#
-mkdir -p /root/.ssh
-cat ${source_tree}/xen/ssh/* > /root/.ssh/authorized_keys
-chmod -f 700 /root/.ssh
-chmod -f 600 /root/.ssh/*
-
 #
 # Document /var/spool/cron/root crontab file for root. (include fields
 # definition)
@@ -242,10 +235,9 @@ EOF
 
 ldconfig
 
-mkdir -p /root/.donomo
-
 if [[ $ec2 -eq 1 ]]
 then
+    mkdir -p /root/.donomo
     /bin/cp -f ${source_tree}/xen/aws/* /root/.donomo/
 fi
 
@@ -353,9 +345,9 @@ EOF
 EOF
 
     # --- Root's DB Password ---
-    cat > /root/.donomo/db_pwd_root.sh <<EOF
-export ROOT_PASSWORD=f360746aba7640928f277b9433a76da4
-EOF
+#    cat > /root/.donomo/db_pwd_root.sh <<EOF
+#export ROOT_PASSWORD=f360746aba7640928f277b9433a76da4
+#EOF
 
     # --- Use Transactional Tables ---
     /bin/cp -f ${source_tree}/donomo_archive/mysqld/my.cnf /etc/my.cnf
@@ -477,14 +469,15 @@ chmod -f 750 /etc/rc.d/rc.local
 # Clean the /root directory and your shell history and exit from the image
 #
 /bin/rm -rf /root/*
-chown -R root:root /root/.donomo
-chmod -f 700 /root/.donomo
-chmod -f 600 /root/.donomo/*
+
+# Create and populate /root/.ssh directory
+#
+mkdir -p /root/.ssh
+cat ${source_tree}/xen/ssh/* > /root/.ssh/authorized_keys
+
 
 /bin/cp -f /home/donomo/.bash* /root/
 echo -n '' > /root/.bash_history
-chown root:root /root/.bash*
-chmod -f 640 /root/.bash*
 
 cat > /root/.emacs <<EOF
 ;;disable splash screen and startup message
@@ -524,5 +517,10 @@ cat > /root/.emacs <<EOF
 ;; Use shift-arrows to navigate
 (windmove-default-keybindings)
 EOF
+
+
+chown -R root:root /root
+find /root -type d -print0 | xargs -r -t -0 chmod -f 700
+find /root -type f -print0 | xargs -r -t -0 chmod -f 600
 
 updatedb
