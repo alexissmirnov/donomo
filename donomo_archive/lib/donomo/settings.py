@@ -84,9 +84,9 @@ def is_affirmative( flag ):
 # Debugging Status
 #
 
-MODE             = query_env( 'DEPLOYMENT_MODE', 'dev').lower()
-TEST_MODE        = ( MODE.find('test') != -1 )
-PRODUCTION_MODE  = ( MODE == 'prod' )
+DEPLOYMENT_MODE  = query_env( 'DEPLOYMENT_MODE', 'dev').lower()
+TEST_MODE        = ( DEPLOYMENT_MODE.find('test') != -1 )
+PRODUCTION_MODE  = ( DEPLOYMENT_MODE == 'prod' )
 DEVELOPMENT_MODE = not (TEST_MODE or PRODUCTION_MODE)
 OS_USER_NAME     = query_env( 'LOGNAME', pwd.getpwuid(os.getuid())[0])
 TEMP_DIR         = query_env('TEMP_DIR', tempfile.gettempdir())
@@ -113,8 +113,8 @@ CACHE_PATH  = query_env('DONOMO_CACHE_PATH', '/var/lib/donomo/cache')
 
 AWS_ACCESS_KEY_ID      = query_env('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY  = query_env('AWS_SECRET_ACCESS_KEY')
-AWS_MODE_PREFIX        = (TEST_MODE or DEVELOPMENT_MODE) and MODE or None
-AWS_PREFIX             = query_env('AWS_PREFIX', PRODUCTION_MODE and '' or ("%s.%s." % (MODE, OS_USER_NAME)))
+AWS_MODE_PREFIX        = (TEST_MODE or DEVELOPMENT_MODE) and DEPLOYMENT_MODE or None
+AWS_PREFIX             = query_env('AWS_PREFIX', PRODUCTION_MODE and '' or ("%s.%s." % (DEPLOYMENT_MODE, OS_USER_NAME)))
 
 S3_HOST                = query_env('S3_HOST', 's3.amazonaws.com')
 S3_IS_SECURE           = is_affirmative(query_env('S3_IS_SECURE', 'yes'))
@@ -168,8 +168,8 @@ logging.getLogger('boto').setLevel(logging.INFO)
 # [ Database, Cache, etc. ]
 #
 
-DATABASE_ENGINE    = (MODE != 'unittest') and 'mysql' or 'sqlite3'
-DATABASE_NAME      = 'donomo_%s' % MODE
+DATABASE_ENGINE    = (DEPLOYMENT_MODE != 'unittest') and 'mysql' or 'sqlite3'
+DATABASE_NAME      = 'donomo_%s' % DEPLOYMENT_MODE
 DATABASE_USER      = 'donomo'
 DATABASE_PASSWORD  = query_env('DATABASE_PASSWORD')
 DATABASE_HOST      = query_env('DATABASE_HOST', '')

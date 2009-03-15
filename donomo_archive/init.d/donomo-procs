@@ -83,13 +83,11 @@ function stop_if_idle {
 
 function spawn_if_overloaded
 {
-    source /root/.donomo/ec2.sh
-
     local pending=$(queue_length)
     echo "... $pending pending"
     if [[ $pending -gt $threshold ]]
     then
-        ec2-run-instances ${DONOMO_PROC_AMI:?} -n $(( 1 + pending / threshold / 2 ))
+        python -m donomo.archive.tools.spawn_instance --i ${DONOMO_PROC_AMI:?} -n $(( 1 + pending / threshold / 2 ))
     fi
 }
 
@@ -117,7 +115,7 @@ case ${1:?} in
         ;;
     spawn)
         action "Spawning processing node" spawn_if_overloaded
-
+        ;;
     *)
         echo "Usage: $(basename $0) start|status|stop|restart|pending|prune"
         exit 1

@@ -268,7 +268,7 @@ def secure_file( base_key, op, in_file_name, out_file_name ):
     """
     passphrase = hmac.new(
         key = settings.SECRET_KEY,
-        msg = '%s:%s' % (settings.MODE, base_key),
+        msg = '%s:%s' % (settings.DEPLOYMENT_MODE, base_key),
         digestmod = hashlib.sha1 ).hexdigest()
 
     params = {

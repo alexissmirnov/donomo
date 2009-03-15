@@ -3,10 +3,6 @@
 from django.conf import settings
 from boto.ec2 import EC2Connection
 
-import sys
-from cStringIO import StringIO
-import tarfile
-import base64
 import optparse
 
 parser = optparse.OptionParser()
@@ -17,7 +13,7 @@ parser.add_option('-i', '--image')
 options, extras = parser.parse_args()
 
 if not options.image:
-    parser.error('--mode is required')
+    parser.error('--image is required')
 
 if len(extras) != 0:
     parser.error('Unrecognized options: %s' % ' '.join(extras))
@@ -41,7 +37,7 @@ parameters = [
     'SQS_VISIBILITY_TIMEOUT',
     ]
 
-user_data = '&'.join(['%s=%s' % (p, settings.getattr(p)) for p in parameters ])
+user_data = '&'.join(['%s=%s' % (p, getattr(settings, p)) for p in parameters ])
 
 conn   = EC2Connection(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
 images = conn.get_all_images(options.image)
@@ -52,7 +48,7 @@ if len(images) != 1:
 reservation = images[0].run(
     min_count = options.num_instances,
     max_count = options.num_instances,
-    user_data = base64.b64encode(user_data))
+    user_data = user_data )
 
 for i in reservation.instances:
     print repr(i), i.state
