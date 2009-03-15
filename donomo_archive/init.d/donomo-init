@@ -1,0 +1,62 @@
+#!/bin/sh
+
+# chkconfig: - 81 81
+# description: Donomo Instance Initialization
+
+source /etc/rc.d/init.d/functions
+
+prog="Donomo-Initialization"
+
+##############################################################################
+#
+# Start the application if it isn't already running
+#
+
+function start
+{
+    source /etc/sysconfig/network
+    [[ "${NETWORKING}" = "no" ]] && echo -n "No networking!" && return 1
+
+    echo ""
+
+    echo "Fetching EC2 Meta-Data"
+    /opt/rightscale/bin/fetchec2metadata.rb
+
+    echo "Fetching EC2 User-Data"
+    /opt/rightscale/bin/fetchec2userdata.rb
+}
+
+##############################################################################
+#
+#
+#
+
+function stop
+{
+    return 0
+}
+
+##############################################################################
+#
+# Dispatch requested behaviour
+#
+
+case ${1:?} in
+    start)
+        action "Starting $prog" start
+        ;;
+    stop)
+        action "Stopping $prog" stop
+        ;;
+    status)
+        echo "ok"
+        ;;
+    restart)
+        $0 stop
+        $0 start
+        ;;
+    *)
+        echo "Usage: $(basename $0) start|stop|status|restart"
+        exit 1
+        ;;
+esac

@@ -2,7 +2,7 @@
 
 set -x
 
-source ./parse-args.sh
+source $(dirname "$0")/parse-args.sh
 
 aws_dir=$(cd $(dirname $0)/../aws && pwd)
 
@@ -153,6 +153,7 @@ ${YUM} groupinstall "Development Tools"
 ${YUM} install httpd-devel apr-devel apr-util-devel libapreq2-devel openssl-devel curl-devel expat-devel libetpan-devel createrepo
 ${YUM} install boost-devel ImageMagick-devel ImageMagick-c++-devel
 ${YUM} install scons
+${YUM} install ruby
 #${YUM_DBG} openssl
 
 wget -N -O "$UPDATES/xen-kernel.tgz" \
@@ -169,27 +170,20 @@ tar -C "${mount_point}/opt" -xvzf "$UPDATES/rightscale_scripts.tgz"
 # Java
 #
 
-if [[ $(( ec2 + solr )) -gt 0 ]]
-then
-    ${YUM} install java
-fi
+${YUM} install java
 
 #
 # EC2 Tools
 #
 
-if [[ $ec2 -eq 1 ]]
-then
-    ${YUM} install ruby
-    wget -N -O "$UPDATES/ec2-ami-tools.noarch.rpm" \
-	    "http://s3.amazonaws.com/ec2-downloads/ec2-ami-tools.noarch.rpm"
-    ${CHROOT} rpm -i "/tmp/updates/ec2-ami-tools.noarch.rpm"
+wget -N -O "$UPDATES/ec2-ami-tools.noarch.rpm" \
+	"http://s3.amazonaws.com/ec2-downloads/ec2-ami-tools.noarch.rpm"
+${CHROOT} rpm -i "/tmp/updates/ec2-ami-tools.noarch.rpm"
 
-    wget -N -O "$UPDATES/ec2-api-tools.zip" \
-	    "http://s3.amazonaws.com/ec2-downloads/ec2-api-tools.zip"
+wget -N -O "$UPDATES/ec2-api-tools.zip" \
+	"http://s3.amazonaws.com/ec2-downloads/ec2-api-tools.zip"
 
-    (cd ${mount_point}/usr/local && unzip "$UPDATES/ec2-api-tools.zip")
-fi
+(cd ${mount_point}/usr/local && unzip "$UPDATES/ec2-api-tools.zip")
 
 
 #

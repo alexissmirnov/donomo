@@ -102,9 +102,9 @@ fi
 mv /etc/localtime /etc/localtime.orig
 ln -sf /usr/share/zoneinfo/GMT0 /etc/localtime
 
-ln -sf /opt/rightscale/etc/init.d/rightscale /etc/init.d/rightscale
-chmod -f +x /opt/rightscale/etc/init.d/rightscale
-chmod -f +x /etc/init.d/rightscale
+#ln -sf /opt/rightscale/etc/init.d/rightscale /etc/init.d/rightscale
+#chmod -f +x /opt/rightscale/etc/init.d/rightscale
+#chmod -f +x /etc/init.d/rightscale
 
 echo "Modifying Services"
 
@@ -448,12 +448,14 @@ then
 fi
 
 #
-# Post Boot Script
+# Boot Scripts
 #
 
+/bin/cp -f ${source_tree}/donomo_archive/init.d/donomo-init /etc/rc.d/
 /bin/cp -f ${source_tree}/donomo_archive/init.d/rc.local /etc/rc.d/
-chown root:root /etc/rc.d/rc.local
-chmod -f 750 /etc/rc.d/rc.local
+chown root:root /etc/rc.d/rc.local /etc/rc.d/donomo-init
+chmod -f 750 /etc/rc.d/rc.local /etc/rd.d/donomo-init
+chkconfig donomo-init on
 
 #
 # Clean up /home/donomo
