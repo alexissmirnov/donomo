@@ -454,7 +454,7 @@ fi
 /bin/cp -f ${source_tree}/donomo_archive/init.d/donomo-init /etc/rc.d/
 /bin/cp -f ${source_tree}/donomo_archive/init.d/rc.local /etc/rc.d/
 chown root:root /etc/rc.d/rc.local /etc/rc.d/donomo-init
-chmod -f 750 /etc/rc.d/rc.local /etc/rd.d/donomo-init
+chmod -f 750 /etc/rc.d/rc.local /etc/rc.d/donomo-init
 chkconfig donomo-init on
 
 #
