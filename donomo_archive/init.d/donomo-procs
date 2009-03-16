@@ -32,6 +32,8 @@ function start
         return 1
     fi
 
+    export KEEP_ENVIRONMENT=true
+
     nice su -c "$HOME/bin/processors --daemonize --pidfile=$pidfile --logfile=$logfile --workdir=$workdir" $USER
 
     return $?

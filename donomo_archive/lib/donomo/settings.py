@@ -42,12 +42,15 @@ def join_and_normalize( *path_components ):
 def query_env(
     variables,
     default = None,
-    delete = True ):
+    delete = None ):
 
     """ Helper function to query the environment for settings.
 
         If found the settings will be removed from the environment by default.
     """
+
+    if delete is None:
+        delete = os.environ.get('KEEP_ENVIRONMENT', 'no').lower() not in [ 'yes', 'true', '1', 'on' ]
 
     def retrieve( key ):
         value = os.environ.get(key, None)
