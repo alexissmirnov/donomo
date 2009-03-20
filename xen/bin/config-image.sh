@@ -105,6 +105,7 @@ ln -sf /usr/share/zoneinfo/GMT0 /etc/localtime
 #ln -sf /opt/rightscale/etc/init.d/rightscale /etc/init.d/rightscale
 #chmod -f +x /opt/rightscale/etc/init.d/rightscale
 #chmod -f +x /etc/init.d/rightscale
+chmod -f +x /opt/rightscale/bin/*
 
 echo "Modifying Services"
 
