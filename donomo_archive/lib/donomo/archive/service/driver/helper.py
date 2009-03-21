@@ -14,6 +14,11 @@ import os
 import shutil
 
 @transaction.commit_on_success
+def handle_work_item(module, processor, work_item):
+    """ Wrapper to put the execution of the processor in a transaction.
+    """
+    module.handle_work_item(processor, work_item)
+
 def main():
     """ Run the process on the given asset where both the process and the
         asset id are given on the command line.
@@ -44,7 +49,7 @@ def main():
                 logging.exception('Unexpected error!')
                 raise
         else:
-            module.handle_work_item(processor, work_item)
+            handle_work_item(module, processor, work_item)
 
     except NotReadyException, e:
         logging.info(e)
