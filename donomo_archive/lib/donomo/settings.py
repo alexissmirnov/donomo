@@ -84,9 +84,9 @@ def is_affirmative( flag ):
 
 ##############################################################################
 
-SUBVERSION_USERNAME = quer_env('SUBVERSION_USERNAME', '')
-SUBVERSION_PASSWORD = quer_env('SUBVERSION_PASSWORD', '')
-SUBVERSION_REPOPATH = quer_env('SUBVERSION_REPOPATH', '')
+SUBVERSION_USERNAME = query_env('SUBVERSION_USERNAME', '')
+SUBVERSION_PASSWORD = query_env('SUBVERSION_PASSWORD', '')
+SUBVERSION_REPOPATH = query_env('SUBVERSION_REPOPATH', '')
 
 ##############################################################################
 #
