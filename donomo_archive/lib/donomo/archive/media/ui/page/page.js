@@ -439,8 +439,10 @@ String.prototype.format = function() {
 		},
 		
 		_processGetPage: function(response) {
+			console.log(response.responseText)
+			
 			var responseJSON = eval('(' + response.responseText + ')');
-			var processingContext = new JsEvalContext(responseJSON);
+			var processingContext = new JsEvalContext(responseJSON.page);
 			var template = null;
 			if (this._config.showFullPage) {
 				template = jstGetTemplate(Page.CONFIG.ID_PAGE_FULL_TEMPLATE);
@@ -453,6 +455,8 @@ String.prototype.format = function() {
 			
 			panel.appendChild(template);
 			jstProcess(processingContext, template);
+
+			var panel = Dom.get(Page.CONFIG.ID_PANEL);
 			
 			if (this._config.showDocument) {
 				Connect.asyncRequest('GET', responseJSON.page.document, {
