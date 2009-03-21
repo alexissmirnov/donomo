@@ -24,6 +24,19 @@ function start
 
     echo "Fetching EC2 User-Data"
     /opt/rightscale/bin/fetchec2userdata.rb
+
+    source /var/spool/ec2/meta-data.sh
+    source /var/spool/ec2/user-data.sh
+
+    if [[ -d /home/donomo ]]
+    then
+        ( cd /home/donomo && svn update )
+        chown -R root:donomo /home/donomo
+        chown -R root:root /home/donomo/init.d
+        find /home/donomo -type f -print0 | xargs -0 chmod -f 640
+        find /home/donomo -type d -print0 | xargs -0 chmod -f 750
+        chmod -R 750 /home/donomo/bin /home/donomo/init.d
+    fi
 }
 
 ##############################################################################
