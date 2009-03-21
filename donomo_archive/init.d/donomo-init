@@ -30,7 +30,7 @@ function start
 
     if [[ -d /home/donomo ]]
     then
-        ( cd /home/donomo && svn update )
+        ( cd /home/donomo && svn switch --non-interactive --username "${EC2_SUBVERSION_USERNAME:?}" --password "${EC2_SUBVERSION_PASSWORD:?}" "${EC2_SUBVERSION_REPOPATH?}" )
         chown -R root:donomo /home/donomo
         chown -R root:root /home/donomo/init.d
         find /home/donomo -type f -print0 | xargs -0 chmod -f 640

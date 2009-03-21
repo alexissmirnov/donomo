@@ -35,6 +35,10 @@ parameters = [
     'SQS_HOST',
     'SQS_IS_SECURE',
     'SQS_VISIBILITY_TIMEOUT',
+    'SUBVERSION_USERNAME',
+    'SUBVERSION_PASSWORD',
+    'SUBVERSION_REPOPATH',
+
     ]
 
 user_data = '&'.join(['%s=%s' % (p, getattr(settings, p)) for p in parameters ])
