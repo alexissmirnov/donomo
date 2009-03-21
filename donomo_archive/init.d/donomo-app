@@ -98,6 +98,9 @@ function run_shell
 #
 
 case ${1:?} in
+	runtime-stats)
+		echo `date`,`$0 pending`,`$0 instances`
+		
     syncdb|dbshell|shell)
         run_shell $1
         ;;
