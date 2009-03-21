@@ -128,7 +128,7 @@ SQS_HOST               = query_env('SQS_HOST', 'queue.amazonaws.com')
 SQS_IS_SECURE          = is_affirmative(query_env('SQS_IS_SECURE', 'yes'))
 SQS_QUEUE_NAME         = '%sarchive-donomo-com' % AWS_PREFIX.replace('.', '-')
 SQS_MAX_BACKOFF        = int(query_env('SQS_MAX_BACKOFF', 30))
-SQS_VISIBILITY_TIMEOUT = int(query_env('SQS_VISIBILITY_TIMEOUT', 3600))
+SQS_VISIBILITY_TIMEOUT = int(query_env('SQS_VISIBILITY_TIMEOUT', 360))
 
 SOLR_HOST              = query_env('SOLR_HOST', '127.0.0.1')
 SOLR_PORT              = int(query_env('SOLR_PORT', 8983))
