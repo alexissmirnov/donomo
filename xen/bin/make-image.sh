@@ -35,7 +35,7 @@ UPDATES=${mount_point}/tmp/updates
 echo "---- Initializating AMI Filesystem --------------------------------"
 
 echo "Creating volume file (${volume_file}) ..."
-dd if=/dev/zero of=${volume_file} bs=1M count=4096
+dd if=/dev/zero of=${volume_file} bs=1M count=3072
 
 echo "Initializing file system ..."
 mke2fs -F -j ${volume_file}
@@ -151,7 +151,7 @@ ${YUM} install emacs
 ${YUM} install svn
 ${YUM} groupinstall "Development Tools"
 ${YUM} install httpd-devel apr-devel apr-util-devel libapreq2-devel openssl-devel curl-devel expat-devel libetpan-devel createrepo
-${YUM} install boost-devel ImageMagick-devel ImageMagick-c++-devel
+${YUM} install boost-devel ImageMagick-devel ImageMagick-c++-devel libpng-devel
 ${YUM} install scons
 ${YUM} install ruby
 #${YUM_DBG} openssl
@@ -241,7 +241,7 @@ fi
 # Donomo bits
 #
 
-(cd $UPDATES && svn export --non-interactive "http://svn.donomo.com/trunk")
+(cd $UPDATES && svn checkout --username deploy --password d0n0m0 --non-interactive "http://svn.donomo.com/trunk")
 
 #
 # Web Server

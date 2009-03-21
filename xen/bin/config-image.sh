@@ -297,7 +297,7 @@ EOF
 --port=8983
 EOF
 
-    /bin/cp -f ${source_tree}/donomo_archive/init.d/solr /etc/init.d/solr
+    /bin/ln s-f ${source_tree}/donomo_archive/init.d/solr /etc/init.d/solr
     chown root:root /etc/init.d/solr
     chmod -f 750 /etc/init.d/solr
 
@@ -317,10 +317,11 @@ EOF
     find /home/donomo -type d -print0 | xargs -0 chmod -f 750
     find /home/donomo -type f -print0 | xargs -0 chmod -f 640
     chmod -f 750 /home/donomo/bin/*
+    chmod -f 750 /home/donomo/init.d/*
     mkdir -p /var/lib/donomo/cache
     mkdir -p /var/log/donomo
     mkdir -p /var/run/donomo
-    chown -R donomo:donomo /home/donomo
+    chown -R root:donomo /home/donomo
     chown -R donomo:donomo /var/lib/donomo
     chown -R donomo:donomo /var/log/donomo
     chown -R donomo:donomo /var/run/donomo
@@ -380,11 +381,6 @@ EOF
 --port=443
 EOF
 
-    # --- Init Script ---
-    /bin/cp -f ${source_tree}/donomo_archive/init.d/donomo-app /etc/init.d/
-    chown root:root /etc/init.d/donomo-app
-    chmod -f 750 /etc/init.d/donomo-app
-
     # --- Config Files ---
     /bin/cp -f /home/donomo/nginx/* /etc/nginx/
     chown root:root /etc/nginx/*
@@ -411,18 +407,14 @@ EOF
 
     # --- Turn on Services ---
     # note that nginx will be started/stopped by donomo-app as necessary
-
+    /bin/ln -sf /home/donomo/init.d/donomo-app /etc/init.d/
     chkconfig donomo-app on
 fi
 
 if [[ $processors -eq 1 ]]
 then
     # --- Init Script ---
-    /bin/cp -f ${source_tree}/donomo_archive/init.d/donomo-procs /etc/init.d/
-    chown root:root /etc/init.d/donomo-procs
-    chmod -f 750 /etc/init.d/donomo-procs
-
-    # -- Turn on Services ---
+    /bin/ln -sf /home/donomo/init.d/donomo-procs /etc/init.d/
     chkconfig donomo-procs on
 fi
 
@@ -452,16 +444,15 @@ fi
 # Boot Scripts
 #
 
-/bin/cp -f ${source_tree}/donomo_archive/init.d/donomo-init /etc/init.d/
-chown root:root /etc/init.d/donomo-init
-chmod -f 750 /etc/init.d/donomo-init
+/bin/ln -sf /home/donomo/init.d/donomo-init /etc/init.d/
+chown -R root:root /home/donomo/init.d
+chmod -fR 750 /home/donomo/init.d
 chkconfig donomo-init on
 
 #
 # Clean up /home/donomo
 #
 
-/bin/rm -rf /home/donomo/init.d
 /bin/rm -rf /home/donomo/nginx
 /bin/rm -rf /home/donomo/mysqld
 /bin/rm -rf /home/donomo/solr
