@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """Upload file to donomo"""
-from __future__ import with_statement 
+from __future__ import with_statement
 import os
 from optparse import OptionParser
 import mimetypes, mimetools
@@ -21,13 +21,14 @@ def post_multipart(url, files, fields=[]):
     content_type, body = encode_multipart_formdata(files, fields)
     headers = {'User-Agent' : 'Donomo Desktop Uploader ' + VERSION,
                'Content-Type': content_type,
+               'HTTP_X_REQUESTED_WITH' : 'XMLHttpRequest',
                'Content-Length': str(len(body))}
     try:
         r, c = h.request(url, 'POST', body, headers)
         print r.status
         print c
         return r.status == 202
-        
+
     except Exception, e:
         print str(e)
         return False
@@ -69,26 +70,26 @@ def main():
     parser.add_option("-p", "--password", help="User's password", dest="password")
     parser.add_option("-d", "--delete", help="Delete files after they were uploaded", dest="delete", default=False, action="store_true", )
     parser.add_option("--domain", help="Domain name of the donomo server. May include port number after :", dest="domain", default="https://archive.donomo.com" )
-    
+
     (options, files) = parser.parse_args()
 
     if len(files) == 0:
         parser.print_usage()
         return
-    
+
     print "Uploading %s to %s for %s" % (files, options.domain, options.user)
 
     for file_to_upload in files:
         with open(file_to_upload, 'rb') as f:
             print "Uploading %s ..." % file_to_upload
-            uploaded = post_multipart("%s/api/1.0/documents/" % options.domain, 
-                                      ((file_to_upload, file_to_upload, f.read()),), 
+            uploaded = post_multipart("%s/api/1.0/documents/" % options.domain,
+                                      ((file_to_upload, file_to_upload, f.read()),),
                                       (('user', options.user), ('password', options.password),))
         print "Uploaded? %s" % uploaded
-            
+
         if options.delete and uploaded:
             os.remove(file_to_upload)
-          
+
 
 if __name__ == '__main__':
     main()
