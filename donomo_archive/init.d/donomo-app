@@ -44,7 +44,7 @@ function start
 
     setup_env
 
-    /bin/su -c "/home/donomo/bin/application runfcgi protocol=fcgi method=prefork daemonize=true pidfile=$pidfile socket=$socket workdir=$workdir outlog=$logfile errlog=$logfile" donomo
+    /bin/su -c "python -m donomo.manage runfcgi protocol=fcgi method=prefork daemonize=true pidfile=$pidfile socket=$socket workdir=$workdir outlog=$logfile errlog=$logfile" donomo
 
     if [[ $? -ne 0 ]]
     then
@@ -89,7 +89,7 @@ function run_shell
 {
     setup_env
 
-    exec /bin/su -c "/home/donomo/bin/application ${1:?}" donomo
+    exec /bin/su -c "python -m donomo.manage ${1:?}" donomo
 }
 
 ##############################################################################

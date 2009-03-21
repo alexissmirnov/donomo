@@ -1,7 +1,0 @@
-#!/bin/sh -e
-
-exec python -m donomo.archive.tools.spawn_processors "$@"
-
-
-
-

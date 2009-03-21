@@ -11,6 +11,18 @@ pidfile=/var/run/donomo/processors.pid
 logfile=/var/log/donomo/processors.log
 prog="Donomo-Processors"
 
+
+##############################################################################
+#
+# Run an application shell or database shell
+#
+
+function run_shell
+{
+    exec /bin/su -c "python -m donomo.manage ${1:?}" $USER
+}
+
+
 function setup_env
 {
     export USER=donomo
@@ -97,6 +109,9 @@ function spawn_if_overloaded
 setup_env
 
 case ${1:?} in
+    syncdb|dbshell|shell)
+        run_shell $1
+        ;;
     start)
         action "Starting $prog" start
         ;;
