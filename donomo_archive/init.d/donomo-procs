@@ -44,9 +44,10 @@ function stop
     killproc -p $pidfile
 }
 
-function queue_length
+
+function runtime_stats
 {
-    su -c "$HOME/bin/queue-length" $USER
+    su -c "python -m donoom.archive.tools.runtime_stats $1" $USER
 }
 
 function is_running {
@@ -109,8 +110,8 @@ case ${1:?} in
         "$0" stop
         "$0" start
         ;;
-    pending)
-        queue_length
+    pending|instances)
+        runtime_stats $1
         ;;
     prune)
         action "Pruning processing node" stop_if_idle
