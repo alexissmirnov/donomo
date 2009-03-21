@@ -17,7 +17,13 @@ import shutil
 def handle_work_item(module, processor, work_item):
     """ Wrapper to put the execution of the processor in a transaction.
     """
-    module.handle_work_item(processor, work_item)
+    new_work_items = module.handle_work_item(processor, work_item)
+
+    if new_work_items is None:
+        new_work_items = []
+
+    return new_work_items
+
 
 def main():
     """ Run the process on the given asset where both the process and the
@@ -49,7 +55,8 @@ def main():
                 logging.exception('Unexpected error!')
                 raise
         else:
-            handle_work_item(module, processor, work_item)
+            new_items = handle_work_item(module, processor, work_item)
+            operations.publish_work_item( *new_items )
 
     except NotReadyException, e:
         logging.info(e)

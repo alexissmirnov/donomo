@@ -82,7 +82,7 @@ def handle_work_item(processor, item):
                 mime_type        = models.MimeType.PDF )
 
 
-    operations.publish_work_item(pdf_asset)
+    return [ pdf_asset ]
 
 
 ##############################################################################

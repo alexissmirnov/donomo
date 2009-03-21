@@ -54,8 +54,9 @@ def handle_work_item(processor, item):
 
     """
     try:
+        new_work = []
         parent_asset = item['Asset-Instance']
-        operations.publish_work_item(
+        new_work.append(
             operations.create_asset_from_file(
                 owner        = item['Owner'],
                 producer     = processor,
@@ -67,10 +68,13 @@ def handle_work_item(processor, item):
                 mime_type    = models.MimeType.HTML ))
 
         if not item['Is-New']:
-            operations.publish_work_item(
+            new_work.append(
                 parent_asset.related_page.document.assets.get(
                     asset_class = models.AssetClass.DOCUMENT,
                     mime_type   = models.MimeType.BINARY ))
+
+        return new_work
+
     except OCRFailed:
         logging.warning('OCR failed, dropping from processing chain')
 

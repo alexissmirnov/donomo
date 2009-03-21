@@ -34,6 +34,7 @@ def handle_work_item(processor, item):
 
     """
 
+    new_work    = []
     asset       = item['Asset-Instance']
     local_path  = item['Local-Path']
     work_dir    = os.path.dirname(local_path)
@@ -51,19 +52,22 @@ def handle_work_item(processor, item):
     all_page_files = glob.glob('%s*.tif*' % page_prefix)
     all_page_files.sort()
     for page_tiff_path in all_page_files:
-        handle_page(
-            processor,
-            asset,
-            document,
-            page_tiff_path,
-            position )
+        new_work.extend(
+            handle_page(
+                processor,
+                asset,
+                document,
+                page_tiff_path,
+                position ))
         position += 1
 
     if document is not None:
-        operations.publish_work_item(
+        new_work.append(
             document.assets.get(
                 asset_class__name = AssetClass.DOCUMENT,
                 mime_type__name   = MimeType.BINARY ))
+
+    return new_work
 
 ##############################################################################
 
@@ -104,7 +108,7 @@ def handle_page(
         thumb_path)
 
     # Put the assets into the work queue
-    operations.publish_work_item(
+    return [
 
         # The oginal full-res page as a TIFF
         operations.create_asset_from_file(
@@ -138,7 +142,7 @@ def handle_page(
             parent       = parent_asset,
             child_number = page.position,
             mime_type    = models.MimeType.JPEG ),
-        )
+        ]
 
 ##############################################################################
 
@@ -196,6 +200,6 @@ def redo_page(
     operations.upload_asset_file( thumbnail, thumb_path    )
 
     # Put the assets into the work queue
-    operations.reprocess_work_item( original, image, thumbnail )
+    return [ original, image, thumbnail ]
 
 ##############################################################################

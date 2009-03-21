@@ -36,6 +36,7 @@ def handle_work_item( processor, work_item ):
 
     """
 
+    asset_list   = []
     parent_asset = work_item['Asset-Instance']
     upload_class = manager(AssetClass).get( name = AssetClass.UPLOAD )
     counter      = 0
@@ -61,7 +62,7 @@ def handle_work_item( processor, work_item ):
                 file_name,
                 mime_type ))
 
-        operations.publish_work_item(
+        asset_list.append(
             operations.create_asset_from_stream(
                 data_stream  = StringIO(part.get_payload(decode=True)),
                 owner        = parent_asset.owner,
@@ -71,6 +72,8 @@ def handle_work_item( processor, work_item ):
                 parent_asset = parent_asset,
                 child_number = counter,
                 mime_type    = mime_type ))
+
+    return asset_list
 
 ##############################################################################
 
@@ -109,7 +112,7 @@ def process_mail(processor, local_path):
         the local file system at the path given by local_path.
     """
 
-    operations.publish_work_item(
+    return [
         operations.create_asset_from_file(
             file_name    = local_path,
             owner        = _get_owner(local_path),
@@ -117,7 +120,8 @@ def process_mail(processor, local_path):
             asset_class  = AssetClass.UPLOAD,
             parent_asset = None,
             child_number = 0,
-            mime_type    = MimeType.MAIL ))
+            mime_type    = MimeType.MAIL ),
+        ]
 
 ##############################################################################
 
@@ -145,7 +149,8 @@ def main():
     #   -> no exception type given
     for file_name in file_name_list:
         try:
-            process_mail(processor, file_name)
+            new_items = process_mail(processor, file_name)
+            operations.publish_work_item(*new_items)
         except:
             logging.exception("Failed to process %s" % file_name )
         else:

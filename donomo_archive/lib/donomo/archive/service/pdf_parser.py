@@ -39,7 +39,7 @@ def handle_work_item(processor, item):
     is_new      = item['Is-New']
     work_dir    = os.path.dirname(local_path)
     page_prefix = os.path.join(work_dir, 'page-')
-
+    asset_list  = []
     pdf.split_pages( local_path, page_prefix )
 
     document = operations.create_document(
@@ -52,13 +52,23 @@ def handle_work_item(processor, item):
     all_page_files = glob.glob('%s*.pdf' % page_prefix)
     all_page_files.sort()
     for page_pdf_path in all_page_files:
-        create_page( processor, asset, document, page_pdf_path,position )
+        asset_list.extend(
+            create_page(
+                processor,
+                asset,
+                document,
+                page_pdf_path,
+                position ))
         position += 1
 
-    operations.publish_work_item(
+    asset_list.append(
         document.assets.get(
             asset_class__name = models.AssetClass.DOCUMENT,
             mime_type__name   = models.MimeType.BINARY ))
+
+    return asset_list
+
+
 
 
 ##############################################################################
@@ -88,7 +98,7 @@ def create_page(
         thumb_path)
 
     # Put the assets into the work queue
-    operations.publish_work_item(
+    return [
 
         # The oginal full-res page as a PDF
         operations.create_asset_from_file(
@@ -122,7 +132,7 @@ def create_page(
             parent       = parent_asset,
             child_number = page.position,
             mime_type    = models.MimeType.JPEG ),
-        )
+        ]
 
 
 ##############################################################################
@@ -173,6 +183,6 @@ def redo_page(
     operations.upload_asset_file( asset['thumbnail'], thumb_path    )
 
     # Put the assets into the work queue
-    operations.reprocess_work_item( *asset.values() )
+    return asset.values()
 
 ##############################################################################
