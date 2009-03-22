@@ -32,7 +32,7 @@ function setup_env
 
     source $DONOMO_HOME/bin/env.sh
 
-    threshold=${DONOMO_PROC_THRESHOLD:-20}
+    threshold=${DONOMO_PROC_THRESHOLD:-50}
 }
 
 function start
