@@ -241,7 +241,7 @@ fi
 # Donomo bits
 #
 
-(cd $UPDATES && svn checkout --username deploy --password d0n0m0 --non-interactive "http://svn.donomo.com/trunk")
+(cd $UPDATES && svn checkout --username deploy --password d0n0m0 --non-interactive "http://svn.donomo.com/tags/latest")
 
 #
 # Web Server
@@ -252,7 +252,7 @@ then
     ${YUM} install nginx
 fi
 
-${CHROOT} /tmp/updates/trunk/xen/bin/config-image.sh "$@"
+${CHROOT} /tmp/updates/latest/xen/bin/config-image.sh "$@"
 rm -rf $UPDATES
 
 umount ${mount_point}/proc

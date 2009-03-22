@@ -4,7 +4,7 @@ set -x
 
 source $(dirname $0)/parse-args.sh "$@"
 
-source_tree=/tmp/updates/trunk
+source_tree=/tmp/updates/latest
 
 #
 # Check consistency of passwd and group files and make appropriate corrections
@@ -93,7 +93,7 @@ fi
 if [[ $database -gt 0 ]]
 then
     cat >> /var/spool/cron/root <<EOF
-*/5 * * * * service donomo-procs spawn
+*/10 * * * * service donomo-procs spawn
 EOF
 fi
 
@@ -125,6 +125,7 @@ chkconfig sshd on
 chkconfig syslog on
 chkconfig sysstat on
 chkconfig psacct on
+chkconfig crond on
 
 if [[ $multicore -eq 1 ]]
 then
@@ -150,7 +151,6 @@ chkconfig avahi-daemon off
 chkconfig avahi-dnsconfd off
 chkconfig bluetooth off
 chkconfig cpuspeed off
-chkconfig crond off
 chkconfig cups off
 chkconfig dc_client off
 chkconfig dc_server off
@@ -454,9 +454,9 @@ chkconfig donomo-init on
 # Clean up /home/donomo
 #
 
-/bin/rm -rf /home/donomo/nginx
-/bin/rm -rf /home/donomo/mysqld
-/bin/rm -rf /home/donomo/solr
+#/bin/rm -rf /home/donomo/nginx
+#/bin/rm -rf /home/donomo/mysqld
+#/bin/rm -rf /home/donomo/solr
 
 
 #
