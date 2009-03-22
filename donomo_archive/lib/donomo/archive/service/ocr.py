@@ -38,7 +38,7 @@ def image_to_html( in_path, out_path = None ):
     if out_path is None:
         out_path = '%s.html' % in_path
 
-    if 0 != os.system('ocroscript recognize %r > %r' % (in_path, out_path)):
+    if 0 != os.system('/usr/local/bin/ocroscript recognize %r > %r' % (in_path, out_path)):
         raise OCRFailed( 'Failed to OCR: %r' % in_path)
 
     return out_path
