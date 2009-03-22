@@ -314,6 +314,7 @@ donomo:$(uuidgen)
 EOF
 
     /bin/cp -rf ${source_tree}/donomo_archive/* /home/donomo/
+    /bin/cp -rf ${source_tree}/donomo_archive/.svn /home/donomo/
     find /home/donomo -type d -print0 | xargs -0 chmod -f 750
     find /home/donomo -type f -print0 | xargs -0 chmod -f 640
     chmod -f 750 /home/donomo/bin/*
