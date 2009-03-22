@@ -59,7 +59,7 @@ function stop
 
 function runtime_stats
 {
-    su -c "python -m donoom.archive.tools.runtime_stats $1" $USER
+    su -c "python -m donomo.archive.tools.runtime_stats $1" $USER
 }
 
 function is_running {
