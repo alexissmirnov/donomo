@@ -75,17 +75,18 @@ function stop_if_idle {
 
     if [[ $(( solr + app + db )) -gt 0 ]]
     then
-        echo "... other modules are running"
+        echo "Pruing aborted ... there are other modules are running!"
         return 1
     fi
 
     local pending=$(runtime_stats pending)
     if [[ $pending -gt $threshold ]]
     then
-        echo "... $pending pending jobs"
-        return 1
+        [[ "$1" = "-q" ]] || echo "Not ready to prune ... $pending pending jobs"
+        return 0
     fi
 
+    echo -n "Shutting down proessing node "
     while [[ $(is_running "$(basename $0)" "$prog") -gt 0 ]]
     do
         echo -n "."
@@ -99,10 +100,14 @@ function stop_if_idle {
 function spawn_if_overloaded
 {
     local pending=$(runtime_stats pending)
-    echo "... $pending work items pending"
+
     if [[ $pending -gt $threshold ]]
     then
+        echo "Spawning!  There are $pending work items in the queue."
         python -m donomo.archive.tools.spawn_instance --i ${DONOMO_PROC_AMI:?} -n $(( 1 + pending / threshold / 2 ))
+    elif [[ "$1" != "-q" ]]
+    then
+        echo "Not spawning.  There are only $pending work items in the queue."
     fi
 }
 
@@ -129,10 +134,10 @@ case ${1:?} in
         runtime_stats $1
         ;;
     prune)
-        action "Pruning processing node" stop_if_idle
+        stop_if_idle "$2"
         ;;
     spawn)
-        action "Spawning processing node" spawn_if_overloaded
+        spawn_if_overloaded "$2"
         ;;
     *)
         echo "Usage: $(basename $0) start|status|stop|restart|pending|prune"

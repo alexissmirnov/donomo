@@ -78,6 +78,7 @@ cat > /var/spool/cron/root <<EOF
 # Default environment for cronjobs
 #
 SHELL=/bin/sh
+MAILTO=aws@donomo.com
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
 HOME=/root
 
@@ -86,14 +87,14 @@ EOF
 if [[ $processors -gt $(( database + application + solr )) ]]
 then
     cat >> /var/spool/cron/root <<EOF
-*/5 * * * * service donomo-procs prune
+*/5 * * * * service donomo-procs prune -q
 EOF
 fi
 
 if [[ $database -gt 0 ]]
 then
     cat >> /var/spool/cron/root <<EOF
-*/10 * * * * service donomo-procs spawn
+*/10 * * * * service donomo-procs spawn -q
 EOF
 fi
 
