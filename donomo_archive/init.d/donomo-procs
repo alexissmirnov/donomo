@@ -79,7 +79,7 @@ function stop_if_idle {
         return 1
     fi
 
-    local pending=$(queue_length)
+    local pending=$(runtime_stats pending)
     if [[ $pending -gt $threshold ]]
     then
         echo "... $pending pending jobs"
@@ -98,8 +98,8 @@ function stop_if_idle {
 
 function spawn_if_overloaded
 {
-    local pending=$(queue_length)
-    echo "... $pending pending"
+    local pending=$(runtime_stats pending)
+    echo "... $pending work items pending"
     if [[ $pending -gt $threshold ]]
     then
         python -m donomo.archive.tools.spawn_instance --i ${DONOMO_PROC_AMI:?} -n $(( 1 + pending / threshold / 2 ))
