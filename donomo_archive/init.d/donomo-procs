@@ -62,6 +62,22 @@ function runtime_stats
     su -c "python -m donomo.archive.tools.runtime_stats $1" $USER
 }
 
+function print_sample
+{
+    local sample="\"$(date -u '+%F %T')\", $(runtime_stats pending), $(runtime_stats instances)"
+
+    if [[ -z "$1" ]]
+    then
+        echo "$sample"
+    else
+        if [[ ! -e "$1" ]]
+        then
+            echo '"Timestamp (UTC)", "Pending Work Items", "Instances"' > "$1"
+        fi
+        echo "$sample" >> "$1"
+    fi
+}
+
 function is_running {
     local svc=$1
     local name=${2:-$1}
@@ -116,6 +132,9 @@ setup_env
 case ${1:?} in
     syncdb|dbshell|shell)
         run_shell $1
+        ;;
+    sample)
+        print_sample "$2"
         ;;
     start)
         action "Starting $prog" start
