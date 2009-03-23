@@ -20,10 +20,10 @@ from django.conf import settings
 #   C0103 - variables at module scope must be all caps
 #
 
-DEFAULT_PROCESSORS = ( 'pdf_parser', 
-                       'tiff_parser', 
-                       'ocr', 
-                       'indexer', 
+DEFAULT_PROCESSORS = ( 'pdf_parser',
+                       'tiff_parser',
+                       'ocr',
+                       'indexer',
                        'pdf_generator',
                        'upload_notifier' )
 
@@ -136,7 +136,7 @@ def main():
 
     parser.add_option(
         '--max-concurrency',
-        default = 3,
+        default = 5,
         type    = 'int')
 
     parser.add_option(
@@ -195,6 +195,13 @@ def main():
         except:
             logging.exception('An exception occurred!')
     # pylint: enable-msg=W0702
+
+    while True:
+        active_threads = threading.activeCount() - 1
+        if active_threads == 0:
+            break
+        logging.info("Waiting for %d workers to finish" % active_threads )
+        time.sleep(2)
 
     logging.info("Stopped")
 
