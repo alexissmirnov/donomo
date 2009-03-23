@@ -58,7 +58,7 @@ SOLR_SERVER = 'http%s://%s:%s' % (
     settings.SOLR_HOST,
     settings.SOLR_PORT)
 
-SOLR_UPDATE_URL = '%s/solr/update/?commit=true' % SOLR_SERVER
+SOLR_UPDATE_URL = '%s/solr/update/' % SOLR_SERVER
 SOLR_QUERY_URL  = '%s/solr/select/' % SOLR_SERVER
 
 ##############################################################################
@@ -128,11 +128,11 @@ def _index_page_from_string( page, text ):
     # its XML parser complains about
     # "Illegal to have multiple roots (start tag in epilog?)"
     # send commit command in a separate POST
-    response, content = http_client.request(
-        uri     = SOLR_UPDATE_URL,
-        method  = 'POST',
-        body    = '<commit/>',
-        headers = { "Content-type" : "text/xml; charset=utf-8" })
+    #response, content = http_client.request(
+    #    uri     = SOLR_UPDATE_URL,
+    #    method  = 'POST',
+    #    body    = '<commit/>',
+    #    headers = { "Content-type" : "text/xml; charset=utf-8" })
 
     if response.status >= 400:
         raise Exception(
