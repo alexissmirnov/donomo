@@ -67,7 +67,7 @@ def handle_work_item(processor, item):
 
     if len(pdf_assets) != 0:
         pdf_asset = pdf_assets[0]
-        pdf_asset.producer = processor,
+        pdf_asset.producer = processor
         operations.upload_asset_stream(pdf_asset, pdf_stream)
     else:
         pdf_asset = operations.create_asset_from_stream(
