@@ -283,7 +283,7 @@ class DocumentOperations(unittest.TestCase):
 
     def test_tag_documents_by_time(self):
         # create an unclassified document
-        doc0 = operations.tag_document( owner = self.user )
+        doc0 = operations.create_document( owner = self.user )
 
         asset0 = operations.create_asset_from_stream(
             owner        = self.user,
@@ -297,10 +297,10 @@ class DocumentOperations(unittest.TestCase):
 
         sleep(2)
 
-        doc1 = operations.tag_document( owner = self.user )
+        doc1 = operations.create_document( owner = self.user )
 
         now = datetime.date.fromtimestamp(time.time())
-        pdf_generator.classify_document(doc1, datetime.timedelta(0, 1))
+        pdf_generator.tag_document(doc1, datetime.timedelta(0, 1))
 
         asset1 = operations.create_asset_from_stream(
             owner        = self.user,
@@ -322,9 +322,9 @@ class DocumentOperations(unittest.TestCase):
         # sleep 3 sec
         sleep(3)
 
-        doc2 = operations.tag_document( owner = self.user )
+        doc2 = operations.create_document( owner = self.user )
         now = datetime.date.fromtimestamp(time.time())
-        pdf_generator.classify_document(doc2, datetime.timedelta(0, 1))
+        pdf_generator.tag_document(doc2, datetime.timedelta(0, 1))
         # is the second document tagged in the different tag?
         self.assert_( doc2.tags.all().count() == 1 )
 
@@ -348,9 +348,9 @@ class DocumentOperations(unittest.TestCase):
         # but with a longer threshold
         sleep(3)
 
-        doc3 = operations.tag_document( owner = self.user )
+        doc3 = operations.create_document( owner = self.user )
         now = datetime.date.fromtimestamp(time.time())
-        pdf_generator.classify_document(doc3, datetime.timedelta(0, 10))
+        pdf_generator.tag_document(doc3, datetime.timedelta(0, 10))
 
         # did this one got tagged with a same tag?
         self.assert_( doc2.tags.all().count() == 1 )

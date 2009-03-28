@@ -60,6 +60,15 @@ def http_method_dispatcher(method_table_function):
 
     return view_func
 
+
+# -----------------------------------------------------------------------------
+class HttpRequestValidationError(Exception):
+    """
+    Use this exeption to signal middleware that http request was invalid from
+    the perspective of the view that handles it.
+    """
+    pass
+
 # -----------------------------------------------------------------------------
 
 class HttpResponseCreated(HttpResponse):

@@ -10,6 +10,7 @@
 
 from django.contrib.auth.models          import User
 from django.db                           import models
+from django.contrib.localflavor.us.models import PhoneNumberField
 from django.db.models                    import permalink
 from django.utils.timesince              import timesince
 
@@ -42,15 +43,13 @@ class FaxNumber(models.Model):
         User,
         related_name = 'fax_numbers')
 
-    number = models.PhoneNumberField(
+    number = PhoneNumberField(
         blank    = False,
-        core     = True,
         db_index = True,
         unique   = True )
 
     type = models.CharField(
         max_length  = 1,
-        core        = True,
         default     = USER_SENDS_FROM,
         choices     = [ (USER_SENDS_FROM, 'External Sender #'),
                         (USER_RECVS_AT,   'Internal Receive #') ])
@@ -58,9 +57,6 @@ class FaxNumber(models.Model):
     __str__ = lambda self : self.number
 
     __unicode__ = __str__
-
-    class Admin:
-        pass
 
 
 ###############################################################################
@@ -82,7 +78,6 @@ class MimeType(models.Model):
 
     name = models.CharField(
         max_length = 64,
-        core       = True,
         blank      = False,
         null       = False,
         unique     = True,
@@ -90,7 +85,6 @@ class MimeType(models.Model):
 
     extension = models.CharField(
         max_length = 15,
-        core       = True,
         blank      = True,
         null       = False,
         db_index   = True,
@@ -100,8 +94,6 @@ class MimeType(models.Model):
 
     __unicode__ = __str__
 
-    class Admin:
-        pass
 
 ###############################################################################
 
@@ -134,8 +126,6 @@ class Process(models.Model):
 
     __unicode__ = __str__
 
-    class Admin:
-        pass
 
 ###############################################################################
 
@@ -150,8 +140,6 @@ class Node(models.Model):
 
     __unicode__ = __str__
 
-    class Admin:
-        pass
 
 ###############################################################################
 
@@ -182,8 +170,6 @@ class Processor(models.Model):
 
     __unicode__ = __str__
 
-    class Admin:
-        pass
 
 ###############################################################################
 
@@ -236,7 +222,6 @@ class Tag(models.Model):
         max_length = 64,
         blank      = True,
         default    = '',
-        core       = True,
         db_index   = True,
         help_text  = 'Class of this tag' )
 
@@ -247,9 +232,6 @@ class Tag(models.Model):
     class Meta:
         """ Constraints """
         unique_together = ( 'owner', 'label' )
-
-    class Admin:
-        pass
 
 ###############################################################################
 
@@ -284,9 +266,6 @@ class Document(models.Model):
 
     class Meta:
         ordering = ('-title',)
-
-    class Admin:
-        pass
 
 ###############################################################################
 
@@ -330,9 +309,6 @@ class Page(models.Model):
 
         # pylint: enable-msg=E1101
 
-    class Admin:
-        pass
-
 
 ###############################################################################
 
@@ -352,7 +328,6 @@ class AssetClass(models.Model):
     name = models.CharField(
         max_length = 64,
         unique     = True,
-        core       = True,
         db_index   = True,
         help_text  = 'Unique label for this asset class' )
 
@@ -376,8 +351,6 @@ class AssetClass(models.Model):
         return 0 != self.consumers.filter(
             ** { 'mime_types%s' % suffix : mime_type } ).count()
 
-    class Admin:
-        pass
 
 ###############################################################################
 
@@ -494,9 +467,6 @@ class Asset(models.Model):
         self.asset_class,
         self.mime_type )
 
-    class Admin:
-        pass
-
     class Meta:
         unique_together = [
             ( 'parent', 'asset_class', 'child_number'),
@@ -527,8 +497,6 @@ class Query(models.Model):
         max_length = 255,
         db_index   = True)
 
-    class Admin:
-        pass
 
 ###############################################################################
 

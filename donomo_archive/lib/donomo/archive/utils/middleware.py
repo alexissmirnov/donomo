@@ -4,9 +4,9 @@ Handy middleware (Django compatible) and decorators.
 """
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.validators import ValidationError, CriticalValidationError
 from django.db              import IntegrityError
 from django.http            import HttpResponse, Http404
+from donomo.archive.utils.http import HttpRequestValidationError
 import simplejson
 import httplib
 import traceback
@@ -138,8 +138,9 @@ class AjaxErrorHandlingMiddleware(object):
 
         elif ( isinstance(exception, KeyError)
                or isinstance(exception, ValueError)
-               or isinstance(exception, ValidationError)
-               or isinstance(exception, CriticalValidationError) ):
+               or isinstance(exception, HttpRequestValidationError)
+#               or isinstance(exception, CriticalValidationError) 
+              ):
             #
             # Let's interpret all data errors (invalid key lookups,
             # value conversion, validation) as bad requests.

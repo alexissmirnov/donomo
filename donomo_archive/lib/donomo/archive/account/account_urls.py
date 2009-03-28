@@ -47,11 +47,22 @@ urlpatterns = patterns('',
                        url(r'^delete/$', 
                             'donomo.archive.account.account_views.account_delete',
                             name='account-delete'),
+                            
+                       url(r'^pay/ipn/$', 
+                            'paypal.standard.views.ipn',
+                            name='paypal.standard.ipn'),
+                        
+                       url(r'^pay/$',  
+                            'donomo.archive.account.account_views.request_payment_standard'),
+                            
+                       url(r'^paypro/$',  
+                            'donomo.archive.account.account_views.request_payment_pro'),
+
                        url(r'^(?P<username>[-+@.a-zA-Z0-9_]+)/export/$',  
                             'donomo.archive.account.account_views.account_export',
                             name='account-export'),
                        url(r'^(?P<username>[-+@.a-zA-Z0-9_]+)/$',  
                             'donomo.archive.account.account_views.account_detail',
                             name='account-detail'),
+                )
                         
-                       )

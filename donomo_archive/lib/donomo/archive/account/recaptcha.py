@@ -1,4 +1,4 @@
-from django.newforms import *
+from django.forms import *
 from django.conf import settings
 from django.utils.safestring import mark_safe
 from django.utils.encoding import StrAndUnicode, force_unicode

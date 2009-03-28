@@ -4,7 +4,7 @@ from django.contrib.auth.decorators         import login_required
 from django.shortcuts                       import render_to_response
 from django.template                        import RequestContext            
 from django.core.urlresolvers import reverse
-from django                                 import newforms as forms
+from django                                 import forms
 from django.utils.translation               import ugettext_lazy as _
 from django.contrib.auth.models             import User
 from registration.models                    import RegistrationProfile
@@ -51,7 +51,9 @@ def account_detail(request, username):
         return HttpResponse('forbidden: username %s' % username)
     
     if request.method == 'GET':
-        return render_to_response('account/userprofile_form.html', {'user' : request.user})
+        return render_to_response('account/userprofile_form.html', 
+                                  {'pay10' : render_payment_standard_button()},
+                                  context_instance = RequestContext(request))
     else:
         return HttpResponse('forbidden')
 
@@ -242,3 +244,58 @@ def register(request,
     return render_to_response(template_name,
                               { 'form': form },
                               context_instance=context)
+    
+
+
+
+
+
+###############################################################################
+
+
+from paypal.pro.views import PayPalPro
+from paypal.standard.forms import PayPalSharedSecretEncryptedPaymentsForm
+
+
+def request_payment_standard(request):
+    return HttpResponse(render_payment_standard_button())
+
+def render_payment_standard_button(amount = "10.00"):
+    # What you want the button to do.
+    paypal_dict = {
+        "business": "dev@donomo.com",
+        "amount": amount,
+        "item_name": "3000 pages. Basic OCR.",
+        "invoice": "unique-invoice-id",
+        "notify_url": "https://archive.donomo.com/account/pay/ipn/",
+        "return_url": "https://archive.donomo.com/account/pay/return/",
+        "cancel_return": "https://archive.donomo.com/account/pay/cancel/",
+    }
+
+    # Create the instance.
+    form = PayPalSharedSecretEncryptedPaymentsForm(initial=paypal_dict)
+
+    
+    # Output the button.
+    return form.sandbox()
+
+
+
+def request_payment_pro(request):
+    item = {'amt':"10.00",              # amount to charge for item
+            'inv':"inventory#",         # unique tracking variable paypal
+            'custom':"tracking#",       # custom tracking variable for you
+            'cancelurl':"https://www.donomo.com/account/pay/cancel/",   # Express checkout cancel url
+            'returnurl':"https://www.donomo.com/account/pay/return/"}   # Express checkout return url
+
+    kw = {'item':'item',                        # what you're selling
+       'payment_template': 'template',          # template to use for payment form
+       'confirm_template': 'confirm_template',  # form class to use for Express checkout confirmation
+       'payment_form_cls': 'payment_form_cls',  # form class to use for payment
+       'success_url': '/success',               # where to redirect after successful payment
+       }
+    ppp = PayPalPro(**kw)
+    return HttpResponse(ppp.render_payment_form())
+
+
+

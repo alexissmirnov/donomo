@@ -7,7 +7,6 @@ from donomo.archive.models  import AssetClass, MimeType
 from donomo.archive.utils   import misc
 from django.conf            import settings
 from django.template        import Template, Context
-from django.core.validators import ValidationError
 from StringIO               import StringIO
 import httplib2
 import simplejson
@@ -161,9 +160,9 @@ def validate_query_string(query_string):
         elif char == ')':
             nesting_level -= 1
             if nesting_level < 0:
-                raise ValidationError("Malformed query string")
+                raise Exception("Malformed query string")
     if nesting_level != 0:
-        raise ValidationError("Malformed query string")
+        raise Exception("Malformed query string")
 
 ###############################################################################
 

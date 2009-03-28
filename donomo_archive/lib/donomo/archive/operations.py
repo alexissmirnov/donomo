@@ -21,10 +21,10 @@ out these operations, including:
 #
 
 from __future__                         import with_statement
-from django.core.validators             import ValidationError
 from django.conf                        import settings
 from donomo.archive.models              import *
 from donomo.archive.utils               import s3, sqs, misc
+from donomo.archive.utils.http       import HttpRequestValidationError
 from platform                           import node
 from socket                             import gethostbyname, gaierror
 from cStringIO                          import StringIO
@@ -154,7 +154,7 @@ def merge_documents( target, source, offset):
     if offset is None:
         offset = target_length
     elif (offset < 0 or offset > target_length):
-        raise ValidationError('Invalid merge position: %d' % offset)
+        raise HttpRequestValidationError('Invalid merge position: %d' % offset)
 
     #
     # Make space in the target document

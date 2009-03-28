@@ -1,8 +1,12 @@
 """ Donomo Archive urls that are user visible.
 """
 
-from django.conf.urls.defaults import patterns, include
+from django.conf.urls.defaults import *
 from django.conf               import settings
+from django.contrib            import admin
+
+admin.autodiscover() #e nable the admin and load each admin.py file:
+
 
 #
 # pylint: disable-msg=C0103
@@ -12,7 +16,7 @@ from django.conf               import settings
 
 urlpatterns = patterns(
     '',
-    (r'^admin/', include('django.contrib.admin.urls')),
+    (r'^admin/(.*)', admin.site.root),
     (r'^media/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT }),
     (r'^', include('donomo.archive.urls')),
 )

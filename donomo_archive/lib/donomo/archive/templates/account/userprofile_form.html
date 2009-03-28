@@ -1,19 +1,21 @@
-{% extends "ui/base.html" %}
-{% block title %}{{user.username}}{% endblock %}
-{% block body %}
-<!-- YUI_include fonts grids -->
+{% extends "ui/base_static.html" %}
 
-{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+{% block title %}
+	Settings for {{user}}
+{% endblock %}
 
-<p>Settings for {{user.get_profile.nickname}}:</p>
-
-<form action="" method="post">
-<p><label for="fax_number">Fax:</label> </p>
-
-<input type="text" name="fax_number" value="{{ form.fax_number }}">
-<input type="submit" value="Submit">
-
-</form>
-
-<a href='/account/{{user.username}}/export/'>Export</a> all documents as searchable PDF in a single zip file.
+{% block content %}
+	{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+	
+	<p>Settings for {{user}}:</p>
+	
+	Fill my account with $10.00. Enough for 3000 pages.
+	<br>
+	{% autoescape off %}
+	{{ pay10 }}
+	{% endautoescape %}
+	
+	<p>
+	<a href='/account/{{user.username}}/export/'>Export</a> all documents as searchable PDF in a single zip file.
+	</p>
 {% endblock %}
