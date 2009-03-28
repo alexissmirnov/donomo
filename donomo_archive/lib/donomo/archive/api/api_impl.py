@@ -293,7 +293,6 @@ def upload_document(request):
     # pick all files that are send in this API
     # support sending multiple files in a single request
     for key, the_file in request.FILES.iteritems():
-        the_file = the_file[0]
         content_type = the_file.content_type
 
         if content_type == 'application/octet-stream':
