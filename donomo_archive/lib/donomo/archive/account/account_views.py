@@ -260,6 +260,7 @@ def register(request,
 
 from paypal.pro.views import PayPalPro
 from paypal.standard.forms import PayPalSharedSecretEncryptedPaymentsForm
+import time
 
 def request_payment_return(request):
     logging.info(result)
@@ -274,7 +275,7 @@ def render_payment_standard_button(amount = "10.00"):
         "business": "dev@donomo.com",
         "amount": amount,
         "item_name": "3000 pages. Basic OCR.",
-        "invoice": "unique-invoice-id",
+        "invoice": str(time.time()),
         "notify_url": "https://archive.donomo.com/account/pay/ipn/",
         "return_url": "https://archive.donomo.com/account/pay/return/",
         "cancel_return": "https://archive.donomo.com/account/pay/cancel/",
