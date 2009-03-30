@@ -48,6 +48,9 @@ urlpatterns = patterns('',
                             'donomo.archive.account.account_views.account_delete',
                             name='account-delete'),
                             
+                       url(r'^pay/return/$', 
+                            'donomo.archive.account.account_views.request_payment_return'),
+
                        url(r'^pay/ipn/$', 
                             'paypal.standard.views.ipn',
                             name='paypal.standard.ipn'),

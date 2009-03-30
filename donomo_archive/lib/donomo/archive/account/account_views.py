@@ -9,6 +9,11 @@ from django.utils.translation               import ugettext_lazy as _
 from django.contrib.auth.models             import User
 from registration.models                    import RegistrationProfile
 from recaptcha                              import RecaptchaForm, RecaptchaFieldPlaceholder, RecaptchaWidget
+
+import logging
+logging = logging.getLogger(os.path.splitext(os.path.basename(__file__))[0])
+
+
 @login_required()    
 def account_delete(request):
     """
@@ -256,7 +261,10 @@ def register(request,
 from paypal.pro.views import PayPalPro
 from paypal.standard.forms import PayPalSharedSecretEncryptedPaymentsForm
 
-
+def request_payment_return(request):
+    logging.info(result)
+    return HttpResponse('OK')
+    
 def request_payment_standard(request):
     return HttpResponse(render_payment_standard_button())
 
@@ -277,7 +285,9 @@ def render_payment_standard_button(amount = "10.00"):
 
     
     # Output the button.
-    return form.sandbox()
+    result = form.sandbox()
+    logging.info(result)
+    return result
 
 
 
