@@ -9,7 +9,7 @@ from django.utils.translation               import ugettext_lazy as _
 from django.contrib.auth.models             import User
 from registration.models                    import RegistrationProfile
 from recaptcha                              import RecaptchaForm, RecaptchaFieldPlaceholder, RecaptchaWidget
-
+import os
 import logging
 logging = logging.getLogger(os.path.splitext(os.path.basename(__file__))[0])
 

@@ -1,4 +1,5 @@
 from paypal.standard.signals import payment_was_successful
+import os
 import logging
 logging = logging.getLogger(os.path.splitext(os.path.basename(__file__))[0])
 
