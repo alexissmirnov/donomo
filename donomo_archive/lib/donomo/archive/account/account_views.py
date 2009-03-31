@@ -263,8 +263,12 @@ from paypal.standard.forms import PayPalSharedSecretEncryptedPaymentsForm
 import time
 
 def request_payment_return(request):
-    logging.info(result)
+    logging.info(request)
     return HttpResponse('OK')
+
+def request_payment_cancel(request):
+    logging.info(result)
+    return HttpResponse('sorry it didnt work out (TODO)')
     
 def request_payment_standard(request):
     return HttpResponse(render_payment_standard_button())
@@ -287,7 +291,6 @@ def render_payment_standard_button(amount = "10.00"):
     
     # Output the button.
     result = form.sandbox()
-    logging.info(result)
     return result
 
 

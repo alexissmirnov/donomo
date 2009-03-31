@@ -51,6 +51,9 @@ urlpatterns = patterns('',
                        url(r'^pay/return/$', 
                             'donomo.archive.account.account_views.request_payment_return'),
 
+                       url(r'^pay/cancel/$', 
+                            'donomo.archive.account.account_views.request_payment_cancel'),
+
                        url(r'^pay/ipn/$', 
                             'paypal.standard.views.ipn',
                             name='paypal.standard.ipn'),
