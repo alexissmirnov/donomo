@@ -8,7 +8,7 @@ logging = logging.getLogger(os.path.splitext(os.path.basename(__file__))[0])
 
 def on_payment_complete(**kwargs):
     logging.info('payment complete : %s' % kwargs)
-    ipn = kwrags['sender']
+    ipn = kwargs['sender']
     u = Users.objects.get(email=ipn.payer_email)
     account = Account.objects.get_or_create(owner = u)[0]
     
