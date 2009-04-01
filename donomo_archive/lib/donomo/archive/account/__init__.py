@@ -1,4 +1,6 @@
-from paypal.standard.signals import payment_was_successful
+from paypal.standard.signals    import payment_was_successful
+from donomo.billing.models      import Account
+
 import os
 import logging
 logging = logging.getLogger(os.path.splitext(os.path.basename(__file__))[0])
@@ -8,7 +10,10 @@ def on_payment_complete(**kwargs):
     logging.info('payment complete : %s' % kwargs)
     ipn = kwrags['sender']
     u = Users.objects.get(email=ipn.payer_email)
-    logging.info('credit user %s with %s' % ( u, ipn))
-    u.groups.add(Group.objects.create(name=ipn.mc_gross)) #TODO create an Account model
+    account = Account.objects.get_or_create(owner = u)[0]
+    
+    if ipn.payment_status == 'Completed':
+        account.balance = account.balance + Account.USD_TO_CREDITS * float(ipn.mc_gross)
+        account.save()
     
 payment_was_successful.connect(on_payment_complete)

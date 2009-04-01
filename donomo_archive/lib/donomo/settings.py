@@ -276,6 +276,7 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.admin',
     'donomo.archive',
+    'donomo.billing',
     'registration',
     'paypal.pro',
     'paypal.standard',

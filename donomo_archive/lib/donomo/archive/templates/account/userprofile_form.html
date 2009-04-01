@@ -7,9 +7,14 @@
 {% block content %}
 	{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 	
-	<p>Settings for {{user}}:</p>
+	<p>{{user}}:</p>
 	
-	Fill my account with $10.00. Enough for 3000 pages.
+	<p>Processed {{page_count}} pages in {{document_count}} documents</p>	
+
+	<p>Remaining balance: {{balance}}$</p>
+
+
+	Add <strong>$10.00</strong> to my account
 	<br>
 	{% autoescape off %}
 	{{ pay10 }}

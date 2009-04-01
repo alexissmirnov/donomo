@@ -8,6 +8,8 @@ from django                                 import forms
 from django.utils.translation               import ugettext_lazy as _
 from django.contrib.auth.models             import User
 from registration.models                    import RegistrationProfile
+from donomo.archive.models                  import Page, Document
+from donomo.billing.models                  import Account
 from recaptcha                              import RecaptchaForm, RecaptchaFieldPlaceholder, RecaptchaWidget
 import os
 import logging
@@ -56,8 +58,23 @@ def account_detail(request, username):
         return HttpResponse('forbidden: username %s' % username)
     
     if request.method == 'GET':
+        page_count = Page.objects.filter(owner = request.user).count()
+        document_count = Document.objects.filter(owner = request.user).count()
+
+        try:
+            account = Account.objects.get(owner = request.user)
+            balance = account.balance
+        except:
+            balance = 0
+        
+        
+        balance = balance / Account.USD_TO_CREDITS
+        
         return render_to_response('account/userprofile_form.html', 
-                                  {'pay10' : render_payment_standard_button()},
+                                  {'pay10' : render_payment_standard_button(),
+                                   'page_count' : page_count,
+                                   'document_count': document_count,
+                                   'balance' : balance},
                                   context_instance = RequestContext(request))
     else:
         return HttpResponse('forbidden')
