@@ -284,7 +284,7 @@ def request_payment_return(request):
     return HttpResponse('OK')
 
 def request_payment_cancel(request):
-    logging.info(result)
+    logging.info(request)
     return HttpResponse('sorry it didnt work out (TODO)')
     
 def request_payment_standard(request):
