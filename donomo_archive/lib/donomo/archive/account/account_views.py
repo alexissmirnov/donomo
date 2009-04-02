@@ -292,7 +292,7 @@ def request_payment_standard(request):
 
 def render_payment_standard_button(owner, amount = "10.00"):
     # What you want the button to do.
-    invoice = Invoice(owner = owner, pk = str(time.time()))
+    invoice = Invoice(owner = owner, pk = int(time.time()))
     invoice.save()
     
     paypal_dict = {
