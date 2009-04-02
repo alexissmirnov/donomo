@@ -4,7 +4,6 @@ from django.contrib.auth.models          import User
 class Invoice(models.Model):
     owner = models.ForeignKey(
         User,
-        unique = True,
         null   = False)
 
 class Account(models.Model):
