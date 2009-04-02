@@ -7,7 +7,7 @@ class Invoice(models.Model):
         null   = False)
 
 class Account(models.Model):
-    PROCUDT_CREDIT_CARGE = {'OCR': 10}
+    PRODUCT_CREDIT_CARGE = {'OCR': 10}
     USD_TO_CREDITS = 1000
 
     
@@ -18,12 +18,17 @@ class Account(models.Model):
     balance = models.IntegerField()
     
     def expense(product, owner):
-        account = Account.objects.get(owner = owner)
-        balance = account.balance - PAccount.ROCUDT_CREDIT_CARGE[product]
-    
+        try:
+            account = Account.objects.get(owner = owner)
+        except:
+            return True # Everything's free for non-account holders!
+        
+        balance = account.balance - Account.PRODUCT_CREDIT_CARGE[product]
+
         if balance > 0:
             account.balance = balance
             account.save()
             return True
         else:
             return False
+        

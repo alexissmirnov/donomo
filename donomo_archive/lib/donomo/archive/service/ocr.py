@@ -6,6 +6,8 @@ text/html representations, suitable for indexing in a search engine.
 """
 
 from donomo.archive import operations, models
+from donomo.billing.models import Account
+
 import os
 import logging
 
@@ -38,6 +40,7 @@ def image_to_html( in_path, out_path = None ):
     if out_path is None:
         out_path = '%s.html' % in_path
 
+    #if 0 != os.system('cat /tmp/ocrstub.html > %r' % out_path):
     if 0 != os.system('/usr/local/bin/ocroscript recognize %r > %r' % (in_path, out_path)):
         raise OCRFailed( 'Failed to OCR: %r' % in_path)
 
@@ -73,7 +76,11 @@ def handle_work_item(processor, item):
                     asset_class = models.AssetClass.DOCUMENT,
                     mime_type   = models.MimeType.BINARY ))
 
-        return new_work
+        if Account.expense('OCR', item['Owner']):
+            return new_work
+        else:
+            raise Exception("Insufficient account balance")
+            
 
     except OCRFailed:
         logging.warning('OCR failed, dropping from processing chain')
