@@ -68,13 +68,13 @@ def account_detail(request, username):
             balance = 0
         
         
-        balance = balance / Account.USD_TO_CREDITS
+        balance = float(balance) / Account.USD_TO_CREDITS
         
         return render_to_response('account/userprofile_form.html', 
                                   {'pay10' : render_payment_standard_button(request.user),
                                    'page_count' : page_count,
                                    'document_count': document_count,
-                                   'balance' : balance},
+                                   'balance' : "%0.2f" % balance},
                                   context_instance = RequestContext(request))
     else:
         return HttpResponse('forbidden')
