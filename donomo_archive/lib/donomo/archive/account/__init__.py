@@ -1,5 +1,5 @@
 from paypal.standard.signals    import payment_was_successful
-from donomo.billing.models      import Account
+from donomo.billing.models      import Account, Invoice
 from django.contrib.auth.models import User
 
 import os
