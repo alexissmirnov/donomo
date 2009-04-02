@@ -1,11 +1,17 @@
 from django.db                           import models
 from django.contrib.auth.models          import User
 
+class Invoice(models.Model):
+    owner = models.ForeignKey(
+        User,
+        unique = True,
+        null   = False)
 
 class Account(models.Model):
     PROCUDT_CREDIT_CARGE = {'OCR': 10}
     USD_TO_CREDITS = 1000
 
+    
     owner = models.ForeignKey(
         User,
         unique = True,

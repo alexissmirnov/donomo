@@ -288,15 +288,18 @@ def request_payment_cancel(request):
     return HttpResponse('sorry it didnt work out (TODO)')
     
 def request_payment_standard(request):
-    return HttpResponse(render_payment_standard_button())
+    return HttpResponse(render_payment_standard_button(request.user))
 
-def render_payment_standard_button(amount = "10.00"):
+def render_payment_standard_button(owner, amount = "10.00"):
     # What you want the button to do.
+    invoice = Invoice(owner = owner)
+    invoice.save()
+    
     paypal_dict = {
         "business": "dev@donomo.com",
         "amount": amount,
         "item_name": "3000 pages. Basic OCR.",
-        "invoice": str(time.time()),
+        "invoice": str(invoice.pk),
         "notify_url": "https://archive.donomo.com/account/pay/ipn/",
         "return_url": "https://archive.donomo.com/account/pay/return/",
         "cancel_return": "https://archive.donomo.com/account/pay/cancel/",
