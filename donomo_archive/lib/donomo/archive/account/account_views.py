@@ -9,7 +9,7 @@ from django.utils.translation               import ugettext_lazy as _
 from django.contrib.auth.models             import User
 from registration.models                    import RegistrationProfile
 from donomo.archive.models                  import Page, Document
-from donomo.billing.models                  import Account
+from donomo.billing.models                  import Account, Invoice
 from recaptcha                              import RecaptchaForm, RecaptchaFieldPlaceholder, RecaptchaWidget
 import os
 import logging
