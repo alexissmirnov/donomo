@@ -6,7 +6,7 @@ text/html representations, suitable for indexing in a search engine.
 """
 
 from donomo.archive import operations, models
-from donomo.billing.models import Account
+from donomo.billing.models import expence
 
 import os
 import logging
@@ -76,7 +76,7 @@ def handle_work_item(processor, item):
                     asset_class = models.AssetClass.DOCUMENT,
                     mime_type   = models.MimeType.BINARY ))
 
-        if Account.expense('OCR', item['Owner']):
+        if expense('OCR', item['Owner']):
             return new_work
         else:
             raise Exception("Insufficient account balance")
