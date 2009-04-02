@@ -7,7 +7,7 @@ class Invoice(models.Model):
         null   = False)
 
 class Account(models.Model):
-    PRODUCT_CREDIT_CARGE = {'OCR': 10}
+    PRODUCT_CREDIT_CARGE = {'OCR': 5}
     USD_TO_CREDITS = 1000
 
     

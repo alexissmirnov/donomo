@@ -315,15 +315,29 @@ RECAPTCHA_PRIVATE_KEY = "6LdwQwMAAAAAAJCZP67vaWH8WiDN5nkOT8pm2D9x"
 BASIC_AUTH_REALM = 'donomo.com'
 LOGIN_URL='/account/login/'
 
-PAYPAL_TEST = True         # Start in Testing Mode
-PAYPAL_WPP_USER = 'dev_api1.donomo.com'      # Test account in dev@donomo.com on https://www.sandbox.paypal.com
-PAYPAL_WPP_PASSWORD = 'EVWFTBCXJUDPH7VZ'
-PAYPAL_WPP_SIGNATURE = 'ADBMLWxrAZMY.Rr08USjIUj5vX-yAectXtjRuUpXE6BPZ2-RRrQGHz1H'
-PAYPAL_CERT_ID = 'FYRVMK6LERSJ6'
-PAYPAL_PRIVATE_CERT = join_and_normalize(DONOMO_PATH, '../../../xen/paypal/sandbox_donomo_private_key.pem')
-PAYPAL_PUBLIC_CERT = join_and_normalize(DONOMO_PATH, '../../../xen/paypal/sandbox_donomo_public_cert.pem')
-PAYPAL_CERT = join_and_normalize(DONOMO_PATH, '../../../xen/paypal/sandbox_paypal_public_cert.pem')
-PAYPAL_RECEIVER_EMAIL = 'dev@donomo.com'
+PAYPAL_SANDBOX = False
+# dev@donomo.com sandbox account 
+#PAYPAL_TEST = True         # Start in Testing Mode
+#PAYPAL_WPP_USER = 'dev_api1.donomo.com'      # Test account in dev@donomo.com on https://www.sandbox.paypal.com
+#PAYPAL_WPP_PASSWORD = 'EVWFTBCXJUDPH7VZ'
+#PAYPAL_WPP_SIGNATURE = 'ADBMLWxrAZMY.Rr08USjIUj5vX-yAectXtjRuUpXE6BPZ2-RRrQGHz1H'
+#PAYPAL_CERT_ID = 'FYRVMK6LERSJ6'
+#PAYPAL_PRIVATE_CERT = join_and_normalize(DONOMO_PATH, '../../../xen/paypal/sandbox_donomo_private_key.pem')
+#PAYPAL_PUBLIC_CERT = join_and_normalize(DONOMO_PATH, '../../../xen/paypal/sandbox_donomo_public_cert.pem')
+#PAYPAL_CERT = join_and_normalize(DONOMO_PATH, '../../../xen/paypal/sandbox_paypal_public_cert.pem')
+#PAYPAL_RECEIVER_EMAIL = 'dev@donomo.com'
+
+# paypal@donomo.com account
+PAYPAL_TEST = True
+PAYPAL_WPP_USER = 'paypal_api1.donomo.com'
+PAYPAL_WPP_PASSWORD = 'GS32ULMZSEXDD5GG'
+PAYPAL_WPP_SIGNATURE = 'Ae9-lLUsGkkjXdO7suGsz0g7oeFEA7ClGeDM5Arsb-F4Qlo1PkR0d--0'
+PAYPAL_CERT_ID = '5ZQ93VYSUMWTN'
+PAYPAL_PRIVATE_CERT = '/etc/paypal/donomo_private_key.pem'
+PAYPAL_PUBLIC_CERT = '/etc/paypal/donomo_public_cert.pem'
+PAYPAL_CERT = '/etc/paypal/paypal_public_cert.pem'
+PAYPAL_RECEIVER_EMAIL = 'paypal@donomo.com'
+
 
 #for k in os.environ.keys():
 #    del os.environ[k]

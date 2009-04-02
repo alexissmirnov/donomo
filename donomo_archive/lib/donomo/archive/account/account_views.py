@@ -281,11 +281,11 @@ import time
 
 def request_payment_return(request):
     logging.info(request)
-    return HttpResponse('OK')
+    return HttpResponseRedirect('/')
 
 def request_payment_cancel(request):
     logging.info(request)
-    return HttpResponse('sorry it didnt work out (TODO)')
+    return HttpResponseRedirect('/')
     
 def request_payment_standard(request):
     return HttpResponse(render_payment_standard_button(request.user))
@@ -298,7 +298,7 @@ def render_payment_standard_button(owner, amount = "10.00"):
     paypal_dict = {
         "business": "dev@donomo.com",
         "amount": amount,
-        "item_name": "3000 pages. Basic OCR.",
+        "item_name": "On-demand OCR for 2,000 pages",
         "invoice": str(invoice.pk),
         "notify_url": "https://archive.donomo.com/account/pay/ipn/",
         "return_url": "https://archive.donomo.com/account/pay/return/",
@@ -310,7 +310,11 @@ def render_payment_standard_button(owner, amount = "10.00"):
 
     
     # Output the button.
-    result = form.sandbox()
+    if settings.PAYPAL_SANDBOX: 
+        result = form.sandbox()
+    else:
+        result = form.render()
+        
     return result
 
 
