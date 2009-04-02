@@ -71,7 +71,7 @@ def account_detail(request, username):
         balance = balance / Account.USD_TO_CREDITS
         
         return render_to_response('account/userprofile_form.html', 
-                                  {'pay10' : render_payment_standard_button(),
+                                  {'pay10' : render_payment_standard_button(request.user),
                                    'page_count' : page_count,
                                    'document_count': document_count,
                                    'balance' : balance},
