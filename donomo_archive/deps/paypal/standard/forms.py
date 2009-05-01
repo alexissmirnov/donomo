@@ -1,44 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from django import forms
-from django.forms.util import flatatt
 from django.conf import settings
 from django.utils.safestring import mark_safe
-from django.utils.encoding import force_unicode
-from django.core.urlresolvers import reverse
-from django.contrib.sites.models import Site
-from django.conf import settings
-
+from paypal.standard.conf import *
 from paypal.standard.widgets import ValueHiddenInput, ReservedValueHiddenInput
-from paypal.standard.models import PayPalIPN
-
-# ### Todo: Can we put a default notify_url initial that defaults to the ipn view?
-# NOTIFY_URL = getattr(settings, 'PAYPAL_NOTIFY_URL', "%s%s" % (Site.objects.get_current(), reverse('paypal.standard.views.ipn')
-NOTIFY_URL = None
-
-# API Endpoints.
-ENDPOINT = "https://www.paypal.com/cgi-bin/webscr"
-SANDBOX_ENDPOINT = "https://www.sandbox.paypal.com/cgi-bin/webscr"
-# Images used to render zee buttons
-IMAGE = getattr(settings, "PAYPAL_IMAGE", "http://images.paypal.com/images/x-click-but01.gif")
-SANDBOX_IMAGE = getattr(settings, "PAYPAL_SANDBOX_IMAGE", "https://www.sandbox.paypal.com/en_US/i/btn/btn_buynowCC_LG.gif")
+from paypal.standard.models import POSTBACK_ENDPOINT, SANDBOX_POSTBACK_ENDPOINT
 
 
-class PayPalIPNForm(forms.ModelForm):
-    """
-    Form used to receive and record PayPal IPN notifications.
-    
-    PayPal IPN test tool:
-    https://developer.paypal.com/us/cgi-bin/devscr?cmd=_tools-session    
-    
-    """
-    # PayPal dates have non-standard formats.
-    payment_date = forms.DateTimeField(required=False, input_formats=PayPalIPN.PAYPAL_DATE_FORMAT)
-    next_payment_date = forms.DateTimeField(required=False, input_formats=PayPalIPN.PAYPAL_DATE_FORMAT)
-
-    class Meta:
-        model = PayPalIPN
-
+# 20:18:05 Jan 30, 2009 PST - PST timezone support is not included out of the box.
+# PAYPAL_DATE_FORMAT = ("%H:%M:%S %b. %d, %Y PST", "%H:%M:%S %b %d, %Y PST",)
+# PayPal dates have been spotted in the wild with these formats, beware!
+PAYPAL_DATE_FORMAT = ("%H:%M:%S %b. %d, %Y PST",
+                      "%H:%M:%S %b. %d, %Y PDT",
+                      "%H:%M:%S %b %d, %Y PST",
+                      "%H:%M:%S %b %d, %Y PDT",)
 
 class PayPalPaymentsForm(forms.Form):
     """
@@ -53,15 +29,14 @@ class PayPalPaymentsForm(forms.Form):
     >>> f.render()
     u'<form action="https://www.paypal.com/cgi-bin/webscr" method="post"> ...'
     
-    """
-    # ### ToDo: Add notify_url initial value.
-    
-    # Choices.
-    CMD_CHOIES = (("_xclick", "Buy now or Donations"), ("_cart", "Shopping cart"))
-    SHIPPING_CHOIES = ((1, "No shipping"), (0, "Shipping"))
+    """    
+    CMD_CHOICES = (("_xclick", "Buy now or Donations"), ("_cart", "Shopping cart"), ("_xclick-subscriptions", "Subscribe"))
+    SHIPPING_CHOICES = ((1, "No shipping"), (0, "Shipping"))
+    NO_NOTE_CHOICES = ((1, "No Note"), (0, "Include Note"))
+    RECURRING_PAYMENT_CHOICES = ((1, "Subscription Payments Recur"), (0, "Subscription payments do not recur"))
+    REATTEMPT_ON_FAIL_CHOICES = ((1, "reattempt billing on Failure"), (0, "Do Not reattempt on failure"))
         
     # Where the money goes.
-    RECEIVER_EMAIL = settings.PAYPAL_RECEIVER_EMAIL
     business = forms.CharField(widget=ValueHiddenInput(), initial=RECEIVER_EMAIL)
 
     # Item information.
@@ -69,36 +44,60 @@ class PayPalPaymentsForm(forms.Form):
     item_name = forms.CharField(widget=ValueHiddenInput())
     item_number = forms.CharField(widget=ValueHiddenInput())
     quantity = forms.CharField(widget=ValueHiddenInput())
+    
+    # Subscription Related.
+    a3 = forms.CharField(widget=ValueHiddenInput())  # Subscription Price
+    p3 = forms.CharField(widget=ValueHiddenInput())  # Subscription Duration
+    t3 = forms.CharField(widget=ValueHiddenInput())  # Subscription unit of Duration, default to Month
+    src = forms.CharField(widget=ValueHiddenInput()) # Is billing recurring? default to yes
+    sra = forms.CharField(widget=ValueHiddenInput()) # Reattempt billing on failed cc transaction
+    no_note = forms.CharField(widget=ValueHiddenInput())
 
     # Localization / PayPal Setup
     lc = forms.CharField(widget=ValueHiddenInput())
+    page_style = forms.CharField(widget=ValueHiddenInput())
+    cbt = forms.CharField(widget=ValueHiddenInput())
 
     # IPN control.
-    notify_url = forms.CharField(widget=ValueHiddenInput()) #, initial=NOTIFY_URL)
+    notify_url = forms.CharField(widget=ValueHiddenInput())
     cancel_return = forms.CharField(widget=ValueHiddenInput())
     return_url = forms.CharField(widget=ReservedValueHiddenInput(attrs={"name":"return"}))
     custom = forms.CharField(widget=ValueHiddenInput())
     invoice = forms.CharField(widget=ValueHiddenInput())
-
+    
     # Default fields.
-    cmd = forms.ChoiceField(widget=forms.HiddenInput(), initial=CMD_CHOIES[0][0])
+    cmd = forms.ChoiceField(widget=forms.HiddenInput(), initial=CMD_CHOICES[0][0])
     charset = forms.CharField(widget=forms.HiddenInput(), initial="utf-8")
     currency_code = forms.CharField(widget=forms.HiddenInput(), initial="USD")
-    no_shipping = forms.ChoiceField(widget=forms.HiddenInput(), choices=SHIPPING_CHOIES, initial=SHIPPING_CHOIES[0][0])
+    no_shipping = forms.ChoiceField(widget=forms.HiddenInput(), choices=SHIPPING_CHOICES, initial=SHIPPING_CHOICES[0][0])
 
-    def _render(self, endpoint, image):
-        return mark_safe(u"""
-            <form action="%s" method="post">
-                %s
-                <input type="image" src="%s" border="0" name="submit" alt="Paypal" />
-            </form>
-        """ % (endpoint, self.as_p(), image)) 
+    def __init__(self, button_type="buy", *args, **kwargs):
+        super(PayPalPaymentsForm, self).__init__(*args, **kwargs)
+        self.button_type = button_type
     
     def render(self):
-        return self._render(ENDPOINT, IMAGE)
+        return mark_safe(u"""<form action="%s" method="post">
+    %s
+    <input type="image" src="%s" border="0" name="submit" alt="Buy it Now" />
+</form>""" % (self.get_endpoint(), self.as_p(), self.get_image())) 
+    
+    def get_endpoint(self):
+        if TEST:
+            return SANDBOX_POSTBACK_ENDPOINT
+        else:
+            return POSTBACK_ENDPOINT
+        
+    def get_image(self):
+        return {(True, True): SUBSCRIPTION_SANDBOX_IMAGE,
+                (True, False): SANDBOX_IMAGE,
+                (False, True): SUBSCRIPTION_IMAGE,
+                (False, False): IMAGE}[TEST, self.is_subscription()]
 
-    def sandbox(self):
-        return self._render(SANDBOX_ENDPOINT, SANDBOX_IMAGE)
+    def is_transaction(self):
+        return self.button_type == "buy"
+
+    def is_subscription(self):
+        return self.button_type == "subscribe"
 
 
 class PayPalEncryptedPaymentsForm(PayPalPaymentsForm):
@@ -111,11 +110,9 @@ class PayPalEncryptedPaymentsForm(PayPalPaymentsForm):
     
     """
     def _encrypt(self):
-        """
-        Use your key thing to encrypt things.
-        
-        """
+        """Use your key thing to encrypt things."""
         from M2Crypto import BIO, SMIME, X509
+        # ### ToDo: Could we move this to conf.py?
         CERT = settings.PAYPAL_PRIVATE_CERT
         PUB_CERT = settings.PAYPAL_PUBLIC_CERT
         PAYPAL_CERT = settings.PAYPAL_CERT
@@ -154,8 +151,8 @@ class PayPalEncryptedPaymentsForm(PayPalPaymentsForm):
     	
     def as_p(self):
         return mark_safe(u"""
-        	<input type="hidden" name="cmd" value="_s-xclick" />
-        	<input type="hidden" name="encrypted" value="%s" />            
+<input type="hidden" name="cmd" value="_s-xclick" />
+<input type="hidden" name="encrypted" value="%s" />            
         """ % self._encrypt())
 
 
@@ -180,84 +177,11 @@ class PayPalSharedSecretEncryptedPaymentsForm(PayPalEncryptedPaymentsForm):
             self.fields['notify_url'].initial += secret_param
 
 
-class PayPalPaymentsExtendedForm(PayPalPaymentsForm):
-    """
-    Idea for a PayPal form with all fields.
-    """
-    # ### Item Information
-    # undefined_quantity
-    # on0
-    # on1
-    # os0
-    # os1
-    
-    # ### Display Information
-    # add
-    # cbt
-    # cn
-    # cpp_header_image
-    # cpp_headerback_color
-    # cpp_payflow_color
-    # cs
-    # display
-    # image_url
-    # page_style
-    # shopping_url
-    # rm
-    
-    # ### Transaction Information
-    address_override = forms.CharField(widget=ValueHiddenInput())
-    currency_code = forms.CharField(widget=forms.HiddenInput(), initial="USD")
-    custom = forms.CharField(widget=ValueHiddenInput())
-    # handling
-    invoice = forms.CharField(widget=ValueHiddenInput())
-    # shipping
-    # shipping2
-    # tax
-    # tax_cart
-    # handling_cart
-    # paymentaction
-    # upload
-    
-    # ### Third-Party Shopping Carts
-    # amount_x
-    # handling_x
-    # item_name_x
-    # item_number_x
-    # on0_x
-    # on1_x
-    # os0_x
-    # os1_x
-    # quantity_x
-    # shipping_x
-    # shipping2_x
-    # tax_x
-    
-    # ### Address Overriding
-    address1 = forms.CharField(widget=ValueHiddenInput())
-    address2 = forms.CharField(widget=ValueHiddenInput())
-    city = forms.CharField(widget=ValueHiddenInput())
-    country = forms.CharField(widget=ValueHiddenInput())
-    first_name = forms.CharField(widget=ValueHiddenInput())
-    last_name = forms.CharField(widget=ValueHiddenInput())
-    # lc
-    # night_phone_a
-    # night_phone_b
-    # night_phone_c
-    state = forms.CharField(widget=ValueHiddenInput())
-    zip = forms.CharField(widget=ValueHiddenInput())
-    
-    # ### Business Account Sign-up
-    # business_address1
-    # business_address2
-    # business_city
-    # business_state
-    # business_country
-    # business_cs_email
-    # business_cs_phone_a
-    # business_cs_phone_b
-    # business_cs_phone_c
-    # business_url
-    # business_night_phone_a
-    # business_night_phone_b
-    # business_night_phone_c
+class PayPalStandardBaseForm(forms.ModelForm):
+    """Form used to receive and record PayPal IPN/PDT."""
+    # PayPal dates have non-standard formats.
+    time_created = forms.DateTimeField(required=False, input_formats=PAYPAL_DATE_FORMAT)
+    payment_date = forms.DateTimeField(required=False, input_formats=PAYPAL_DATE_FORMAT)
+    next_payment_date = forms.DateTimeField(required=False, input_formats=PAYPAL_DATE_FORMAT)
+    subscr_date = forms.DateTimeField(required=False, input_formats=PAYPAL_DATE_FORMAT)
+    subscr_effective = forms.DateTimeField(required=False, input_formats=PAYPAL_DATE_FORMAT)
