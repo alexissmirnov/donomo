@@ -1,6 +1,6 @@
 from django.http                            import HttpResponse, HttpResponseRedirect
 from django.conf                            import settings
-from django.contrib.auth                    import authenticate, login, logout
+from django.contrib                         import auth
 from django.contrib.auth.decorators         import login_required
 from django.shortcuts                       import render_to_response
 from django.template                        import RequestContext            
@@ -32,10 +32,10 @@ def account_delete(request):
 def signin(request):
     username = request.POST['username']
     password = request.POST['password']
-    user = authenticate(username=username, password=password)
+    user = auth.authenticate(username=username, password=password)
     if user is not None:
         if user.is_active:
-            login(request, user)
+            auth.login(request, user)
             return HttpResponseRedirect('/')
         else:
             return render_to_response('account/account_disabled.html')
@@ -43,9 +43,12 @@ def signin(request):
         return render_to_response('account/invalid_login.html')
             
 @login_required()
-def signout(request):
-    logout(request)
-    return HttpResponseRedirect('/')    
+def logout(request):
+    logging.debug(RequestContext(request))
+    
+    return auth.logout(request, 
+                       next_page=request.REQUEST.get('next', None),
+                       template_name = RequestContext(request)['template_name'])
 
 @login_required()    
 def account_detail(request, username):

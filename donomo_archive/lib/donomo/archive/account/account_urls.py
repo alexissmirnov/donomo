@@ -5,7 +5,7 @@ from django.views.generic.simple import direct_to_template
 from django.contrib.auth import views as auth_views
 
 from registration.views import activate
-from donomo.archive.account.account_views import register
+from donomo.archive.account.account_views import register, logout
 
 
 urlpatterns = patterns('',

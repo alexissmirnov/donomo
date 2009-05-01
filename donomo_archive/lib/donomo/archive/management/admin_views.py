@@ -11,7 +11,7 @@ Admin view function entry points
 
 from django.contrib.admin.views.decorators import staff_member_required
 from donomo.archive.utils.http             import http_method_dispatcher
-from donomo.archive.admin.admin_impl       import *
+from donomo.archive.management.admin_impl       import *
 
 __all__ = (
     'queue_list',

@@ -1,8 +1,8 @@
 from django.contrib import admin
-from models import *
+from donomo.archive.models import *
 
 class MimeTypeAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('__unicode__',)
 admin.site.register(MimeType, MimeTypeAdmin)
 
 class ProcessAdmin(admin.ModelAdmin):
@@ -23,7 +23,7 @@ admin.site.register(Tag, TagAdmin)
 
 class DocumentAdmin(admin.ModelAdmin):
     pass
-admin.site.register(Document, Document)
+admin.site.register(Document, DocumentAdmin)
 
 class PageAdmin(admin.ModelAdmin):
     pass

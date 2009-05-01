@@ -10,7 +10,7 @@ URL to view mappings for admin functions.
 #
 
 from django.conf.urls.defaults import url, patterns
-from donomo.archive.admin.admin_views import *
+from donomo.archive.management.admin_views import *
 
 urlpatterns = patterns(
     '',
