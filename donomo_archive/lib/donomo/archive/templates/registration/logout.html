@@ -3,5 +3,29 @@
 {% block title %}Signup to Cloud OCR{% endblock %}
 
 {% block content %}
-		<h2>Thank you for using Cloud OCR.</h2>
+		<h2>Log in to Cloud OCR account.</h2>
+		<p></p>
+       <form action="{%url auth_login%}?next=/" method="post">
+       	<table>
+       		<tbody>
+       			<tr>
+	       			<th>
+	       				<label for="id_email">Email address:</label> 
+	       			</th>
+					<td>
+						<input class="username" type="text" name="username" value="{{account}}">
+					</td>
+				</tr>
+       			<tr>
+	       			<th>
+	       				<label for="id_password">Password:</label> 
+	       			</th>
+					<td>
+						<input class="password" type='password' name='password'>
+					</td>
+				</tr>
+       		</tbody>
+       	</table>
+		<input type="submit" value="Login">
+        </form>
 {% endblock %}
