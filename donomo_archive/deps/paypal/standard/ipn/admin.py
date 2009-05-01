@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import string
-
+from string import split as L
 from django.contrib import admin
-
-from paypal.standard.models import PayPalIPN
+from paypal.standard.ipn.models import PayPalIPN
 
 # ### ToDo: These fields groupings are just a best guess. Need to be rearranged
 # ### by somone with after using the system for some time.
@@ -12,7 +10,6 @@ from paypal.standard.models import PayPalIPN
 # ### ToDo: Maybe move these `fields` into the model as BUYER_FIELDS = "..."
 # ### so they can be accessed by forms etc.
 
-L = string.split
 
 class PayPalIPNAdmin(admin.ModelAdmin):
     date_hierarchy = 'payment_date'
@@ -43,9 +40,9 @@ class PayPalIPNAdmin(admin.ModelAdmin):
         ("Admin", {
             "description": "Additional Info.",
             "classes": ('collapse',),
-            "fields": L("test_ipn ipaddress query flag_code flag_info")
+            "fields": L("test_ipn ipaddress query response flag_code flag_info")
         }),
     )
-    list_display = L("__unicode__ flag invoice custom payment_status created_at")
+    list_display = L("__unicode__ flag flag_info invoice custom payment_status created_at")
     search_fields = L("txn_id recurring_payment_id")
 admin.site.register(PayPalIPN, PayPalIPNAdmin)
