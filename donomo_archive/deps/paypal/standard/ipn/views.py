@@ -5,6 +5,8 @@ from django.views.decorators.http import require_POST
 from paypal.standard.ipn.forms import PayPalIPNForm
 from paypal.standard.ipn.models import PayPalIPN
 
+import logging
+logging = logging.getLogger(os.path.splitext(os.path.basename(__file__))[0])
 
 @require_POST
 def ipn(request, item_check_callable=None):
@@ -17,6 +19,9 @@ def ipn(request, item_check_callable=None):
     https://developer.paypal.com/cgi-bin/devscr?cmd=_ipn-link-session
     
     """    
+    
+    logging.info(request)
+    
     form = PayPalIPNForm(request.POST)
     if form.is_valid():
         try:
