@@ -295,7 +295,7 @@ def request_payment_standard(request):
     return HttpResponse(render_payment_standard_button(request.user))
 
 def render_payment_standard_button(owner, amount = "10.00"):
-    logging.info('rendering standard payment button. sandbox? ' + settings.PAYPAL_SANDBOX)
+    logging.info('rendering standard payment button. sandbox? ' + settings.PAYPAL_TEST)
     
     # What you want the button to do.
     invoice = Invoice(owner = owner, pk = int(time.time()))
@@ -307,7 +307,7 @@ def render_payment_standard_button(owner, amount = "10.00"):
         "item_name": "On-demand OCR for 2,000 pages",
         "invoice": str(invoice.pk),
         "notify_url": "https://archive.donomo.com/account/pay/ipn/gpxjyxmrzzqpncosnbenvkkzcmxz",
-        "return_url": "https://archive.donomo.com/account/pay/return/",
+        "return_url": "https://archive.donomo.com/account/pay/ipn/gpxjyxmrzzqpncosnbenvkkzcmxz", #"https://archive.donomo.com/account/pay/return/",
         "cancel_return": "https://archive.donomo.com/account/pay/cancel/",
     }
 
