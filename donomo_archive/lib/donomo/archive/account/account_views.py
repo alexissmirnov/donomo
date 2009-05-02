@@ -295,6 +295,8 @@ def request_payment_standard(request):
     return HttpResponse(render_payment_standard_button(request.user))
 
 def render_payment_standard_button(owner, amount = "10.00"):
+    logging.info('rendering standard payment button. sandbox? ' + settings.PAYPAL_SANDBOX)
+    
     # What you want the button to do.
     invoice = Invoice(owner = owner, pk = int(time.time()))
     invoice.save()
@@ -314,10 +316,7 @@ def render_payment_standard_button(owner, amount = "10.00"):
 
     
     # Output the button.
-    if settings.PAYPAL_SANDBOX: 
-        result = form.sandbox()
-    else:
-        result = form.render()
+    result = form.render()
         
     return result
 

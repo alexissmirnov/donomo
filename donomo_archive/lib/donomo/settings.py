@@ -315,10 +315,9 @@ RECAPTCHA_PRIVATE_KEY = "6LdwQwMAAAAAAJCZP67vaWH8WiDN5nkOT8pm2D9x"
 BASIC_AUTH_REALM = 'donomo.com'
 LOGIN_URL='/account/login/'
 
-PAYPAL_SANDBOX = bool(query_env('PAYPAL_SANDBOX', False))
-if PAYPAL_SANDBOX:
+PAYPAL_TEST = bool(query_env('PAYPAL_TEST', True))
+if PAYPAL_TEST:
     # dev@donomo.com sandbox account 
-    PAYPAL_TEST = True         # Start in Testing Mode
     PAYPAL_WPP_USER = 'dev_api1.donomo.com'      # Test account in dev@donomo.com on https://www.sandbox.paypal.com
     PAYPAL_WPP_PASSWORD = 'EVWFTBCXJUDPH7VZ'
     PAYPAL_WPP_SIGNATURE = 'ADBMLWxrAZMY.Rr08USjIUj5vX-yAectXtjRuUpXE6BPZ2-RRrQGHz1H'
@@ -329,7 +328,6 @@ if PAYPAL_SANDBOX:
     PAYPAL_RECEIVER_EMAIL = 'dev@donomo.com'
 else:
     # paypal@donomo.com account
-    PAYPAL_TEST = False
     PAYPAL_WPP_USER = 'paypal_api1.donomo.com'
     PAYPAL_WPP_PASSWORD = 'GS32ULMZSEXDD5GG'
     PAYPAL_WPP_SIGNATURE = 'Ae9-lLUsGkkjXdO7suGsz0g7oeFEA7ClGeDM5Arsb-F4Qlo1PkR0d--0'
