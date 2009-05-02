@@ -3,6 +3,10 @@
 from django.conf import settings
 from django.contrib.auth.models import get_hexdigest
 
+import logging
+import os
+logging = logging.getLogger(os.path.splitext(os.path.basename(__file__))[0])
+
 
 def duplicate_txn_id(ipn_obj):
     """Returns True if a record with this transaction id exists."""
@@ -45,4 +49,8 @@ def check_secret(form_instance, secret):
     """
     # ### ToDo: add invoice & custom
     # secret_fields = ['business', 'item_name']
-    return make_secret(form_instance) == secret
+    form_instance_secret = make_secret(form_instance)
+    logging.info(form_instance_secret)
+    logging.info(secret)
+    logging(form_instance_secret == secret)
+    return form_instance_secret == secret
