@@ -24,22 +24,34 @@ def ipn(request, item_check_callable=None):
     logging.info(request)
     
     form = PayPalIPNForm(request.POST)
+    
+    logging.info(form)
+    logging.info(form.is_valid())
+    
     if form.is_valid():
         try:
             ipn_obj = form.save(commit=False)
+            logging.info(ipn_obj)
         except Exception, e:
+            logging.error(e)
             ipn_obj = PayPalIPN()
             ipn_obj.set_flag("Exception while processing. (%s)" % form.errors)
+            logging.info(ipn_obj)
     else:
         ipn_obj.set_flag("Invalid form. (%s)" % form.errors)
-
+        logging.info(ipn_obj)
+        
     ipn_obj.initialize(request)
     if not ipn_obj.flag:
         # Secrets should only be used over SSL.
         if request.is_secure() and 'secret' in request.GET:
+            logging.info('request is secured')
             ipn_obj.verify_secret(form, request.GET['secret'])
         else:
+            logging.info('request NOT secured')
             ipn_obj.verify(item_check_callable)
 
     ipn_obj.save()
+    logging.info(ipn_obj)
+    logging.info('ipn DONE')
     return HttpResponse("OKAY")
