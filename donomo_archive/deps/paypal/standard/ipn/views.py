@@ -42,6 +42,12 @@ def ipn(request, item_check_callable=None):
         logging.info(ipn_obj)
         
     ipn_obj.initialize(request)
+    
+    logging.info(ipn_obj.flag)
+    logging.info(request.is_secure())
+    logging.info(request.GET)
+    logging.info('secret' in request.GET)
+    
     if not ipn_obj.flag:
         # Secrets should only be used over SSL.
         if request.is_secure() and 'secret' in request.GET:
