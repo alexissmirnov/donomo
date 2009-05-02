@@ -54,9 +54,10 @@ urlpatterns = patterns('',
                        url(r'^pay/cancel/$', 
                             'donomo.archive.account.account_views.request_payment_cancel'),
 
-                       url(r'^pay/ipn/$', 
-                            'paypal.standard.views.ipn',
-                            name='paypal.standard.ipn'),
+                       # a POST to this URL sends a signal
+                       # handled in donomo.archive.account.on_payment_complete
+                       url(r'^pay/ipn/gpxjyxmrzzqpncosnbenvkkzcmxz/$', 
+                            include('paypal.standard.ipn.urls')), 
                         
                        url(r'^pay/$',  
                             'donomo.archive.account.account_views.request_payment_standard'),

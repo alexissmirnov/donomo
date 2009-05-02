@@ -304,7 +304,7 @@ def render_payment_standard_button(owner, amount = "10.00"):
         "amount": amount,
         "item_name": "On-demand OCR for 2,000 pages",
         "invoice": str(invoice.pk),
-        "notify_url": "https://archive.donomo.com/account/pay/ipn/",
+        "notify_url": "https://archive.donomo.com/account/pay/ipn/gpxjyxmrzzqpncosnbenvkkzcmxz",
         "return_url": "https://archive.donomo.com/account/pay/return/",
         "cancel_return": "https://archive.donomo.com/account/pay/cancel/",
     }

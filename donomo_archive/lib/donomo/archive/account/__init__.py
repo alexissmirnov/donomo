@@ -1,15 +1,14 @@
-from paypal.standard.signals    import payment_was_successful
-from donomo.billing.models      import Account, Invoice
-from django.contrib.auth.models import User
+from paypal.standard.ipn.signals    import payment_was_successful, payment_was_flagged
+from donomo.billing.models          import Account, Invoice
+from django.contrib.auth.models     import User
 
 import os
 import logging
 logging = logging.getLogger(os.path.splitext(os.path.basename(__file__))[0])
 
 
-def on_payment_complete(**kwargs):
+def on_payment_successful(ipn, **kwargs):
     logging.info('payment complete : %s' % kwargs)
-    ipn = kwargs['sender']
     invoice = Invoice.objects.get(pk = ipn.invoice)
     account = Account.objects.get_or_create(owner = invoice.owner, defaults={'balance' : 0})[0]
     
@@ -17,4 +16,10 @@ def on_payment_complete(**kwargs):
         account.balance = account.balance + Account.USD_TO_CREDITS * float(ipn.mc_gross)
         account.save()
     
-payment_was_successful.connect(on_payment_complete)
+payment_was_successful.connect(on_payment_successful)
+
+
+def on_payment_flagged(ipn, **kwargs):
+    logging.info('payment flagged : %s' % kwargs)
+    
+payment_was_flagged.connect(on_payment_flagged)
