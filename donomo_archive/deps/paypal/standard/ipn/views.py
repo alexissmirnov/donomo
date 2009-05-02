@@ -6,6 +6,7 @@ from paypal.standard.ipn.forms import PayPalIPNForm
 from paypal.standard.ipn.models import PayPalIPN
 
 import logging
+import os
 logging = logging.getLogger(os.path.splitext(os.path.basename(__file__))[0])
 
 @require_POST
