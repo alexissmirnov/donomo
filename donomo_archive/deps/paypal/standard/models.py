@@ -211,6 +211,7 @@ class PayPalStandardBase(models.Model):
         `item_name` and `item_number` are all correct.
 
         """
+        logging.info('in verify')
         self._postback()
         self._verify_postback()  
         if not self.flag:
