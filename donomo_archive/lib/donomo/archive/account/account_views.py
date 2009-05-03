@@ -73,9 +73,9 @@ def account_detail(request, username):
 
 
         balance = float(balance) / Account.USD_TO_CREDITS
-        
+
         amount = "1.00"
-        return render_to_response('account/userprofile_form.html', 
+        return render_to_response('account/userprofile_form.html',
                                   {'amount' : amount,
                                    'pay_button' : render_payment_standard_button(request.user, amount),
                                    'page_count' : page_count,
@@ -304,7 +304,7 @@ def render_payment_standard_button(owner, amount = "10.00"):
     invoice.save()
 
     paypal_dict = {
-        "business": "dev@donomo.com",
+        "business": settings.PAYPAL_RECEIVER_EMAIL,
         "amount": amount,
         "item_name": "On-demand OCR for 2,000 pages",
         "invoice": str(invoice.pk),
