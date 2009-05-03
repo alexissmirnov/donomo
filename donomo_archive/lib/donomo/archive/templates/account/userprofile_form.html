@@ -14,10 +14,10 @@
 	<p>Remaining balance: {{balance}}$</p>
 
 
-	Add <strong>$10.00</strong> to my account
+	Add <strong>${{amount}}</strong> to my account
 	<br>
 	{% autoescape off %}
-	{{ pay10 }}
+	{{ pay_button }}
 	{% endautoescape %}
 	
 	<p>
