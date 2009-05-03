@@ -52,7 +52,7 @@ def ipn(request, item_check_callable=None):
         # Secrets should only be used over SSL.
         # HACK: request.is_secure() and 
         # TODO: add is_secure() after archive.donomo.com has a real cert
-        if 'secret' in request.GET:
+        if request.is_secure() and 'secret' in request.GET:
             logging.info('request is secured')
             ipn_obj.verify_secret(form, request.GET['secret'])
         else:

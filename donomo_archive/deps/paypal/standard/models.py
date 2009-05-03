@@ -6,6 +6,11 @@ from paypal.standard.helpers import duplicate_txn_id, check_secret
 from paypal.standard.conf import RECEIVER_EMAIL, POSTBACK_ENDPOINT, SANDBOX_POSTBACK_ENDPOINT
 
 
+import logging
+import os
+logging = logging.getLogger(os.path.splitext(os.path.basename(__file__))[0])
+
+
 class PayPalStandardBase(models.Model):
     """Meta class for common variables shared by IPN and PDT: http://tinyurl.com/cuq6sj"""
     # FLAG_CODE_CHOICES = (
@@ -225,7 +230,9 @@ class PayPalStandardBase(models.Model):
                 pass
         
         self.save()
+        logging.info('about to send signals')
         self.send_signals()
+        logging.info('DONE sending signals')
 
     def verify_secret(self, form_instance, secret):
         """Verifies an IPN payment over SSL using EWP."""
