@@ -3,7 +3,7 @@ from django.conf                            import settings
 from django.contrib                         import auth
 from django.contrib.auth.decorators         import login_required
 from django.shortcuts                       import render_to_response
-from django.template                        import RequestContext            
+from django.template                        import RequestContext
 from django.core.urlresolvers import reverse
 from django                                 import forms
 from django.utils.translation               import ugettext_lazy as _
@@ -17,7 +17,7 @@ import logging
 logging = logging.getLogger(os.path.splitext(os.path.basename(__file__))[0])
 
 
-@login_required()    
+@login_required()
 def account_delete(request):
     """
     Deletes user's account.
@@ -25,7 +25,7 @@ def account_delete(request):
     #TODO: delete all user's data on solr, s3, etc.
     if request.user.is_authenticated():
         request.user.delete()
-        return logout(request)   
+        return logout(request)
     else:
         return HttpResponse('forbidden')
 
@@ -41,26 +41,26 @@ def signin(request):
             return render_to_response('account/account_disabled.html')
     else:
         return render_to_response('account/invalid_login.html')
-            
+
 @login_required()
 def logout(request):
     logging.debug(RequestContext(request))
-    
-    return auth.logout(request, 
+
+    return auth.logout(request,
                        next_page=request.REQUEST.get('next', None),
                        template_name = RequestContext(request)['template_name'])
 
-@login_required()    
+@login_required()
 def account_detail(request, username):
     """
         Renders account management UI
     """
     #TODO replace with generic views once
     #http://code.djangoproject.com/ticket/3639 is resolved
-    
+
     if username != request.user.username:
         return HttpResponse('forbidden: username %s' % username)
-    
+
     if request.method == 'GET':
         page_count = Page.objects.filter(owner = request.user).count()
         document_count = Document.objects.filter(owner = request.user).count()
@@ -70,11 +70,11 @@ def account_detail(request, username):
             balance = account.balance
         except:
             balance = 0
-        
-        
+
+
         balance = float(balance) / Account.USD_TO_CREDITS
-        
-        return render_to_response('account/userprofile_form.html', 
+
+        return render_to_response('account/userprofile_form.html',
                                   {'pay10' : render_payment_standard_button(request.user),
                                    'page_count' : page_count,
                                    'document_count': document_count,
@@ -90,34 +90,34 @@ def account_export(request, username):
     """
     #TODO replace with generic views once
     #http://code.djangoproject.com/ticket/3639 is resolved
-    
+
     if username != request.user.username and not request.user.staff:
         return HttpResponse('forbidden: username %s' % username)
-   
+
     if request.method == 'GET':
        return HttpResponse('Not implemented yet')
     else:
        return HttpResponse('forbidden')
 
-    
+
 # I put this on all required fields, because it's easier to pick up
 # on them with CSS or JavaScript if they have a class of "required"
 # in the HTML. Your mileage may vary. If/when Django ticket #3515
 # lands in trunk, this will no longer be necessary.
 attrs_dict = { 'class': 'required' }
-    
+
 class RegistrationForm(RecaptchaForm):
     """
     Form for registering a new user account.
-    
+
     Requires the password to be entered twice to catch typos.
-    
+
     Subclasses should feel free to add any additional validation they
     need, but should either preserve the base ``save()`` or implement
     a ``save()`` which accepts the ``profile_callback`` keyword
     argument and passes it through to
     ``RegistrationProfile.objects.create_inactive_user()``.
-    
+
     """
     email = forms.EmailField(widget=forms.TextInput(attrs=dict(attrs_dict,
                                                                maxlength=75)),
@@ -127,16 +127,16 @@ class RegistrationForm(RecaptchaForm):
                                 label=_(u'Enter Password'))
     password2 = forms.CharField(widget=forms.PasswordInput(attrs=attrs_dict, render_value=False),
                                 label=_(u'Retype Password'))
-    
+
     captcha = RecaptchaFieldPlaceholder(widget=RecaptchaWidget(theme='white'),
                                         label=_(u'Word Verification'),
                                         help_text=_(u"Type the characters you see in the picture"))
- 
+
     def clean_username(self):
         """
         Validate that the email is not already
         in use.
-        
+
         """
         try:
             user = User.objects.get(username__iexact=self.cleaned_data['email'])
@@ -150,24 +150,24 @@ class RegistrationForm(RecaptchaForm):
         match. Note that an error here will end up in
         ``non_field_errors()`` because it doesn't apply to a single
         field.
-        
+
         """
         if 'password1' in self.cleaned_data and 'password2' in self.cleaned_data:
             if self.cleaned_data['password1'] != self.cleaned_data['password2']:
                 raise forms.ValidationError(_(u'You must type the same password each time'))
         return self.cleaned_data
-    
+
     def save(self, profile_callback=None):
         """
         Create the new ``User`` and ``RegistrationProfile``, and
         returns the ``User``.
-        
+
         This is essentially a light wrapper around
         ``RegistrationProfile.objects.create_inactive_user()``,
         feeding it the form data and a profile callback (see the
         documentation on ``create_inactive_user()`` for details) if
         supplied.
-        
+
         """
         new_user = RegistrationProfile.objects.create_inactive_user(
                         username=self.cleaned_data['email'],
@@ -177,7 +177,7 @@ class RegistrationForm(RecaptchaForm):
         return new_user
 
 
-def register(request, 
+def register(request,
              success_url=None,
              form_class = RegistrationForm,
              profile_callback=None,
@@ -185,68 +185,68 @@ def register(request,
              extra_context=None):
     """
     Allow a new user to register an account.
-    
+
     Following successful registration, issue a redirect; by default,
     this will be whatever URL corresponds to the named URL pattern
     ``registration_complete``, which will be
     ``/accounts/register/complete/`` if using the included URLConf. To
     change this, point that named pattern at another URL, or pass your
     preferred URL as the keyword argument ``success_url``.
-    
+
     By default, ``registration.forms.RegistrationForm`` will be used
     as the registration form; to change this, pass a different form
     class as the ``form_class`` keyword argument. The form class you
     specify must have a method ``save`` which will create and return
     the new ``User``, and that method must accept the keyword argument
     ``profile_callback`` (see below).
-    
+
     To enable creation of a site-specific user profile object for the
     new user, pass a function which will create the profile object as
     the keyword argument ``profile_callback``. See
     ``RegistrationManager.create_inactive_user`` in the file
     ``models.py`` for details on how to write this function.
-    
+
     By default, use the template
     ``registration/registration_form.html``; to change this, pass the
     name of a template as the keyword argument ``template_name``.
-    
+
     **Required arguments**
-    
+
     None.
-    
+
     **Optional arguments**
-    
+
     ``form_class``
         The form class to use for registration.
-    
+
     ``extra_context``
         A dictionary of variables to add to the template context. Any
         callable object in this dictionary will be called to produce
         the end result which appears in the context.
-    
+
     ``profile_callback``
         A function which will be used to create a site-specific
         profile instance for the new ``User``.
-    
+
     ``success_url``
         The URL to redirect to on successful registration.
-    
+
     ``template_name``
         A custom template to use.
-    
+
     **Context:**
-    
+
     ``form``
         The registration form.
-    
+
     Any extra variables supplied in the ``extra_context`` argument
     (see above).
-    
+
     **Template:**
-    
+
     registration/registration_form.html or ``template_name`` keyword
     argument.
-    
+
     """
     remote_ip = request.META['REMOTE_ADDR']
 
@@ -261,7 +261,7 @@ def register(request,
             return HttpResponseRedirect(success_url or reverse('registration_complete'))
     else:
         form = form_class(remote_ip)
-    
+
     if extra_context is None:
         extra_context = {}
     context = RequestContext(request)
@@ -270,7 +270,7 @@ def register(request,
     return render_to_response(template_name,
                               { 'form': form },
                               context_instance=context)
-    
+
 
 
 
@@ -280,7 +280,7 @@ def register(request,
 
 
 from paypal.pro.views import PayPalPro
-from paypal.standard.forms import PayPalSharedSecretEncryptedPaymentsForm
+from paypal.standard.forms import PayPalEncryptedPaymentsForm # PayPalSharedSecretEncryptedPaymentsForm
 import time
 
 def request_payment_return(request):
@@ -290,34 +290,34 @@ def request_payment_return(request):
 def request_payment_cancel(request):
     logging.info(request)
     return HttpResponseRedirect('/')
-    
+
 def request_payment_standard(request):
     return HttpResponse(render_payment_standard_button(request.user))
 
 def render_payment_standard_button(owner, amount = "10.00"):
-    logging.info('rendering standard payment button. sandbox? ' + settings.PAYPAL_TEST)
-    
+    logging.info('rendering standard payment button. sandbox? %d' % settings.PAYPAL_TEST)
+
     # What you want the button to do.
     invoice = Invoice(owner = owner, pk = int(time.time()))
     invoice.save()
-    
+
     paypal_dict = {
         "business": "dev@donomo.com",
         "amount": amount,
         "item_name": "On-demand OCR for 2,000 pages",
         "invoice": str(invoice.pk),
-        "notify_url": "https://archive.donomo.com/account/pay/ipn/gpxjyxmrzzqpncosnbenvkkzcmxz",
-        "return_url": "https://archive.donomo.com/account/pay/ipn/gpxjyxmrzzqpncosnbenvkkzcmxz", #"https://archive.donomo.com/account/pay/return/",
+        "notify_url": "https://archive.donomo.com/account/pay/ipn/gpxjyxmrzzqpncosnbenvkkzcmxz/",
+        "return_url": "https://archive.donomo.com/account/pay/return/",
         "cancel_return": "https://archive.donomo.com/account/pay/cancel/",
     }
 
     # Create the instance.
-    form = PayPalSharedSecretEncryptedPaymentsForm(initial=paypal_dict)
+    form = PayPalEncryptedPaymentsForm(initial=paypal_dict) #PayPalSharedSecretEncryptedPaymentsForm(initial=paypal_dict)
 
-    
+
     # Output the button.
     result = form.render()
-        
+
     return result
 
 
