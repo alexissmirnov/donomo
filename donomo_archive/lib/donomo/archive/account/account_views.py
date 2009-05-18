@@ -75,9 +75,19 @@ def account_detail(request, username):
         balance = float(balance) / Account.USD_TO_CREDITS
 
         amount = "1.00"
+        subscription_1 = "20.00"
+        subscription_2 = "180.00"
+        subscription_3 = "1600.00"
+        
         return render_to_response('account/userprofile_form.html',
                                   {'amount' : amount,
                                    'pay_button' : render_payment_standard_button(request.user, amount),
+                                   'subscription_amount_1' : subscription_1,
+                                   'subscribe_button_1' : render_subscription_button(request.user, subscription_1),
+                                   'subscription_amount_2' : subscription_2,
+                                   'subscribe_button_2' : render_subscription_button(request.user, subscription_2),
+                                   'subscription_amount_3' : subscription_3,
+                                   'subscribe_button_3' : render_subscription_button(request.user, subscription_3),
                                    'page_count' : page_count,
                                    'document_count': document_count,
                                    'balance' : "%0.2f" % balance},
@@ -322,6 +332,31 @@ def render_payment_standard_button(owner, amount = "10.00"):
 
     return result
 
+def render_subscription_button(owner, amount):
+    # What you want the button to do.
+    paypal_dict = {
+        "cmd": "_xclick-subscriptions",
+        "business": settings.PAYPAL_RECEIVER_EMAIL,
+        "a3": amount,                      # monthly price 
+        "p3": 1,                           # duration of each unit (depends on unit)
+        "t3": "M",                         # duration unit ("M for Month")
+        "src": "1",                        # make payments recur
+        "sra": "1",                        # reattempt payment on payment error
+        "no_note": "1",                    # remove extra notes (optional)
+        "item_name": "Cloud OCR subscription",
+        "notify_url": "https://archive.donomo.com/account/pay/ipn/gpxjyxmrzzqpncosnbenvkkzcmxz/",
+        "return_url": "https://archive.donomo.com/account/pay/return/",
+        "cancel_return": "https://archive.donomo.com/account/pay/cancel/",
+    }
+
+    # Create the instance.
+    form = PayPalEncryptedPaymentsForm(initial=paypal_dict, button_type="subscribe")
+
+
+    # Output the button.
+    result = form.render()
+
+    return result
 
 
 def request_payment_pro(request):

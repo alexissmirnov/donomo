@@ -7,20 +7,37 @@
 {% block content %}
 	{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 	
-	<p>{{user}}:</p>
+	<div class='section'>
+		Your account email address: {{user}}<br/>
+		Member since: 25 October, 1970<br/>
+		Your account has {{page_count}} processed pages in {{document_count}} documents.<br/>
+		
+		<input type='checkbox' checked='checked' name='newsletter_toggle'/> Yes I would like to receive periodic Cloud OCR newsletter.
+	</div>
 	
-	<p>Processed {{page_count}} pages in {{document_count}} documents</p>	
-
-	<p>Remaining balance: {{balance}}$</p>
-
-
-	Add <strong>${{amount}}</strong> to my account
-	<br>
-	{% autoescape off %}
-	{{ pay_button }}
-	{% endautoescape %}
+	<div class='section'>
+		<h1>Need to process more?</h1>
+		
+		<p>Remaining balance: {{balance}}$. Enough for <b>123</b> pages.</p>
+		
+		Add <strong>${{amount}}</strong> to my account
+		<br>
+		{% autoescape off %}
+		{{ pay_button }}
+		{% endautoescape %}	
+	</div>
 	
-	<p>
-	<a href='/account/{{user.username}}/export/'>Export</a> all documents as searchable PDF in a single zip file.
-	</p>
+	<div class='section'>
+		<h1>Upgrade to a monthly subscription and save.</h1>
+		3,000 pages ( approximately one paper box) | {{subscription_amount_1}}$ per month | {{subscribe_button_1}}<br/>
+		30,000 pages (10 boxes) | {{subscription_amount_2}}$ per month. 10% off. | {{subscribe_button_2}}<br/>
+		300,000 pages (100 boxes) | {{subscription_amount_3}}$ per month. 20% off. | {{subscribe_button_3}}<br/>
+		Can't find the right subscription plan? Contact us.<br/>
+	</div>
+	
+	<div class='section'>
+		<h1>Need to export your data?</h1>
+		<p>You can export all your documents at any time. All processed documents will be included as searchable PDFs. </p>
+		<a href='/account/{{user.username}}/export/'>Export my account as a single ZIP file.</a>
+	</div>
 {% endblock %}
