@@ -100,7 +100,7 @@ DEVELOPMENT_MODE = not (TEST_MODE or PRODUCTION_MODE)
 OS_USER_NAME     = query_env( 'LOGNAME', pwd.getpwuid(os.getuid())[0])
 TEMP_DIR         = query_env('TEMP_DIR', tempfile.gettempdir())
 
-DEBUG            = DEVELOPMENT_MODE or is_affirmative(query_env('DEBUG','no'))
+DEBUG            = True #DEVELOPMENT_MODE or is_affirmative(query_env('DEBUG','no'))
 TEMPLATE_DEBUG   = DEBUG
 
 ##############################################################################
@@ -315,9 +315,9 @@ RECAPTCHA_PRIVATE_KEY = "6LdwQwMAAAAAAJCZP67vaWH8WiDN5nkOT8pm2D9x"
 BASIC_AUTH_REALM = 'donomo.com'
 LOGIN_URL='/account/login/'
 
-PAYPAL_TEST = bool(query_env('PAYPAL_TEST', True))
+PAYPAL_TEST = bool(query_env('PAYPAL_TEST', False))
 if PAYPAL_TEST:
-    # dev@donomo.com sandbox account 
+    # dev@donomo.com sandbox account
     PAYPAL_WPP_USER = 'dev_api1.donomo.com'      # Test account in dev@donomo.com on https://www.sandbox.paypal.com
     PAYPAL_WPP_PASSWORD = 'EVWFTBCXJUDPH7VZ'
     PAYPAL_WPP_SIGNATURE = 'ADBMLWxrAZMY.Rr08USjIUj5vX-yAectXtjRuUpXE6BPZ2-RRrQGHz1H'
@@ -336,7 +336,6 @@ else:
     PAYPAL_PUBLIC_CERT = '/etc/paypal/donomo_public_cert.pem'
     PAYPAL_CERT = '/etc/paypal/paypal_public_cert.pem'
     PAYPAL_RECEIVER_EMAIL = 'paypal@donomo.com'
-
 
 #for k in os.environ.keys():
 #    del os.environ[k]

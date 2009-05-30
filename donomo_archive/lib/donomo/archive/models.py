@@ -467,6 +467,9 @@ class Asset(models.Model):
         self.asset_class,
         self.mime_type )
 
+    def get_children(self, asset_class):
+        return self.children.filter( asset_class__name = asset_class )
+
     class Meta:
         unique_together = [
             ( 'parent', 'asset_class', 'child_number'),

@@ -5,7 +5,7 @@ pidfile=$2
 
 SOLR_HOME=$(cd $(dirname $0)/.. && pwd)
 SOLR_INST=$(ls -d /usr/local/apache-solr-* | sort | tail -1)
-JAVA_HOME=$(dirname $(dirname $(dirname $(dirname $(locate libjvm.so | sort | tail -1)))))
+JAVA_HOME=/usr/java/default
 
 #export CLASSPATH=$SOLR_HOME/lib
 #:$SOLR_INST/lib:$JAVA_HOME/lib:$CLASSPATH
@@ -14,4 +14,4 @@ echo "$$" > ${pidfile:?}
 
 cd "$SOLR_HOME"
 
-exec /usr/bin/java -server -jar ./start.jar 2>> ${logfile:?}
+exec $JAVA_HOME/bin/java -server -jar ./start.jar 2>> ${logfile:?}

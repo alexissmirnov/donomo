@@ -80,6 +80,7 @@ function stop
 {
     killproc -p $pidfile
 }
+
 ##############################################################################
 #
 # Run an application shell or database shell
@@ -100,7 +101,11 @@ function run_shell
 case ${1:?} in
 	runtime-stats)
 		echo $(date), $($0 pending), $($0 instances)
-		;;	
+		;;
+    environment)
+        setup_env
+        exec bash
+        ;;
     syncdb|dbshell|shell)
         run_shell $1
         ;;
