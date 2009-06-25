@@ -7,7 +7,10 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db              import IntegrityError
 from django.http            import HttpResponse, Http404
 from donomo.archive.utils.http import HttpRequestValidationError
-import simplejson
+try:
+    import json
+except:
+    import simplejson as json
 import httplib
 import traceback
 import logging
@@ -49,7 +52,7 @@ def json_view( view_func ):
             'status key in dict returned from a json_view view must be an int'
 
         return HttpResponse(
-            content      = simplejson.dumps( response ),
+            content      = json.dumps( response ),
             status       = status,
             content_type = JSON_CONTENT_TYPE )
 
@@ -139,7 +142,7 @@ class AjaxErrorHandlingMiddleware(object):
         elif ( isinstance(exception, KeyError)
                or isinstance(exception, ValueError)
                or isinstance(exception, HttpRequestValidationError)
-#               or isinstance(exception, CriticalValidationError) 
+#               or isinstance(exception, CriticalValidationError)
               ):
             #
             # Let's interpret all data errors (invalid key lookups,
@@ -175,7 +178,7 @@ class AjaxErrorHandlingMiddleware(object):
             }
 
         return HttpResponse(
-            content      = simplejson.dumps( response_dict ),
+            content      = json.dumps( response_dict ),
             status       = status,
             content_type = JSON_CONTENT_TYPE )
 

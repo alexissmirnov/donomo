@@ -9,7 +9,10 @@ from django.conf            import settings
 from django.template        import Template, Context
 from StringIO               import StringIO
 import httplib2
-import simplejson
+try:
+    import json
+except:
+    import simplejson as json
 import urllib
 import os
 import logging
@@ -205,7 +208,7 @@ def raw_query( user, query_string, start_index = 0, num_rows = 50):
     if response.status != 200:
         raise Exception("Search query failed")
 
-    return simplejson.load(StringIO(content))
+    return json.load(StringIO(content))
 
 ###############################################################################
 
