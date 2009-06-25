@@ -199,13 +199,13 @@ ${CHROOT} scons -C ${tmp_dir}/iulib install
 
 # Tessearct OCR
 svn export -r 227 --non-interactive "http://tesseract-ocr.googlecode.com/svn/trunk/" ${mount_point}/${tmp_dir}/tesseract-ocr
-${CHROOT) bash -c "cd '${tmp_dir}/tesseract-ocr' && ./configure CXXFLAGS='-fPIC -O2'"
+${CHROOT} bash -c "cd '${tmp_dir}/tesseract-ocr' && ./configure CXXFLAGS='-fPIC -O2'"
 ${CHROOT} make -C "${tmp_dir}/tesseract-ocr"
 ${CHROOT} make -C "${tmp_dir}/tesseract-ocr install"
 
 # ocropus
 ${WGET} "http://ocropus.googlecode.com/files/ocropus-0.3.1.tar.gz"
 ${CHROOT} tar -C ${tmp_dir} -xvzf ${tmp_dir}/ocropus-0.3.1.tar.gz
-${CHROOT) bash -c "cd '${tmp_dir}/ocropus-0.3' && ./configure --without-fst --without-leptonica --without-SDL CXXFLAGS='-fPIC -O2'"
+${CHROOT} bash -c "cd '${tmp_dir}/ocropus-0.3' && ./configure --without-fst --without-leptonica --without-SDL CXXFLAGS='-fPIC -O2'"
 ${CHROOT} make -C "${tmp_dir}/ocropus-0.3"
 ${CHROOT} make -C "${tmp_dir}/ocropus-0.3 install"
