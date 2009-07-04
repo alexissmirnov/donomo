@@ -1,43 +1,139 @@
 {% extends "ui/base_static.html" %}
 
 {% block title %}
-	Settings for {{user}}
+	Cloud OCR account details for {{user}}
 {% endblock %}
 
 {% block content %}
 	{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 	
-	<div class='section'>
-		Your account email address: {{user}}<br/>
-		Member since: 25 October, 1970<br/>
-		Your account has {{page_count}} processed pages in {{document_count}} documents.<br/>
-		
-		<input type='checkbox' checked='checked' name='newsletter_toggle'/> Yes I would like to receive periodic Cloud OCR newsletter.
+	<div class='page_header'>
+		<h1>Account details for {{user}}</h1>
+		<div class='page_header_right'>
+			Member since {{user.date_joined|date:"D d M Y"}}<br/>
+			{{page_count}} processed pages in {{document_count}} documents.
+		</div>
 	</div>
-	
-	<div class='section'>
-		<h1>Need to process more?</h1>
+	<div class='innercol'>
+		<div class='section' id='balance_overview'>
+			{% if credited_pages_num %}
+				<p>
+					Your remaining balance is {{balance}}$. 
+					You have enough credits to process {{credited_pages_num}} more page{{credited_pages_num|pluralize}}.
+				</p>
+				<p>
+					Cloud OCR will store your documents for {{remaining_storage_days}} more day{{remaining_storage_days|pluralize}}.
+				</p>
+			{% else %}
+				<p class="no_balance">
+					<span class="no_balance">You no longer have Cloud OCR credits.</span> 
+					<a href="#subscription_plans">Refill</a> or <a href="#subscription_plans">upgrade</a> your account to process more. 
+				</p>
+				<p><a href="/">Download</a> your documents. 
+					If your account isn't re-filled Cloud OCR will store them for {{remaining_storage_days}} more day{{remaining_storage_days|pluralize}}.
+				</p>
+			{% endif %}
+			</p>
+		</div>
 		
-		<p>Remaining balance: {{balance}}$. Enough for <b>123</b> pages.</p>
+		<div class='section featured' id='upgrade_offer'>
+			Get more done! <span class="button"><a href="/account/{{user}}/subscribe/?plan=pro"><span>Upgrade</span></a></span> to Pro, our most popular subscription plan, and save. 
+		</div>
 		
-		Add <strong>${{amount}}</strong> to my account
-		<br>
-		{% autoescape off %}
-		{{ pay_button }}
-		{% endautoescape %}	
+		<div class='section' id='subscription_plans'>
+			<table class='payment_plans' cellpadding='0' cellspacing='0'>
+			  <tbody>
+			  	<tr class="header">
+			    	<th class="head">Payment plans you can choose:</th>
+					<th>Pages</th>
+			    	<th>Storage</th>
+			    	<th>SSL Security</th>
+					<th>&nbsp;</th>
+			  	</tr>
+			  	<tr>
+				    <th>
+				      <span class="plan_name">Max</span> <span class="price">$800/month</span>
+			    	</th>
+				    <td><strong>300,000</strong></td>
+				    <td><strong>UNLIMITED</strong></td>
+				    <td><img alt="yes" src="{{MEDIA_URL}}skins/donomo/images/greycheck-bullet-16.gif" height="15" width="16"></td>
+					<td><div class="button"><a href="/account/{{user}}/subscribe/?plan=max"><span>Upgrade</span></a></div></td>
+			  	</tr>
+			  	<tr>
+				    <th>
+				      <span class="plan_name">Pro</span> <span class="price">$90/month</span>
+			    	</th>
+				    <td><strong>30,000</strong></td>
+				    <td><strong>UNLIMITED</strong></td>
+				    <td><img alt="yes" src="{{MEDIA_URL}}skins/donomo/images/greycheck-bullet-16.gif" height="15" width="16"></td>
+					<td><div class="button"><a href="/account/{{user}}/subscribe/?plan=pro"><span>Upgrade</span></a></div></td>
+			  	</tr>
+			  	<tr>
+				    <th>
+				      <span class="plan_name">Plus</span> <span class="price">$10/month</span>
+			    	</th>
+				    <td><strong>3,000</strong></td>
+				    <td><strong>50 GB</strong></td>
+				    <td><img alt="yes" src="{{MEDIA_URL}}skins/donomo/images/greycheck-bullet-16.gif" height="15" width="16"></td>
+					<td><div class="button"><a href="/account/{{user}}/subscribe/?plan=plus"><span>Upgrade</span></a></div></td>
+			  	</tr>
+			  	<tr class="payg_plan">
+				    <th>
+				      <span class="plan_name">Pay as you go</span> <span class="price">$90.</span><span class="promo_message"> 10% OFF!</spen>
+				    </th>
+				    <td><strong>10,000</strong></td>
+				    <td><strong>100G for 30 days</strong></td>
+				    <td><img alt="yes" src="{{MEDIA_URL}}skins/donomo/images/greycheck-bullet-16.gif" height="15" width="16"></td>
+					<td><div class="button"><a href="/account/{{user}}/refill/?amount=100"><span>Refill</span></a></div></td>
+			  	</tr>
+			  	<tr class="payg_plan">
+				    <th>
+				      <span class="plan_name">Pay as you go</span> <span class="price">$10.</span>
+				    </th>
+				    <td><strong>1000</strong></td>
+				    <td><strong>10G for 30 days</strong></td>
+				    <td><img alt="yes" src="{{MEDIA_URL}}skins/donomo/images/greycheck-bullet-16.gif" height="15" width="16"></td>
+					<td><div class="button"><a href="/account/{{user}}/refill/?amount=10"><span>Refill</span></a></div></td>
+			  	</tr>
+			</tbody>
+			</table>
+			<p class='note'>
+				Can't find the right subscription plan? <a href='mailto:support@donomo.com'>Tell us!</a>.
+			</p>
+		</div>
 	</div>
-	
-	<div class='section'>
-		<h1>Upgrade to a monthly subscription and save.</h1>
-		3,000 pages ( approximately one paper box) | {{subscription_amount_1}}$ per month | {{subscribe_button_1}}<br/>
-		30,000 pages (10 boxes) | {{subscription_amount_2}}$ per month. 10% off. | {{subscribe_button_2}}<br/>
-		300,000 pages (100 boxes) | {{subscription_amount_3}}$ per month. 20% off. | {{subscribe_button_3}}<br/>
-		Can't find the right subscription plan? Contact us.<br/>
-	</div>
-	
 	<div class='section'>
 		<h1>Need to export your data?</h1>
 		<p>You can export all your documents at any time. All processed documents will be included as searchable PDFs. </p>
-		<a href='/account/{{user.username}}/export/'>Export my account as a single ZIP file.</a>
+		<p><a href='/account/{{user.username}}/export/'>Export my account as a single ZIP file.</a></p>
+	</div>
+
+	<div class='section'>
+		<h1>Need to calcel your account?</h1>
+		<p>We'll be sorry to see you go. Once your account is cancelled, all your documents will be immidiately and permanently deleted.
+		If you have a monthly subscription you won't be charged again after your official cancellation date.
+		</p>
+		<p>
+		<a href='/account/{{user}}/delete/'>Please cancel my account and delete my data.</a>
+		</p>
+	</div>
+
+
+	<div class='section'>
+		<h1>Notification Preferences</h1>
+		<p>
+			<input type='checkbox' checked='checked' name='newsletter_toggle'/>Yes I would like to receive periodic Cloud OCR newsletter.
+		</p>
+	</div>
+	
+	<div class='section'>
+		<h1>Uploaders</h1>
+		<p>Use these tools to upload scans directly to CloudOCR</p>
+		<p>
+			<a href="/media/download/uploader.msi"><img class="inline-icon" src='{{MEDIA_URL}}img/icon-vista.png'> Windows Vista & XP: <b>Download</b> (3MB)</a>
+		</p>
+		<p>
+			<a href="/media/download/uploader.dmg"><img class="inline-icon" src='{{MEDIA_URL}}img/icon-apple.png'> Apple Mac OS X 10.5 & 10.4 <b>Download</b> (10MB)</a>
+		</p>
 	</div>
 {% endblock %}

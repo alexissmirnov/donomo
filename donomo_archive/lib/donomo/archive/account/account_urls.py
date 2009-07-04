@@ -44,15 +44,22 @@ urlpatterns = patterns('',
                            direct_to_template,
                            {'template': 'registration/activate.html'},
                            name='registration_complete'),
-                       url(r'^delete/$', 
+                       url(r'^(?P<username>[-+@.a-zA-Z0-9_]+)/delete/$', 
                             'donomo.archive.account.account_views.account_delete',
-                            name='account-delete'),
-                            
+                            name='account-delete'),                                                        
+                       url(r'^(?P<username>[-+@.a-zA-Z0-9_]+)/export/$',  
+                            'donomo.archive.account.account_views.account_export',
+                            name='account-export'),
+                       url(r'^(?P<username>[-+@.a-zA-Z0-9_]+)/$',  
+                            'donomo.archive.account.account_views.account_detail',
+                            name='account-detail'),
+ 
+# payment_views
                        url(r'^pay/return/$', 
-                            'donomo.archive.account.account_views.request_payment_return'),
+                            'donomo.archive.account.payment_views.request_payment_return'),
 
                        url(r'^pay/cancel/$', 
-                            'donomo.archive.account.account_views.request_payment_cancel'),
+                            'donomo.archive.account.payment_views.request_payment_cancel'),
 
                        # a POST to this URL sends a signal
                        # handled in donomo.archive.account.on_payment_complete
@@ -60,16 +67,18 @@ urlpatterns = patterns('',
                             include('paypal.standard.ipn.urls')), 
                         
                        url(r'^pay/$',  
-                            'donomo.archive.account.account_views.request_payment_standard'),
+                            'donomo.archive.account.payment_views.request_payment_standard'),
                             
                        url(r'^paypro/$',  
-                            'donomo.archive.account.account_views.request_payment_pro'),
+                            'donomo.archive.account.payment_views.request_payment_pro'),
 
-                       url(r'^(?P<username>[-+@.a-zA-Z0-9_]+)/export/$',  
-                            'donomo.archive.account.account_views.account_export',
-                            name='account-export'),
-                       url(r'^(?P<username>[-+@.a-zA-Z0-9_]+)/$',  
-                            'donomo.archive.account.account_views.account_detail',
-                            name='account-detail'),
+                       url(r'^(?P<username>[-+@.a-zA-Z0-9_]+)/refill/$',  
+                            'donomo.archive.account.payment_views.account_refill',
+                            name='account-refill'),
+
+                       url(r'^(?P<username>[-+@.a-zA-Z0-9_]+)/subscribe/$',  
+                            'donomo.archive.account.payment_views.account_subscribe',
+                            name='account-subscribe'),
+                           
                 )
                         

@@ -155,3 +155,164 @@ font-size:0;
 .lb_ts div{
 font-size:0;
 }
+
+#hd h1 {
+	margin-top: -40px;
+}
+
+#hd h3 {
+	color: #777777;
+	margin-top: -0px;
+	margin-right: 40px;
+	text-align: right;
+	font-weight: bold;
+}
+
+
+.section h1 {
+	font-size:1.7em;
+	font-weight:bold;
+	color:#E4880B;
+	background:url(images/commentbg2.gif) left top no-repeat;
+	margin: 2em 0 -1.4em 0;
+}
+
+.section p {
+	font-size: 1.3em;
+}
+
+p.note {
+	font-size: 1em;
+	color: #9C9C9C;
+	font-style:italic;
+	margin-top: -1em;
+	text-align:center;
+}
+
+div.featured {
+	font-weight: bold;
+	font-size:1.5em;
+	margin-bottom: 0.5em;
+}
+
+div.page_header h1 {
+	font-size:2em;
+	color:#333;
+	margin: 0 0 5px 0;
+}
+
+div.page_header {
+	font-size: 1.3em;
+}
+
+p.no_balance {
+	font-weight: bold; color: #E4880B;
+}
+
+table.payment_plans {
+	color: #000000;
+	margin: -4px 0 10px;
+}
+
+
+table.payment_plans span.promo_message {font-weight: bold; color: #E4880B;}
+table.payment_plans {
+	width: 100%;
+	margin: 1px 0 10px;
+	color: #000;
+	border-collapse:inherit;
+}
+
+table.payment_plans td, table.payment_plans th {
+	border-bottom: 1px solid #CCC;
+	padding: 10px 18px;
+	text-align: center;
+	font-size: 12px;
+	white-space: nowrap;
+}
+
+table.payment_plans tr.payg_plan td, table.payment_plans tr.payg_plan th {background: #edf3fe;}
+table.payment_plans th {text-align: left; font-weight: bold;}
+
+table.payment_plans tr.header th {
+	background: #ddd;
+	color: #444;
+	font-size: 11px;
+	text-transform: uppercase;
+	font-weight: normal;
+	text-align: center;
+	white-space: nowrap;
+	border-top: 1px solid #999;
+}
+
+table.payment_plans td.details {
+	font-size: 13px;
+	color: #444;
+	background: #FFF;
+}
+
+table.payment_plans td.details strong {color: #000;}
+
+table.payment_plans tr.header th.head {
+	color: #000; 
+	font-size: 14px; 
+	text-align: left; 
+	font-weight: bold; 
+	text-transform: none; 
+	padding: 10px 18px;
+}
+
+table.payment_plans span.cardName {
+	text-transform: uppercase; 
+	font-size: 14px;
+}
+
+table.payment_plans span.price {
+	color: #666; 
+	font-size: 13px;
+}
+
+table.payment_plans span.price em {
+	font-weight: normal; 
+	font-size: 12px;
+}
+
+table.payment_plans td a {
+	color: #333;
+	font-size: 11px;
+}
+
+table.payment_plans td.details a {font-size: 13px;}
+
+table.payment_plans td a:hover {
+	color: #FFF;
+	background-color: #333;
+}
+
+table.payment_plans td .button a {
+	background: url(images/grey_button_left.gif) 0 0 no-repeat;
+    color: #333;
+	display: table-cell; /* Fix for Firefox 2 */
+    display: inline-block;
+    font-family: helvetica, arial, sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    height: 30px;    
+    white-space: nowrap;
+	text-decoration: none;
+	padding: 0 0 0 11px;
+	margin: 0;
+}
+
+table.payment_plans td .button span {
+	background: url(images/grey_button_right.gif) 100% 0 no-repeat;
+    display: block;
+    padding: 0 24px 0 10px;
+    line-height: 30px;	
+}
+
+table.payment_plans td .button a:active {background-position: 0 -30px;}
+
+table.payment_plans td .button a:active span {background-position: 100% -30px;}
+
+

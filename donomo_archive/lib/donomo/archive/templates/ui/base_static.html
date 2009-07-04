@@ -4,15 +4,19 @@
 <!-- YUI_include button grids fonts reset -->
 <style type="text/css">
 #custom-doc { width: 100%; min-width: 250px; }
+
 </style>
 
-<link rel="stylesheet" type="text/css" href="/media/skins/donomo/style.css" />
+<link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}skins/donomo/style.css" />
 {% endblock %}
 
 {% block body %}
 <div id="custom-doc" class="yui-t7">
 	<div id="header"/>
    	<div id="hd">
+   		{% if user.is_authenticated %}
+   		<h3><a href='/account/logout/'>Logout</a></h3>
+		{% endif %}
    		<h1><a href='/'>Donomo <b>Cloud OCR</b></a></h1>
    	</div>
    <div id="bd">

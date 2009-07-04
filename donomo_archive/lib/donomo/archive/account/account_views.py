@@ -15,15 +15,14 @@ from recaptcha                              import RecaptchaForm, RecaptchaField
 import os
 import logging
 logging = logging.getLogger(os.path.splitext(os.path.basename(__file__))[0])
-
-
+                              
 @login_required()
-def account_delete(request):
+def account_delete(request, username):
     """
     Deletes user's account.
     """
     #TODO: delete all user's data on solr, s3, etc.
-    if request.user.is_authenticated():
+    if request.user.is_authenticated() and username == user:
         request.user.delete()
         return logout(request)
     else:
@@ -74,23 +73,11 @@ def account_detail(request, username):
 
         balance = float(balance) / Account.USD_TO_CREDITS
 
-        amount = "1.00"
-        subscription_1 = "20.00"
-        subscription_2 = "180.00"
-        subscription_3 = "1600.00"
-        
         return render_to_response('account/userprofile_form.html',
-                                  {'amount' : amount,
-                                   'pay_button' : render_payment_standard_button(request.user, amount),
-                                   'subscription_amount_1' : subscription_1,
-                                   'subscribe_button_1' : render_subscription_button(request.user, subscription_1),
-                                   'subscription_amount_2' : subscription_2,
-                                   'subscribe_button_2' : render_subscription_button(request.user, subscription_2),
-                                   'subscription_amount_3' : subscription_3,
-                                   'subscribe_button_3' : render_subscription_button(request.user, subscription_3),
-                                   'page_count' : page_count,
+                                  {'page_count' : page_count,
                                    'document_count': document_count,
-                                   'balance' : "%0.2f" % balance},
+                                   'balance' : "%0.2f" % balance,
+                                   'remaining_storage_days' : "30" },
                                   context_instance = RequestContext(request))
     else:
         return HttpResponse('forbidden')
@@ -282,98 +269,5 @@ def register(request,
     return render_to_response(template_name,
                               { 'form': form },
                               context_instance=context)
-
-
-
-
-
-
-###############################################################################
-
-
-from paypal.pro.views import PayPalPro
-from paypal.standard.forms import PayPalEncryptedPaymentsForm # PayPalSharedSecretEncryptedPaymentsForm
-import time
-
-def request_payment_return(request):
-    logging.info(request)
-    return HttpResponseRedirect('/')
-
-def request_payment_cancel(request):
-    logging.info(request)
-    return HttpResponseRedirect('/')
-
-def request_payment_standard(request):
-    return HttpResponse(render_payment_standard_button(request.user))
-
-def render_payment_standard_button(owner, amount = "10.00"):
-    logging.info('rendering standard payment button. sandbox? %d' % settings.PAYPAL_TEST)
-
-    # What you want the button to do.
-    invoice = Invoice(owner = owner, pk = int(time.time()))
-    invoice.save()
-
-    paypal_dict = {
-        "business": settings.PAYPAL_RECEIVER_EMAIL,
-        "amount": amount,
-        "item_name": "On-demand OCR for 2,000 pages",
-        "invoice": str(invoice.pk),
-        "notify_url": "https://archive.donomo.com/account/pay/ipn/gpxjyxmrzzqpncosnbenvkkzcmxz/",
-        "return_url": "https://archive.donomo.com/account/pay/return/",
-        "cancel_return": "https://archive.donomo.com/account/pay/cancel/",
-    }
-
-    # Create the instance.
-    form = PayPalEncryptedPaymentsForm(initial=paypal_dict) #PayPalSharedSecretEncryptedPaymentsForm(initial=paypal_dict)
-
-
-    # Output the button.
-    result = form.render()
-
-    return result
-
-def render_subscription_button(owner, amount):
-    # What you want the button to do.
-    paypal_dict = {
-        "cmd": "_xclick-subscriptions",
-        "business": settings.PAYPAL_RECEIVER_EMAIL,
-        "a3": amount,                      # monthly price 
-        "p3": 1,                           # duration of each unit (depends on unit)
-        "t3": "M",                         # duration unit ("M for Month")
-        "src": "1",                        # make payments recur
-        "sra": "1",                        # reattempt payment on payment error
-        "no_note": "1",                    # remove extra notes (optional)
-        "item_name": "Cloud OCR subscription",
-        "notify_url": "https://archive.donomo.com/account/pay/ipn/gpxjyxmrzzqpncosnbenvkkzcmxz/",
-        "return_url": "https://archive.donomo.com/account/pay/return/",
-        "cancel_return": "https://archive.donomo.com/account/pay/cancel/",
-    }
-
-    # Create the instance.
-    form = PayPalEncryptedPaymentsForm(initial=paypal_dict, button_type="subscribe")
-
-
-    # Output the button.
-    result = form.render()
-
-    return result
-
-
-def request_payment_pro(request):
-    item = {'amt':"10.00",              # amount to charge for item
-            'inv':"inventory#",         # unique tracking variable paypal
-            'custom':"tracking#",       # custom tracking variable for you
-            'cancelurl':"https://www.donomo.com/account/pay/cancel/",   # Express checkout cancel url
-            'returnurl':"https://www.donomo.com/account/pay/return/"}   # Express checkout return url
-
-    kw = {'item':'item',                        # what you're selling
-       'payment_template': 'template',          # template to use for payment form
-       'confirm_template': 'confirm_template',  # form class to use for Express checkout confirmation
-       'payment_form_cls': 'payment_form_cls',  # form class to use for payment
-       'success_url': '/success',               # where to redirect after successful payment
-       }
-    ppp = PayPalPro(**kw)
-    return HttpResponse(ppp.render_payment_form())
-
 
 
