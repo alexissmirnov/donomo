@@ -1,0 +1,31 @@
+{% extends "ui/base_static.html" %}
+
+{% block title %}
+	Subscribing {{user}} to Cloud OCR. 
+{% endblock %}
+
+{% block content %}
+	{% if error_message %}<p class="error">{{ error_message }}</p>{% endif %}
+	
+	<div class='page_header'>
+		<h1>Thank you for choosing to upgrade to <b>{{plan}}</b> subscription plan.</h1>
+	</div>
+	<div class='innercol'>
+		<div class='section' id='payment'>
+				<p>
+					You're upgrading your {{user}} account located to {{plan}} subscription plan. 
+					As soon as the subscription is started you will be able to process 
+					{{plan_pages}} page{{plan_pages|pluralize}} every month until you cancel or downgrade your account. 
+					Additional credit is always available. Simply refill your account for additional credit.
+				</p>
+					
+				<p>
+					We will make a single charge ${{amount}} every 30 days, starting today. 
+					<b>Click "Subscribe" button to complete the transaction.</b>
+				</p>
+				{% autoescape off %}
+				{{ pay_button }}
+				{% endautoescape %}	
+		</div>
+	</div>
+{% endblock %}
