@@ -67,19 +67,19 @@ def account_detail(request, username):
         try:
             account = Account.objects.get(owner = request.user)
             balance = account.balance
-            logging.info('balance is %s' % balance)
         except Account.DoesNotExist:
-            logging.error('no account found')
             balance = 0
 
 
         balance = float(balance) / Account.USD_TO_CREDITS
+        credited_pages_num = balance / Account.PRODUCT_CREDIT_CARGE['OCR']
         
 
         return render_to_response('account/userprofile_form.html',
                                   {'page_count' : page_count,
                                    'document_count': document_count,
                                    'balance' : "%0.2f" % balance,
+                                   'credited_pages_num' : credited_pages_num,
                                    'remaining_storage_days' : "30" },
                                   context_instance = RequestContext(request))
     else:
