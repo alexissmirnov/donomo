@@ -287,7 +287,7 @@ AUTHENTICATION_BACKENDS = (
     'donomo.archive.account.auth_backend.OpenIDAuthBackend',
     )
 
-AUTH_PROFILE_MODULE = 'account.userprofile'
+AUTH_PROFILE_MODULE = 'billing.Account'
 
 TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.auth",

@@ -4,7 +4,7 @@ from django.contrib.auth.decorators  import login_required
 
 @login_required
 def expense(request):
-    account = Account.get(owner = request.user)
+    account = Account.get(user = request.user)
     balance = account.balance - request.REQUEST['charge']
     
     if balance > 0:

@@ -9,5 +9,5 @@ class InvoiceAdmin(admin.ModelAdmin):
 admin.site.register(Invoice, InvoiceAdmin)
 
 class AccountAdmin(admin.ModelAdmin):
-    list_display = ("owner", "balance",)
+    list_display = ("user", "balance",)
 admin.site.register(Account, AccountAdmin)

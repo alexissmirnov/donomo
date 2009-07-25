@@ -20,6 +20,12 @@ urlpatterns = patterns(
         name   = 'ui_view_page' ),
 
     url(
+        regex  = r'^welcome/$',
+        view   = direct_to_template,
+        kwargs = { 'template' : 'ui/welcome.html' },
+        name   = 'ui_welcome' ),
+
+    url(
         regex  = r'^view/download/$',
         view   = download_tags,
         name   = 'ui_download_tags' ),

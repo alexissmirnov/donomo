@@ -84,6 +84,7 @@ def render_payment_standard_button(owner, amount = "10.00"):
     invoice = Invoice(owner = owner, pk = int(time.time()))
     invoice.save()
 
+    #TODO remove hardcoded URLs and domain name
     paypal_dict = {
         "business": settings.PAYPAL_RECEIVER_EMAIL,
         "amount": amount,

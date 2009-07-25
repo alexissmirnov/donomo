@@ -19,7 +19,6 @@ urlpatterns = patterns('',
                            name='registration_activate'),
                        url(r'^login/$',
                            auth_views.login,
-                           {'template_name': 'registration/login.html'},
                            name='auth_login'),
                        url(r'^logout/$',
                            auth_views.logout,
@@ -80,5 +79,7 @@ urlpatterns = patterns('',
                             'donomo.archive.account.payment_views.account_subscribe',
                             name='account-subscribe'),
                            
+                       url(r'^$',
+                           'donomo.archive.account.account_views.account_detail'),
                 )
                         

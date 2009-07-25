@@ -50,14 +50,14 @@ def logout(request):
                        template_name = RequestContext(request)['template_name'])
 
 @login_required()
-def account_detail(request, username):
+def account_detail(request, username = None):
     """
         Renders account management UI
     """
     #TODO replace with generic views once
     #http://code.djangoproject.com/ticket/3639 is resolved
 
-    if username != request.user.username:
+    if username is not None and username != request.user.username:
         return HttpResponse('forbidden: username %s' % username)
 
     if request.method == 'GET':
@@ -65,7 +65,7 @@ def account_detail(request, username):
         document_count = Document.objects.filter(owner = request.user).count()
 
         try:
-            account = Account.objects.get(owner = request.user)
+            account = Account.objects.get(user = request.user)
             balance = account.balance
         except Account.DoesNotExist:
             balance = 0
@@ -178,11 +178,35 @@ class RegistrationForm(RecaptchaForm):
                         profile_callback=profile_callback)
         return new_user
 
+class SiteProfileNotAvailable(Exception):
+    pass
 
+def create_profile_model(user):
+    """
+    This method is supplied as "profile_callback" and will be called just after the
+    new user object object is created.
+    """
+    from django.db import models
+    from django.core.exceptions import ImproperlyConfigured
+    if not getattr(settings, 'AUTH_PROFILE_MODULE', False):
+        raise SiteProfileNotAvailable
+
+    try:
+        app_label, model_name = settings.AUTH_PROFILE_MODULE.split('.')
+        model = models.get_model(app_label, model_name)
+        profile, created = model._default_manager.get_or_create(
+                                user=user,
+                                defaults={"balance": Account.BALANCE_ON_CREATION })
+        logging.debug("%s is created? %s" %(profile, created))
+
+        return profile
+    except (ImportError, ImproperlyConfigured):
+        raise SiteProfileNotAvailable
+    
 def register(request,
              success_url=None,
              form_class = RegistrationForm,
-             profile_callback=None,
+             profile_callback=create_profile_model,
              template_name='registration/registration_form.html',
              extra_context=None):
     """
@@ -272,5 +296,4 @@ def register(request,
     return render_to_response(template_name,
                               { 'form': form },
                               context_instance=context)
-
 
