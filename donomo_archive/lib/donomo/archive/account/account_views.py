@@ -64,22 +64,9 @@ def account_detail(request, username = None):
         page_count = Page.objects.filter(owner = request.user).count()
         document_count = Document.objects.filter(owner = request.user).count()
 
-        try:
-            account = Account.objects.get(user = request.user)
-            balance = account.balance
-        except Account.DoesNotExist:
-            balance = 0
-
-
-        balance = float(balance) / Account.USD_TO_CREDITS
-        credited_pages_num = balance / Account.PRODUCT_CREDIT_CARGE['OCR']
-        
-
         return render_to_response('account/userprofile_form.html',
                                   {'page_count' : page_count,
                                    'document_count': document_count,
-                                   'balance' : "%0.2f" % balance,
-                                   'credited_pages_num' : credited_pages_num,
                                    'remaining_storage_days' : "30" },
                                   context_instance = RequestContext(request))
     else:

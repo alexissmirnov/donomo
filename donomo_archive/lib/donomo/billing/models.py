@@ -7,9 +7,9 @@ class Invoice(models.Model):
         null   = False)
 
 class Account(models.Model):
-    PRODUCT_CREDIT_CARGE = {'OCR': 5}
-    USD_TO_CREDITS = 1000
-    BALANCE_ON_CREATION = 500 
+    PRODUCT_CREDIT_CARGE = {'OCR': 15}
+    USD_TO_CREDITS = 500
+    BALANCE_ON_CREATION = 5.00
 
     
     user = models.ForeignKey(
@@ -19,4 +19,4 @@ class Account(models.Model):
     balance = models.IntegerField()
     
     def prepaid_product_ocr(self):
-        return self.balance / Account.PRODUCT_CREDIT_CARGE['OCR']
+        return ( self.balance * Account.USD_TO_CREDITS ) / Account.PRODUCT_CREDIT_CARGE['OCR']

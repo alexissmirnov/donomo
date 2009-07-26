@@ -16,10 +16,10 @@
 	</div>
 	<div class='innercol'>
 		<div class='section' id='balance_overview'>
-			{% if credited_pages_num %}
+			{% if user.get_profile.prepaid_product_ocr %}
 				<p>
-					Your remaining balance is {{balance}}$. 
-					You have enough credits to process {{credited_pages_num}} more page{{credited_pages_num|pluralize}}.
+					Your remaining balance is <strong>${{user.get_profile.balance|floatformat:2}}</strong>. 
+					You have enough credits to process {{user.get_profile.prepaid_product_ocr}} more page{{user.get_profile.prepaid_product_ocr|pluralize}}.
 				</p>
 				<p>
 					Cloud OCR will store your documents for {{remaining_storage_days}} more day{{remaining_storage_days|pluralize}}.
@@ -52,48 +52,48 @@
 			  	</tr>
 			  	<tr>
 				    <th>
-				      <span class="plan_name">Max</span> <span class="price">$800/month</span>
+				      <span class="plan_name">Max</span> <span class="price">$800.00/month</span>
 			    	</th>
-				    <td><strong>300,000</strong></td>
+				    <td><strong>33,000</strong></td>
 				    <td><strong>UNLIMITED</strong></td>
 				    <td><img alt="yes" src="{{MEDIA_URL}}skins/donomo/images/greycheck-bullet-16.gif" height="15" width="16"></td>
 					<td><div class="button"><a href="/account/{{user}}/subscribe/?plan=max"><span>Upgrade</span></a></div></td>
 			  	</tr>
 			  	<tr>
 				    <th>
-				      <span class="plan_name">Pro</span> <span class="price">$90/month</span>
+				      <span class="plan_name">Pro</span> <span class="price">$90.00/month</span>
 			    	</th>
-				    <td><strong>30,000</strong></td>
+				    <td><strong>3,500</strong></td>
 				    <td><strong>UNLIMITED</strong></td>
 				    <td><img alt="yes" src="{{MEDIA_URL}}skins/donomo/images/greycheck-bullet-16.gif" height="15" width="16"></td>
 					<td><div class="button"><a href="/account/{{user}}/subscribe/?plan=pro"><span>Upgrade</span></a></div></td>
 			  	</tr>
 			  	<tr>
 				    <th>
-				      <span class="plan_name">Plus</span> <span class="price">$10/month</span>
+				      <span class="plan_name">Plus</span> <span class="price">$30.00/month</span>
 			    	</th>
-				    <td><strong>3,000</strong></td>
+				    <td><strong>1,300</strong></td>
 				    <td><strong>50 GB</strong></td>
 				    <td><img alt="yes" src="{{MEDIA_URL}}skins/donomo/images/greycheck-bullet-16.gif" height="15" width="16"></td>
 					<td><div class="button"><a href="/account/{{user}}/subscribe/?plan=plus"><span>Upgrade</span></a></div></td>
 			  	</tr>
 			  	<tr class="payg_plan">
 				    <th>
-				      <span class="plan_name">Pay as you go</span> <span class="price">$90.</span><span class="promo_message"> 10% OFF!</spen>
+				      <span class="plan_name">Pay as you go</span> <span class="price">$99.98.</span><span class="promo_message"></span>
 				    </th>
-				    <td><strong>10,000</strong></td>
+				    <td><strong>3,300</strong></td>
 				    <td><strong>100G for 30 days</strong></td>
 				    <td><img alt="yes" src="{{MEDIA_URL}}skins/donomo/images/greycheck-bullet-16.gif" height="15" width="16"></td>
-					<td><div class="button"><a href="/account/{{user}}/refill/?amount=100"><span>Refill</span></a></div></td>
+					<td><div class="button"><a href="/account/{{user}}/refill/?amount=99.98"><span>Refill</span></a></div></td>
 			  	</tr>
 			  	<tr class="payg_plan">
 				    <th>
-				      <span class="plan_name">Pay as you go</span> <span class="price">$10.</span>
+				      <span class="plan_name">Pay as you go</span> <span class="price">$29.99.</span>
 				    </th>
 				    <td><strong>1000</strong></td>
 				    <td><strong>10G for 30 days</strong></td>
 				    <td><img alt="yes" src="{{MEDIA_URL}}skins/donomo/images/greycheck-bullet-16.gif" height="15" width="16"></td>
-					<td><div class="button"><a href="/account/{{user}}/refill/?amount=10"><span>Refill</span></a></div></td>
+					<td><div class="button"><a href="/account/{{user}}/refill/?amount=29.99"><span>Refill</span></a></div></td>
 			  	</tr>
 			</tbody>
 			</table>

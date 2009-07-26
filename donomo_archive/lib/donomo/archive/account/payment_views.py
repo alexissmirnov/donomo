@@ -19,14 +19,14 @@ import os
 import logging
 logging = logging.getLogger(os.path.splitext(os.path.basename(__file__))[0])
 
-SUBSCRIPTION_PLANS = {'max' : [800, 300000] , 'pro' : [90, 30000], 'plus' : [10,3000]}
+SUBSCRIPTION_PLANS = {'max' : [800, 33000] , 'pro' : [90, 3500], 'plus' : [30,1300]}
 
 @login_required()
 def account_refill(request, username):
     """
     View that adds funds to an account. Renders Paypal button.
     """
-    amount = int(request.GET['amount'])
+    amount = float(request.GET['amount'])
     
     return render_to_response('account/refill.html',
                               {
