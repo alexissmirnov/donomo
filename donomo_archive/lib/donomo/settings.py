@@ -337,5 +337,3 @@ else:
     PAYPAL_CERT = '/etc/paypal/paypal_public_cert.pem'
     PAYPAL_RECEIVER_EMAIL = 'paypal@donomo.com'
 
-#for k in os.environ.keys():
-#    del os.environ[k]
