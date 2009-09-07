@@ -76,11 +76,15 @@ def handle_work_item(processor, item):
                     asset_class = models.AssetClass.DOCUMENT,
                     mime_type   = models.MimeType.BINARY ))
 
-        if donomo.billing.models.expense('OCR', item['Owner']):
-            return new_work
+        # do no check for available credit for inactive accounts. 
+        # assumption: the account can only be inactive when the trial is in progress
+        if item['Owner'].is_active:
+            if donomo.billing.views.expense('OCR', item['Owner']):
+                return new_work
+            else:
+                raise Exception("Insufficient account balance")
         else:
-            raise Exception("Insufficient account balance")
-            
+            return new_work
 
     except OCRFailed:
         logging.warning('OCR failed, dropping from processing chain')
