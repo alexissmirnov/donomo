@@ -47,6 +47,7 @@ __all__ = (
     'tag_documents',
     'get_page_pdf',
     'get_search',
+    'process_uploaded_files',
     )
 
 logging = logging.getLogger('web-api')
@@ -287,12 +288,20 @@ def upload_document(request):
     if request.user is None or not request.user.is_active:
         raise HttpRequestValidationError('account disabled')
 
+    process_uploaded_files(request.FILES, request.user)
+
+    return {
+        'status'   : 202,
+        # 'location' : upload.get_absolute_url(),
+        }
+
+def process_uploaded_files(files, user):
     gateway      = _init_processor()[0]
     logging.debug(str(gateway))
 
     # pick all files that are send in this API
     # support sending multiple files in a single request
-    for key, the_file in request.FILES.iteritems():
+    for key, the_file in files.iteritems():
         content_type = the_file.content_type
 
         if content_type == 'application/octet-stream':
@@ -306,7 +315,7 @@ def upload_document(request):
 
         upload = operations.create_asset_from_stream(
             data_stream  = StringIO(the_file.read()),
-            owner        = request.user,
+            owner        = user,
             producer     = gateway,
             asset_class  = models.AssetClass.UPLOAD,
             file_name    = the_file.name,
@@ -314,11 +323,6 @@ def upload_document(request):
             mime_type    = content_type)
 
         operations.publish_work_item(upload)
-
-    return {
-        'status'   : 202,
-        # 'location' : upload.get_absolute_url(),
-        }
 
 ##############################################################################
 @login_required
