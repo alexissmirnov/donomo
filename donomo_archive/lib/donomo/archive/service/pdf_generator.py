@@ -7,9 +7,13 @@ itno a PDF FILE.
 
 """
 
-from donomo.archive import operations, models
-from donomo.archive.utils import pdf
-from donomo.archive.service import NotReadyException
+from django.conf                    import settings
+from django.core.mail               import EmailMessage, SMTPConnection
+from django.template.loader         import render_to_string
+
+from donomo.archive                 import operations, models
+from donomo.archive.utils           import pdf
+from donomo.archive.service         import NotReadyException
 
 
 from cStringIO import StringIO
@@ -51,8 +55,6 @@ def handle_work_item(processor, item):
         raise NotReadyException(
             "Postponing PDF generation, OCR not complete for pages")
 
-    # classify the document based on the creation time of its PDF asset
-    tag_document(document, datetime.timedelta(0, UPLOAD_AGGREGATE_TIME_TRESHOLD))
 
     pdf_stream = StringIO(
         pdf.render_document(
@@ -60,6 +62,14 @@ def handle_work_item(processor, item):
             output_buffer = StringIO(),
             username = document.owner.username,
             title = document.title ).getvalue() )
+
+    # trial account handling -- send the PDF in attachment
+    # and delete all associated assets
+    if handle_trial_account(document, pdf_stream.getvalue()):
+        return
+    
+    # classify the document based on the creation time of its PDF asset
+    tag_document(document, datetime.timedelta(0, UPLOAD_AGGREGATE_TIME_TRESHOLD))
 
     pdf_assets = document.assets.filter(
         asset_class__name = models.AssetClass.DOCUMENT,
@@ -83,7 +93,6 @@ def handle_work_item(processor, item):
 
 
     return [ pdf_asset ]
-
 
 ##############################################################################
 def tag_document(document, treshold):
@@ -141,3 +150,41 @@ def tag_document(document, treshold):
     document.save()
 
 ##############################################################################
+def handle_trial_account(document, pdf_file_contents):
+    """
+    Special handling for trial accounts: Instead of creating a PDF assert 
+    we're sending the PDF file as attachment in email. The document (and
+    all dependent assets) are deleted
+    """
+    try:
+        # use is_active flag to determine the trial account
+        if document.owner.is_active:
+            return False
+        
+        subject = render_to_string('core/trial_return_email_subject.txt')
+        
+        # Email subject *must not* contain newlines
+        subject = ''.join(subject.splitlines())
+        
+        body = render_to_string('core/trial_return_email.txt',
+                                   { 'user': document.owner.email,
+                                     'free_pages': "100" }) #TODO parametrize
+        message = EmailMessage(subject, body, 
+                               settings.UPLOAD_NOTIFICATION_EMAIL, 
+                               [document.owner.email],
+                               connection=SMTPConnection())
+        # walk up the tree of asset dependencies, find the original asset that stores
+        # the filename
+        
+        page_original_asset = document.pages[0].assets.get(
+                        assets__asset_class__name = models.AssetClass.PAGE_ORIGINAL )
+        original = page_original_asset.parent_asset
+        
+        message.attach(original.orig_file_name + '-digitised.pdf', pdf_file_contents)
+
+        message.send()
+        return True
+    except Exception, e:
+        logging.error(e)
+        
+    
