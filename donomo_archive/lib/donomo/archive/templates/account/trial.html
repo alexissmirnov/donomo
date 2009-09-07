@@ -1,0 +1,269 @@
+{% extends "ui/base_static.html" %}
+
+{% block title %}
+	Donomo Cloud OCR. Free trial. 
+{% endblock %}
+
+{% block content %}
+	<!-- Dependencies -->
+	<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/yahoo-dom-event/yahoo-dom-event.js"></script>
+	<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/element/element-min.js"></script>
+	<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/uploader/uploader-debug.js"></script> 
+	<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/connection/connection-debug.js"></script> 
+
+	<style type="text/css">
+		.uploadButton a, .clearButton a {
+			display:block;
+			width:100px;
+			height:40px;
+			text-decoration: none;
+			margin-left:5px;
+		}
+		
+		.uploadButton a {
+			background: url("{{MEDIA_URL}}ui/account/assets/uploadFileButton.png") 0 0 no-repeat;
+		}
+		
+		.clearButton a {
+			width:70px;
+			margin-right:15px;
+			background: url("{{MEDIA_URL}}ui/account/assets/clearListButton.png") 0 0 no-repeat;
+		}
+		
+	    .uploadButton a:visited, .clearButton a:visited {
+			background-position: 0 0;
+		}
+		
+	    .uploadButton a:hover, .clearButton a:hover {	
+			background-position: 0 -40px;
+		}
+		
+	    .uploadButton a:active, .clearButton a:active {
+			background-position: 0 -80px;
+		}
+		
+	    .uploadButton a:disabled, .clearButton a:disabled {
+			background-position: 0 -120px;
+		}
+	</style>
+
+	{% if error_message %}<p class="error">{{ error_message }}</p>{% endif %}
+	
+	<div class='page_header'>
+		<h1><b>Try Cloud OCR for free</b></h1>
+		<p class='h1-note'>Upload a single document scan and we'll digitize it and email you a searchable PDF. Or <a href="/account/register/">Signup</a> and <strong>digitize 100 more pages for free</strong>.</p>
+	</div>
+	<div class='innercol'>
+	<div class='section'>
+		</div>
+				<div class='section' id='email-section'>
+					<p>
+					<b>Step 1: </b><br/>Enter your email address: 
+					<input type="text" id='email' name="email" size="30"/>
+					<span class='field-error' id='email-field-error' style='visibility:hidden'> Please enter valid email address</span><br/>
+					</p>
+					We will use this email address to send you the finished document.
+				</div>
+				<div class='section' id='file-section'>
+					<p>
+					<b>Step 2:</b><br/>Select a file:
+					<div>
+						<div id="fileProgress" style="border: black 1px solid; width:300px; height:40px;float:left">
+							<div id="fileName" style="text-align:center; margin:5px; font-size:15px; width:290px; height:25px; overflow:hidden"></div>
+							<div id="progressBar" style="width:300px;height:5px;background-color:#CCCCCC"></div>
+						</div>
+					<div id="uploaderUI" style="width:100px;height:40px;margin-left:5px;float:left"></div>
+					<div class="clearButton" style="float:left">
+					<a class="rolloverButton" href="#" onClick="handleClearFiles(); return false;"></a>
+					</div>
+					File in PDF, JPEG, TIFF format are accepted. The scanned document should not contain more than 20 pages.
+					</div>
+					
+					<span id=''></span>
+				</div>
+				<div class='section' id='process-section'>
+					<p>		
+					<b>Step 3:</b>
+					<div id='upload-button' class="uploadButton" style="float:left; text-align:center; margin-right: 5px;"><a class="rolloverButton" href="#" onClick="upload(); return false;"></a></div>
+					<span id='upload-progress' style='display:none'>Uloading...</span>
+			
+
+	       		<span id='upload-complete' style='display:none'>
+	       			<img style='vertical-align: middle' src="http://l.yimg.com/g/images/upload/circle-checkmark-ok.png"/>
+	       			<b>Thanks!</b> Your document is being processed and we'll email you the result. <a href='/account/register/'>Signup and digitize more documents.</a>
+	       		</span>
+	       		</p>
+			</div>
+			
+
+	</div>
+	<script type="text/javascript">
+		var Connect = YAHOO.util.Connect;
+		var Event = YAHOO.util.Event;
+		var Uploader = YAHOO.widget.Uploader;
+		var Dom = YAHOO.util.Dom;
+	    
+	    // Instantiate the uploader and write it to its placeholder div.
+		YAHOO.widget.Uploader.SWFURL = "/media/yui/2.7.0/build/uploader/assets/uploader.swf"; 
+		//YAHOO.widget.Uploader.SWFURL = "assets/uploader.swf";
+		
+		var uploader = new YAHOO.widget.Uploader( "uploaderUI", "{{MEDIA_URL}}ui/account/assets/selectFileButton.png" );
+		
+		// Add event listeners to various events on the uploader.
+		// Methods on the uploader should only be called once the 
+		// contentReady event has fired.
+		
+		uploader.addListener('contentReady', handleContentReady);
+		uploader.addListener('fileSelect',onFileSelect)
+		uploader.addListener('uploadStart',onUploadStart);
+		uploader.addListener('uploadProgress',onUploadProgress);
+		uploader.addListener('uploadCancel',onUploadCancel);
+		uploader.addListener('uploadComplete',onUploadComplete);
+		uploader.addListener('uploadCompleteData',onUploadResponse);
+		uploader.addListener('uploadError', onUploadError);
+	    	
+	    // Variable for holding the selected file ID.
+		var fileID;
+		
+		function handleClearFiles() {
+		uploader.clearFileList();
+		uploader.enable();
+		fileID = null;
+		
+		var filename = document.getElementById("fileName");
+		filename.innerHTML = "";
+		
+		var progressbar = document.getElementById("progressBar");
+		progressbar.innerHTML = "";
+		}
+			
+		// When contentReady event is fired, you can call methods on the uploader.
+		function handleContentReady () {
+		    // Allows the uploader to send log messages to trace, as well as to YAHOO.log
+			uploader.setAllowLogging(true);
+			
+			// Restrict selection to a single file (that's what it is by default,
+			// just demonstrating how).
+			uploader.setAllowMultipleFiles(false);
+			
+			// New set of file filters.
+			var ff = new Array({description:"Images", extensions:"*.jpg;*.pdf;*.tif"});
+			                   
+			// Apply new set of file filters to the uploader.
+			uploader.setFileFilters(ff);
+		}
+	
+		// Returns true if emailAddress is in valid form
+		// From http://www.4guysfromrolla.com/webtech/validateemail.shtml
+		function isEmailValid(emailAddress) {
+			 var emailReg = "^[\\w-_\.+]*[\\w-_\.]\@([\\w]+\\.)+[\\w]+[\\w]$";
+			 var regex = new RegExp(emailReg);
+			 return regex.test(emailAddress);
+		}
+		// Initiate the file upload. Since there's only one file, 
+		// we can use either upload() or uploadAll() call. fileList 
+		// needs to have been populated by the user.
+		function upload() {
+			var email = document.getElementById("email").value;
+			
+			if(!isEmailValid(email)) {
+				Dom.setStyle('email-field-error', 'visibility', 'visible');
+				return;
+			}
+			else {
+				Dom.setStyle('email-field-error', 'visibility', 'hidden');
+			}
+	
+					
+		    if (fileID != null) {
+		    	Dom.setStyle(['upload-progress'], 'display', 'inherit');
+		    	
+		    	Connect.asyncRequest('HEAD', '/account/' + email + '/', {
+		    		argument : {'email' : email, 'uploader' : uploader},
+		    		failure : function(o) {
+						// email is already taken
+						if(o.status == 404) {
+		  				    // Email not yet taken
+							o.argument.uploader.uploadAll("/account/trial/", 
+						                "POST", 
+						                {email:o.argument.email});
+							}
+					},
+					success : function(o) {
+						if(o.getResponseHeader['donomo-account-active'] == 'True') {
+							window.location = "/account/login/?src=/account/trial/&email="+email;
+						}
+						else {
+							window.location = "/account/register/?src=/account/trial/&email="+email;
+						}
+					}
+				});
+			}
+		}
+		
+		// Fired when the user selects files in the "Browse" dialog
+		// and clicks "Ok".
+		function onFileSelect(event) {
+			for (var item in event.fileList) {
+			    if(YAHOO.lang.hasOwnProperty(event.fileList, item)) {
+					YAHOO.log(event.fileList[item].id);
+					fileID = event.fileList[item].id;
+				}
+			}
+			uploader.disable();
+			
+			var filename = document.getElementById("fileName");
+			filename.innerHTML = event.fileList[fileID].name;
+			
+			var progressbar = document.getElementById("progressBar");
+			progressbar.innerHTML = "";
+		}
+	
+	    // Do something on each file's upload start.
+		function onUploadStart(event) {
+		
+		}
+		
+		// Do something on each file's upload progress event.
+		function onUploadProgress(event) {
+			prog = Math.round(300*(event["bytesLoaded"]/event["bytesTotal"]));
+		  	progbar = "<div style=\"background-color: #f00; height: 5px; width: " + prog + "px\"/>";
+	
+			var progressbar = document.getElementById("progressBar");
+			progressbar.innerHTML = progbar;
+		}
+		
+		// Do something when each file's upload is complete.
+		function onUploadComplete(event) {
+			uploader.clearFileList();
+			uploader.enable();
+			
+			progbar = "<div style=\"background-color: #f00; height: 5px; width: 300px\"/>";
+			var progressbar = document.getElementById("progressBar");
+			progressbar.innerHTML = progbar;
+
+			Dom.setStyle(['upload-complete'], 'display', 'inherit');
+			Dom.setStyle(['upload-button', 'upload-progress'], 'display', 'none');
+		}
+		
+		// Do something if a file upload throws an error.
+		// (When uploadAll() is used, the Uploader will
+		// attempt to continue uploading.
+		function onUploadError(event) {
+	
+		}
+		
+		// Do something if an upload is cancelled.
+		function onUploadCancel(event) {
+	
+		}
+		
+		// Do something when data is received back from the server.
+		function onUploadResponse(event) {
+			YAHOO.log("Server response received.");
+		}
+	
+	</script>	
+	<!--   <script type="text/javascript" src="{{MEDIA_URL}}ui/account/trial.js"></script> -->
+	
+{% endblock %}

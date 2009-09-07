@@ -3,6 +3,13 @@
 {% block title %}Signup to Cloud OCR{% endblock %}
 
 {% block content %}
+		{%ifequal request.GET.src '/account/trial/' %}
+		<p class='redirect-note'>
+			The trial is closed for {{request.GET.email}} because this account is already registered. 
+			Please login to upload new documents.
+		</p>
+		{% endifequal %}
+		
 		<h2>Log in to Cloud OCR account.</h2>
 		<p></p>
        <form action="{%url auth_login%}?next=/" method="post">
@@ -13,7 +20,7 @@
 	       				<label for="id_email">Email address:</label> 
 	       			</th>
 					<td>
-						<input class="username" type="text" name="username" value="{{account}}">
+						<input class="username" type="text" name="username" value="{{request.GET.email}}">
 					</td>
 				</tr>
        			<tr>

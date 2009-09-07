@@ -1,0 +1,9 @@
+Hello {{user}},
+
+The scan uploaded to Cloud OCR have been successfully processed. Your searchable PDF is attached to this message.
+
+Need to process more scans? No problem! Sing up at http://archive.donomo.com/account/register/ and process {{free_pages}} more pages for FREE.
+
+We offer subscription plans or a prepaid account options.
+
+Team Donomo

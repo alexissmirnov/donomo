@@ -1,8 +1,15 @@
 {% extends "ui/base_static.html" %}
 
 {% block title %}Signup to Cloud OCR{% endblock %}
-
 {% block content %}
+		{%ifequal request.GET.src '/account/trial/' %}
+		<p class='redirect-note'>
+			Great to have you back! The email {{request.GET.email}} was already used for one-time trial. But no worries, 
+			you can process more documents for free. Register by filling the form below and get free credits to process 
+			100 more pages.
+		</p>
+		{% endifequal %}
+
 		<h2>Signup to Cloud OCR</h2>
 		<p>
 			Signup to Cloud OCR is fast and easy. Complete the form below and you'll be processing document scans in minutes! 
