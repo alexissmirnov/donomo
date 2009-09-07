@@ -315,4 +315,11 @@ table.payment_plans td .button a:active {background-position: 0 -30px;}
 
 table.payment_plans td .button a:active span {background-position: 100% -30px;}
 
-
+p.redirect-note {
+	background-color: #FFFFFF; 
+	border-color: #444444; 
+	border-style: solid; 
+	border-width: 1px; 
+	color:#E4880B; 
+	padding: 15px;
+};

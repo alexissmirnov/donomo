@@ -13,7 +13,7 @@ YAHOO.donomo.TagEditorDialog = function(){
 		// having a browser that doesn't support PUTs
 		// so we make a POST request and overrride the HTTP method
 		// by passing _method
-		Connect.asyncRequest(
+		YAHOO.util.Connect.asyncRequest(
 			'POST', 
 			doc.id+'?_method=PUT',
 			{ success : function(o) {
