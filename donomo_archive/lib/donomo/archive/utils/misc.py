@@ -7,6 +7,8 @@ from django.core.urlresolvers import reverse
 import re
 import mimetypes
 import BeautifulSoup
+import logging
+logging    = logging.getLogger('donomo-archive')
 
 #
 # pylint: disable-msg=C0103,W0142
@@ -178,8 +180,15 @@ def extract_text_from_hocr( hocr ):
     """
     bsoup = BeautifulSoup.BeautifulSoup(hocr)
 
-    h, w = get_hocr_page_dimentions(bsoup)
-    lines = get_hocr_lines(bsoup)
+    try:
+        h, w = get_hocr_page_dimentions(bsoup)
+        lines = get_hocr_lines(bsoup)
+    except KeyError, e:
+        logging.error('invalid HOCR: %s' % e)
+        h = 100
+        w = 100
+        lines = list()
+
     return h, w, lines
 
 
