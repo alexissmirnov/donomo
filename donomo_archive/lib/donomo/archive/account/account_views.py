@@ -1,21 +1,56 @@
-from django.http                            import HttpResponse, HttpResponseRedirect
+from django.http                            import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, HttpResponseBadRequest
 from django.conf                            import settings
 from django.contrib                         import auth
 from django.contrib.auth.decorators         import login_required
 from django.shortcuts                       import render_to_response
 from django.template                        import RequestContext
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers               import reverse
 from django                                 import forms
 from django.utils.translation               import ugettext_lazy as _
 from django.contrib.auth.models             import User
 from registration.models                    import RegistrationProfile
 from donomo.archive.models                  import Page, Document
 from donomo.billing.models                  import Account, Invoice
+from donomo.archive.api                     import api_impl
 from recaptcha                              import RecaptchaForm, RecaptchaFieldPlaceholder, RecaptchaWidget
 import os
 import logging
 logging = logging.getLogger(os.path.splitext(os.path.basename(__file__))[0])
-                              
+
+def trial(request):
+    if request.method == 'GET':
+        return render_to_response('account/trial.html',
+                                  context_instance = RequestContext(request))
+    elif request.method == 'POST':
+        if not request.POST.has_key('email'):
+            return HttpResponseBadRequest('no email') #TODO: validation
+
+        try:
+            user, created = get_or_create_trial_account(request.POST['email'])
+            
+            if not created:
+                return HttpResponseForbidden("Trial for %s has expired" % user.email)
+            
+            # now that the user object is created, submit the files for processing                    
+            api_impl.process_uploaded_files(request.FILES, user)
+                
+        except Exception, e:
+            print str(e);
+        return HttpResponse('User created: ' + str(created))
+    else:
+        return HttpResponse('method not supported')
+
+def get_or_create_trial_account(email):
+    try:
+        return (User.objects.get(email__exact = email), False)
+    except User.DoesNotExist:
+        user = User.objects.create_user(email, email)
+        user.set_unusable_password()
+        user.is_active = False
+        user.save()
+        return (user, True)
+
+
 @login_required()
 def account_delete(request, username):
     """
@@ -39,7 +74,7 @@ def signin(request):
         else:
             return render_to_response('account/account_disabled.html')
     else:
-        return render_to_response('account/invalid_login.html')
+        return render_to_response('account/invalid_login.html', locals())
 
 @login_required()
 def logout(request):
@@ -49,8 +84,29 @@ def logout(request):
                        next_page=request.REQUEST.get('next', None),
                        template_name = RequestContext(request)['template_name'])
 
-@login_required()
 def account_detail(request, username = None):
+    if request.method == 'HEAD':
+        return head_account_detail(request, username)
+    elif request.method == 'GET':
+        return get_account_detail(request, username)
+    
+def head_account_detail(request, username = None):
+    """
+    Returns HttpResponse 200 if the account exists, 404 otherwise. 
+    Used to verify the existence of the account.
+    Can be invoked by anonymous request.
+    """
+    response = HttpResponse(content_type = 'text/plain')
+    try:
+        user = User.objects.get(username__exact = username)
+        response['donomo-account-active'] = user.is_active
+    except User.DoesNotExist:
+        response.status_code = 404
+        
+    return response
+
+@login_required()
+def get_account_detail(request, username = None):
     """
         Renders account management UI
     """

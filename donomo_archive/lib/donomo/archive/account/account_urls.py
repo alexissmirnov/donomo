@@ -5,7 +5,7 @@ from django.views.generic.simple import direct_to_template
 from django.contrib.auth import views as auth_views
 
 from registration.views import activate
-from donomo.archive.account.account_views import register, logout
+from donomo.archive.account.account_views import *
 
 
 urlpatterns = patterns('',
@@ -43,6 +43,10 @@ urlpatterns = patterns('',
                            direct_to_template,
                            {'template': 'registration/activate.html'},
                            name='registration_complete'),
+                       url(r'^trial/$',
+                           trial,
+                           name='trial'),
+
                        url(r'^(?P<username>[-+@.a-zA-Z0-9_]+)/delete/$', 
                             'donomo.archive.account.account_views.account_delete',
                             name='account-delete'),                                                        
