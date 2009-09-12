@@ -21,7 +21,6 @@ def _get_connection():
     return SQSConnection(
         aws_access_key_id     = settings.AWS_ACCESS_KEY_ID,
         aws_secret_access_key = settings.AWS_SECRET_ACCESS_KEY,
-        host                  = settings.SQS_HOST,
         is_secure             = settings.SQS_IS_SECURE )
 
 
