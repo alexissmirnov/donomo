@@ -85,7 +85,7 @@ def handle_page(
     """
 
     # Stuff we'll need later
-    new_page     = operations.create_page(document, position)
+    page     = operations.create_page(document, position)
     base_name    = os.path.splitext(tiff_original_path)[0]
     rgba_path    = '%s.rgba' % base_name
     jpeg_path    = '%s.jpeg' % base_name
@@ -116,7 +116,7 @@ def handle_page(
             producer     = processor,
             asset_class  = models.AssetClass.PAGE_ORIGINAL,
             file_name    = tiff_original_path,
-            related_page = new_page,
+            related_page = page,
             parent       = parent_asset,
             child_number = page.position,
             mime_type    = models.MimeType.TIFF ),
@@ -127,7 +127,7 @@ def handle_page(
             producer     = processor,
             asset_class  = models.AssetClass.PAGE_IMAGE,
             file_name    = jpeg_path,
-            related_page = new_page,
+            related_page = page,
             parent       = parent_asset,
             child_number = page.position,
             mime_type    = models.MimeType.JPEG ),
@@ -138,7 +138,7 @@ def handle_page(
             producer     = processor,
             asset_class  = models.AssetClass.PAGE_THUMBNAIL,
             file_name    = thumb_path,
-            related_page = new_page,
+            related_page = page,
             parent       = parent_asset,
             child_number = page.position,
             mime_type    = models.MimeType.JPEG ),
