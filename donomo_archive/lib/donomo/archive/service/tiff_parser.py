@@ -64,8 +64,8 @@ def handle_work_item(processor, item):
     if document is not None:
         new_work.append(
             document.assets.get(
-                asset_class__name = AssetClass.DOCUMENT,
-                mime_type__name   = MimeType.BINARY ))
+                asset_class__name = models.AssetClass.DOCUMENT,
+                mime_type__name   = models.MimeType.BINARY ))
 
     return new_work
 
