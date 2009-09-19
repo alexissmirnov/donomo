@@ -176,7 +176,7 @@ def handle_trial_account(document, pdf_file_contents):
         # walk up the tree of asset dependencies, find the original asset that stores
         # the filename
         
-        page_original_asset = document.pages[0].assets.get(
+        page_original_asset = document.pages.all()[0].assets.get(
                         assets__asset_class__name = models.AssetClass.PAGE_ORIGINAL )
         original = page_original_asset.parent_asset
         
