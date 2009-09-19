@@ -44,6 +44,14 @@ def handle_work_item(processor, item):
 
     logging.debug(document)
     
+    # use is_active flag to determine the trial account
+    # don't send a link to a document to an inactive account.
+    # a trial account cannot download documents
+    # since the account is not active.
+    # drop the work item
+    if not document.owner.is_active:
+        return
+    
     # Use the timestamp of the complete PDF to determine the creation 
     # date of the document.
     pdf_asset = document.assets.get(
