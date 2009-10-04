@@ -7,6 +7,7 @@ text/html representations, suitable for indexing in a search engine.
 
 from donomo.archive import operations, models
 import donomo.billing.models
+import donomo.billing.views
 
 import os
 import logging
