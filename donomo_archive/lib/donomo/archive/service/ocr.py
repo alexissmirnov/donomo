@@ -7,7 +7,6 @@ text/html representations, suitable for indexing in a search engine.
 
 from donomo.archive import operations, models
 import donomo.billing.models
-import donomo.billing.views
 
 import os
 import logging
@@ -80,7 +79,8 @@ def handle_work_item(processor, item):
         # do no check for available credit for inactive accounts. 
         # assumption: the account can only be inactive when the trial is in progress
         if item['Owner'].is_active:
-            if donomo.billing.views.expense('OCR', item['Owner']):
+            if donomo.billing.models.process_billable_event(item['Owner'], 
+                                                            'ocr.ocropus.page'):
                 return new_work
             else:
                 raise Exception("Insufficient account balance")

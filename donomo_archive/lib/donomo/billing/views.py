@@ -1,15 +1,14 @@
 from django.http                            import HttpResponse, HttpResponseRedirect
 from donomo.archive.utils.http              import HttpResponsePaymentRequired
 from django.contrib.auth.decorators  import login_required
+import donomo.billing.models
+
 
 @login_required
 def expense(request):
-    account = Account.get(user = request.user)
-    balance = account.balance - request.REQUEST['charge']
+    done = donomo.billing.models.charge(request.user, request.REQUEST['charge'])
     
-    if balance > 0:
-        account.balance = balance
-        account.save()
+    if done:
         return HttpResponse()
     else:
         return HttpResponsePaymentRequired("{'error': 'balance low'}")
