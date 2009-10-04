@@ -43,7 +43,7 @@ class Invoice(models.Model):
 class Account(models.Model):
     PRODUCT_CREDIT_CARGE = {'ocr.ocropus.page': 15}
     USD_TO_CREDITS = 500
-    BALANCE_ON_CREATION = 5.00
+    BALANCE_ON_CREATION = 2490.00
 
     
     user = models.ForeignKey(
