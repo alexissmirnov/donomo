@@ -59,9 +59,10 @@ def handle_work_item(processor, item):
     try:
         new_work = []
         parent_asset = item['Asset-Instance']
+        owner = item['Owner']
         new_work.append(
             operations.create_asset_from_file(
-                owner        = item['Owner'],
+                owner        = owner,
                 producer     = processor,
                 asset_class  = models.AssetClass.PAGE_TEXT,
                 file_name    = image_to_html( item['Local-Path'] ),
@@ -78,8 +79,8 @@ def handle_work_item(processor, item):
 
         # do no check for available credit for inactive accounts. 
         # assumption: the account can only be inactive when the trial is in progress
-        if item['Owner'].is_active:
-            if donomo.billing.models.process_billable_event(item['Owner'], 
+        if owner.is_active:
+            if donomo.billing.models.process_billable_event(owner, 
                                                             'ocr.ocropus.page'):
                 return new_work
             else:
