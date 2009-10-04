@@ -30,8 +30,8 @@ def process_billable_event(user, event_name):
     How much each billable event costs is determined by a table in
     Account class.
     """
-    account = Account.get(user = user)
-    charge = Accoount.PRODUCT_CREDIT_CARGE[event_name]
+    account = Account.objects.get(user = user)
+    charge = Account.PRODUCT_CREDIT_CARGE[event_name]
     return charge_account(account, charge)
 
 
