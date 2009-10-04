@@ -6,7 +6,7 @@ def change(user, charge):
     Charges a user a given number of credits.
     Returns True is the charge was successful.
     """
-    account = Account.get(user = user)
+    account = Account.objects.get(user = user)
     return charge_account(account, charge)
 
 def charge_account(account, charge):
