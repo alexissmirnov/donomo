@@ -427,15 +427,13 @@ def instantiate_asset(asset, parent_temp_dir = None):
                 local_dest_path = file_name ))
 
         keys = asset.owner.encryption_keys.all()
-        if len(keys) == 0:
-            logging.warn("%s is not secure" % asset.owner)
-        else:
+        if len(keys) != 0:
             enc_name = '%s.enc' % file_name
             shutil.move(file_name, enc_name)
             secure_file(
                 keys[0].value,
                 DECRYPT,
-
+    
                 enc_name,
                 file_name )
             os.remove(enc_name)

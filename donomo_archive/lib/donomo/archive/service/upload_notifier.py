@@ -14,6 +14,7 @@ from django.conf import settings
 from donomo.archive import operations, models
 from donomo.archive.utils import pdf
 from donomo.archive.service import NotReadyException
+import donomo.billing.models
 from cStringIO import StringIO
 import datetime
 import time
@@ -128,7 +129,9 @@ def send_notification(owner, upload_arrregate):
                                    { 'user': owner.email,
                                      'tag': upload_arrregate.label,
                                      'document_count' : document_count,
-                                     'site': current_site.domain })
+                                     'site': current_site.domain,
+                                     'remaining_pages_per_credit' : donomo.billing.models.get_remaining_credit(owner) 
+                                    })
         
         send_mail(subject, message, settings.UPLOAD_NOTIFICATION_EMAIL, [owner.email])
                 

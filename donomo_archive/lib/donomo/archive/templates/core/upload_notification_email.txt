@@ -6,4 +6,14 @@ You can view and download a ZIP archive containing {{document_count}} searchable
 
 https://{{site}}/view/download/?batch={{tag|urlencode}}
 
-Team Donomo
+{% if remaining_pages_per_credit %}
+Your account is active and has enough funds to process {{remaining_pages_per_credit}} more page{{remaining_pages_per_credit|pluralize}}. Add funds to process more documents anytime at https://{{site}}/account/
+{% else %}
+Your account is out of credit! Refill or upgrade at https://{{site}}/account/
+{% endif %}
+
+
+Any questions? Just reply to this email.
+
+Thanks for using Donomo.
+http://donomo.com

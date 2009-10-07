@@ -288,6 +288,11 @@ def upload_document(request):
     if request.user is None or not request.user.is_active:
         raise HttpRequestValidationError('account disabled')
 
+    # check if user's account isn't running low
+    if not donomo.billing.models.get_remaining_credit(request.user):
+        return { 'status' : 402, # payment required
+                }
+
     process_uploaded_files(request.FILES, request.user)
 
     return {
