@@ -1,6 +1,13 @@
 from django.db                           import models
 from django.contrib.auth.models          import User
 
+PRICING_PLANS = {'payg1' : [29.99, 1000, 30000], 
+                  'payg2' : [99.95, 4000, 120000],
+                  'plus' : [30.00, 1500, 45000],
+                  'pro' : [90.00, 5000, 150000],
+                  'max' : [300.00, 17000, 510000] }
+
+
 
 def get_remaining_credit(user, billable_event = 'ocr.ocropus.page'):
     """
@@ -26,6 +33,8 @@ def change(user, charge):
     Charges a user a given number of credits.
     Returns True is the charge was successful.
     """
+    
+    # TODO: wrap in a transaction
     account = Account.objects.get(user = user)
     return charge_account(account, charge)
 
@@ -33,6 +42,8 @@ def charge_account(account, charge):
     """
     Charges an account object a given number of credits.
     Returns True is the charge was successful.
+    
+    Charge is measured in "credits". Balance is measured in credits
     """
     balance = account.balance - charge
     
@@ -42,7 +53,30 @@ def charge_account(account, charge):
         return True
     else:
         return False
-        
+
+
+def refill_account( account, usd, purchace_plan = None):
+    """
+    Adds credits to an account based on the given purchase plan
+    """
+    if purchace_plan is None:
+        if usd == 29.99:
+            purchace_plan = 'payg1'
+        elif usd == 99.98:
+            purchace_plan = 'payg2'
+        elif usd == 30:
+            purchace_plan = 'plus'
+        elif usd == 90:
+            purchace_plan = 'pro'
+        elif usd == 300:
+            purchace_plan = 'max'
+        else:
+            return
+    
+    gross, pages, credit = PRICING_PLANS[purchace_plan]
+    account.balance = account.balance + credit
+    account.save()
+    
 def process_billable_event(user, event_name):
     """
     This function will perform a charge that corresponds to the
@@ -61,9 +95,8 @@ class Invoice(models.Model):
         null   = False)
 
 class Account(models.Model):
-    PRODUCT_CREDIT_CARGE = {'ocr.ocropus.page': 15}
-    USD_TO_CREDITS = 500
-    BALANCE_ON_CREATION = 2490.00
+    PRODUCT_CREDIT_CARGE = {'ocr.ocropus.page': 30}
+    BALANCE_ON_CREATION = 5.00
 
     
     user = models.ForeignKey(
@@ -73,4 +106,4 @@ class Account(models.Model):
     balance = models.IntegerField()
     
     def prepaid_product_ocr(self):
-        return ( max(0, self.balance) * Account.USD_TO_CREDITS ) / Account.PRODUCT_CREDIT_CARGE['ocr.ocropus.page']
+        return max(0, self.balance) / float(Account.PRODUCT_CREDIT_CARGE['ocr.ocropus.page'])

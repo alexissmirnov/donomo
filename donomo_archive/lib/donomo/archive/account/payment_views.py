@@ -10,7 +10,7 @@ from django.utils.translation               import ugettext_lazy as _
 from django.contrib.auth.models             import User
 from registration.models                    import RegistrationProfile
 from donomo.archive.models                  import Page, Document
-from donomo.billing.models                  import Account, Invoice
+from donomo.billing.models                  import Account, Invoice, PRICING_PLANS
 from paypal.pro.views import PayPalPro
 from paypal.standard.forms import PayPalEncryptedPaymentsForm # PayPalSharedSecretEncryptedPaymentsForm
 import time
@@ -19,18 +19,21 @@ import os
 import logging
 logging = logging.getLogger(os.path.splitext(os.path.basename(__file__))[0])
 
-SUBSCRIPTION_PLANS = {'max' : [800, 33000] , 'pro' : [90, 3500], 'plus' : [30,1300]}
-
 @login_required()
 def account_refill(request, username):
     """
     View that adds funds to an account. Renders Paypal button.
     """
-    amount = float(request.GET['amount'])
+    plan = float(request.GET['payg_plan'])
+    if not plan in ['payg1', 'payg2']:
+        return HttpResponse('wrong payment plan')
+
+    amount, pages, credit = PRICING_PLANS[plan]
     
     return render_to_response('account/refill.html',
                               {
                                'amount' : amount,
+                               'plan_pages' : pages,
                                'pay_button' : render_payment_standard_button(request.user, amount)
                                },
                                context_instance = RequestContext(request))
@@ -45,7 +48,7 @@ def account_subscribe(request, username):
     if not plan in ['max', 'pro', 'plus']:
         return HttpResponse('wrong subscription plan')
     
-    amount, pages = SUBSCRIPTION_PLANS[plan]
+    amount, pages, credit = PRICING_PLANS[plan]
     button = render_subscription_button(request.user, amount)
     
     return render_to_response('account/subscribe.html',
@@ -57,10 +60,6 @@ def account_subscribe(request, username):
                                'pay_button' : button
                                },
                                context_instance = RequestContext(request))
-
-
-
-
 
 ###############################################################################
 
@@ -88,7 +87,7 @@ def render_payment_standard_button(owner, amount = "10.00"):
     paypal_dict = {
         "business": settings.PAYPAL_RECEIVER_EMAIL,
         "amount": amount,
-        "item_name": "On-demand OCR for 2,000 pages",
+        "item_name": "On-demand OCR",
         "invoice": str(invoice.pk),
         "notify_url": "https://archive.donomo.com/account/pay/ipn/gpxjyxmrzzqpncosnbenvkkzcmxz/",
         "return_url": "https://archive.donomo.com/account/pay/return/",
