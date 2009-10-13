@@ -17,8 +17,7 @@
 	<div class='innercol'>
 		<div class='section' id='balance_overview'>
 			{% if user.get_profile.prepaid_product_ocr %}
-				<p>
-					Your remaining balance is <strong>${{user.get_profile.balance|floatformat:2}}</strong>. 
+				<p> 
 					You have enough credits to process {{user.get_profile.prepaid_product_ocr}} more page{{user.get_profile.prepaid_product_ocr|pluralize}}.
 				</p>
 				<p>
