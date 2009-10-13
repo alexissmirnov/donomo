@@ -24,7 +24,7 @@ def account_refill(request, username):
     """
     View that adds funds to an account. Renders Paypal button.
     """
-    plan = float(request.GET['payg_plan'])
+    plan = request.GET['payg_plan']
     if not plan in ['payg1', 'payg2']:
         return HttpResponse('wrong payment plan')
 
