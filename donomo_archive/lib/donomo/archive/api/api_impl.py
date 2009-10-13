@@ -21,6 +21,7 @@ from donomo.archive.utils            import pdf, s3
 from donomo.archive.utils.middleware import json_view
 from donomo.archive.utils.misc       import get_url, param_is_true, guess_mime_type, days_since
 from donomo.archive.utils.http       import HttpRequestValidationError
+from donomo.billing.models           import get_remaining_credit
 import logging
 import zipfile
 import tempfile
@@ -289,7 +290,7 @@ def upload_document(request):
         raise HttpRequestValidationError('account disabled')
 
     # check if user's account isn't running low
-    if not donomo.billing.models.get_remaining_credit(request.user):
+    if not get_remaining_credit(request.user):
         return { 'status' : 402, # payment required
                 }
 
