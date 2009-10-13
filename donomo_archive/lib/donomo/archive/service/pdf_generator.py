@@ -22,7 +22,7 @@ import time
 import logging
 logging    = logging.getLogger('donomo-archive')
 
-UPLOAD_AGGREGATE_TIME_TRESHOLD = 240 # 4 minutes
+UPLOAD_AGGREGATE_TIME_TRESHOLD = 3000 # 50 minutes
 
 DEFAULT_INPUTS  = (
     models.AssetClass.DOCUMENT,
