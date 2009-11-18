@@ -6,7 +6,7 @@
 
 {% block content %}
 	{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
-	
+
 	<div class='page_header'>
 		<h1>Account details for {{user}}</h1>
 		<div class='page_header_right'>
@@ -17,28 +17,28 @@
 	<div class='innercol'>
 		<div class='section' id='balance_overview'>
 			{% if user.get_profile.prepaid_product_ocr %}
-				<p> 
-					You have enough credits to process {{user.get_profile.prepaid_product_ocr}} more page{{user.get_profile.prepaid_product_ocr|pluralize}}.
+				<p>
+					You have enough credits to process {{user.get_profile.prepaid_product_ocr|floatformat:0}} more page{{user.get_profile.prepaid_product_ocr|pluralize}}.
 				</p>
 				<p>
 					Cloud OCR will store your documents for {{remaining_storage_days}} more day{{remaining_storage_days|pluralize}}.
 				</p>
 			{% else %}
 				<p class="no_balance">
-					<span class="no_balance">You no longer have Cloud OCR credits.</span> 
-					<a href="#subscription_plans">Refill</a> or <a href="#subscription_plans">upgrade</a> your account to process more. 
+					<span class="no_balance">You no longer have Cloud OCR credits.</span>
+					<a href="#subscription_plans">Refill</a> or <a href="#subscription_plans">upgrade</a> your account to process more.
 				</p>
-				<p><a href="/">Download</a> your documents. 
+				<p><a href="/">Download</a> your documents.
 					If your account isn't re-filled Cloud OCR will store them for {{remaining_storage_days}} more day{{remaining_storage_days|pluralize}}.
 				</p>
 			{% endif %}
 			</p>
 		</div>
-		
+
 		<div class='section featured' id='upgrade_offer'>
-			Get more done! <span class="button"><a href="/account/{{user}}/subscribe/?plan=pro"><span>Upgrade</span></a></span> to Pro, our most popular subscription plan, and save. 
+			Get more done! <span class="button"><a href="/account/{{user}}/subscribe/?plan=pro"><span>Upgrade</span></a></span> to Pro, our most popular subscription plan, and save.
 		</div>
-		
+
 		<div class='section' id='subscription_plans'>
 			<table class='payment_plans' cellpadding='0' cellspacing='0'>
 			  <tbody>
@@ -124,7 +124,7 @@
 			<input type='checkbox' checked='checked' name='newsletter_toggle'/>Yes I would like to receive periodic Cloud OCR newsletter.
 		</p>
 	</div>
-	
+
 	<div class='section'>
 		<h1>Install an uploader</h1>
 		<p>Use these tools to upload scans directly to CloudOCR</p>

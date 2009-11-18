@@ -6,11 +6,11 @@
 
 {% block content %}
 	{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
-	
+
 	<div class='page_header'>
 		<h1>Welcome {{user}}</h1>
 		<div class='page_header_right'>
-			<p>Process {{user.get_profile.prepaid_product_ocr}} pages for free!</p>
+			<p>Process {{user.get_profile.prepaid_product_ocr|floatformat:0}} pages for free!</p>
 			<p>To process your documents, upload it to Cloud OCR. When processing is complete you'll receive an email with a secure link to a searchable PDFs.</p>
 		</div>
 		<div class='innercol'></div>
@@ -25,7 +25,7 @@
 		<p>
 			<a href="/media/download/uploader.dmg"><img class="inline-icon" src='{{MEDIA_URL}}img/icon-apple.png'> Apple Mac OS X 10.5 & 10.4 <b>Download</b> (10MB)</a>
 		</p>
-		
+
 		<p>Once you install the uploader, run it from your desktop's command line.</p>
 	</div>
 
