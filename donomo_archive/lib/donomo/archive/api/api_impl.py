@@ -516,7 +516,7 @@ def delete_document(request, pk):
     Delete a document.
 
     """
-    request.user.document.get(pk = pk).delete()
+    request.user.documents.get(pk = pk).delete()
 
     # TODO: clean up stuff related to the document
 
