@@ -22,7 +22,7 @@ import time
 import logging
 logging    = logging.getLogger('donomo-archive')
 
-UPLOAD_AGGREGATE_TIME_TRESHOLD = 3000 # 50 minutes
+UPLOAD_AGGREGATE_TIME_TRESHOLD = 6000 # 100 minutes
 
 DEFAULT_INPUTS  = (
     models.AssetClass.DOCUMENT,
@@ -67,7 +67,7 @@ def handle_work_item(processor, item):
     # and delete all associated assets
     if handle_trial_account(document, pdf_stream.getvalue()):
         return
-    
+
     # classify the document based on the creation time of its PDF asset
     tag_document(document, datetime.timedelta(0, UPLOAD_AGGREGATE_TIME_TRESHOLD))
 
@@ -152,7 +152,7 @@ def tag_document(document, treshold):
 ##############################################################################
 def handle_trial_account(document, pdf_file_contents):
     """
-    Special handling for trial accounts: Instead of creating a PDF assert 
+    Special handling for trial accounts: Instead of creating a PDF assert
     we're sending the PDF file as attachment in email. The document (and
     all dependent assets) are deleted
     """
@@ -160,25 +160,25 @@ def handle_trial_account(document, pdf_file_contents):
         # use is_active flag to determine the trial account
         if document.owner.is_active:
             return False
-        
+
         subject = render_to_string('core/trial_return_email_subject.txt')
-        
+
         # Email subject *must not* contain newlines
         subject = ''.join(subject.splitlines())
-        
+
         body = render_to_string('core/trial_return_email.txt',
                                    { 'user': document.owner.email,
                                      'free_pages': "100" }) #TODO parametrize
-        message = EmailMessage(subject, body, 
-                               settings.UPLOAD_NOTIFICATION_EMAIL, 
+        message = EmailMessage(subject, body,
+                               settings.UPLOAD_NOTIFICATION_EMAIL,
                                [document.owner.email],
                                connection=SMTPConnection())
         # walk up the tree of asset dependencies, find the original asset that stores
         # the filename
-        
+
         page_original_asset = document.pages.all()[0].get_asset( models.AssetClass.PAGE_ORIGINAL )
         original = page_original_asset.parent
-        
+
         message.attach(original.orig_file_name + '-digitised.pdf', pdf_file_contents)
 
         message.send()
@@ -187,5 +187,5 @@ def handle_trial_account(document, pdf_file_contents):
         logging.error(e)
         import traceback
         logging.error(traceback.format_stack())
-        
-    
+
+

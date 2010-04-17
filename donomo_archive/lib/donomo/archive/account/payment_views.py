@@ -13,6 +13,8 @@ from donomo.archive.models                  import Page, Document
 from donomo.billing.models                  import Account, Invoice, PRICING_PLANS
 from paypal.pro.views import PayPalPro
 from paypal.standard.forms import PayPalEncryptedPaymentsForm # PayPalSharedSecretEncryptedPaymentsForm
+from paypal.standard.conf import POSTBACK_ENDPOINT, SANDBOX_POSTBACK_ENDPOINT, RECEIVER_EMAIL, TEST
+
 import time
 
 import os
@@ -29,7 +31,7 @@ def account_refill(request, username):
         return HttpResponse('wrong payment plan')
 
     amount, pages, credit = PRICING_PLANS[plan]
-    
+
     return render_to_response('account/refill.html',
                               {
                                'amount' : amount,
@@ -44,13 +46,13 @@ def account_subscribe(request, username):
     View that adds funds to an account. Renders Paypal button.
     """
     plan = request.GET['plan']
-    
+
     if not plan in ['max', 'pro', 'plus']:
         return HttpResponse('wrong subscription plan')
-    
+
     amount, pages, credit = PRICING_PLANS[plan]
     button = render_subscription_button(request.user, amount)
-    
+
     return render_to_response('account/subscribe.html',
                               {
                                'plan' : plan,
@@ -77,7 +79,7 @@ def request_payment_standard(request):
     return HttpResponse(render_payment_standard_button(request.user))
 
 def render_payment_standard_button(owner, amount = "10.00"):
-    logging.info('rendering standard payment button. sandbox? %d' % settings.PAYPAL_TEST)
+    logging.info('rendering standard payment button. sandbox? %d, %d' % (settings.PAYPAL_TEST, TEST))
 
     # What you want the button to do.
     invoice = Invoice(owner = owner, pk = int(time.time()))
@@ -108,7 +110,7 @@ def render_subscription_button(owner, amount):
     paypal_dict = {
         "cmd": "_xclick-subscriptions",
         "business": settings.PAYPAL_RECEIVER_EMAIL,
-        "a3": amount,                      # monthly price 
+        "a3": amount,                      # monthly price
         "p3": 1,                           # duration of each unit (depends on unit)
         "t3": "M",                         # duration unit ("M for Month")
         "src": "1",                        # make payments recur

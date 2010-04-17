@@ -331,7 +331,7 @@ else:
     PAYPAL_WPP_USER = 'paypal_api1.donomo.com'
     PAYPAL_WPP_PASSWORD = 'GS32ULMZSEXDD5GG'
     PAYPAL_WPP_SIGNATURE = 'Ae9-lLUsGkkjXdO7suGsz0g7oeFEA7ClGeDM5Arsb-F4Qlo1PkR0d--0'
-    PAYPAL_CERT_ID = '5ZQ93VYSUMWTN'
+    PAYPAL_CERT_ID = '567K2WTNAUT9N'
     PAYPAL_PRIVATE_CERT = '/etc/paypal/donomo_private_key.pem'
     PAYPAL_PUBLIC_CERT = '/etc/paypal/donomo_public_cert.pem'
     PAYPAL_CERT = '/etc/paypal/paypal_public_cert.pem'
