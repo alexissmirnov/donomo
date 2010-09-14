@@ -1,0 +1,46 @@
+/*
+.wf-button {
+    background-color: red;
+    opacity:0.1;
+}
+*/
+.wf-start {
+    background-image: url('resources/start.png?v1'); 
+    background-repeat: no-repeat;
+}
+.wf-new-account {
+    background-image: url('resources/new-account.png?v1'); 
+    background-repeat: no-repeat;
+}
+.wf-new-account-gmail {
+    background-image: url('resources/new-account-gmail.png?v1'); 
+    background-repeat: no-repeat;
+}
+.wf-new-account-gmail-loading {
+    background-image: url('resources/new-account-gmail-loading.png?v1'); 
+    background-repeat: no-repeat;
+}
+.wf-flows {
+    background-image: url('resources/flows.png?v1'); 
+    background-repeat: no-repeat;
+}
+.wf-economist {
+    background-image: url('resources/economist.png?v1'); 
+    background-repeat: no-repeat;
+}
+.wf-conversation {
+    background-image: url('resources/conversation.png?v1'); 
+    background-repeat: no-repeat;
+}
+.wf-classification {
+    background-image: url('resources/classification.png?v1'); 
+    background-repeat: no-repeat;
+}
+.wf-expanded-flows {
+    background-image: url('resources/expanded-flows.png?v1'); 
+    background-repeat: no-repeat;
+}
+.wf-add-account {
+    background-image: url('resources/add-account.png?v1'); 
+    background-repeat: no-repeat;
+}
