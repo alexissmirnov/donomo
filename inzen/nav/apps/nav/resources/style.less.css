@@ -1,0 +1,137 @@
+@background-color: #F4F4F4;
+@off-white: #F2F2F2;
+
+.main-pane {
+    background-image: url('/media/img/iPadBackgroundTexture-brown.png');
+}
+
+.profile-view {
+	background-color: white;
+	-webkit-border-radius: 5px;
+	-webkit-box-shadow: 0px 0px 40px black;
+}
+
+.profile-view-account {
+	-webkit-border-radius: 3px;
+	border: 1px solid #EDEDED;
+	background-color: white;
+	background-repeat: no-repeat;
+	background-position: 0px 24px;
+}
+
+.profile-view-gmail {
+	background-image: url('/media/img/gmail.png');
+}
+.profile-view-twitter {
+	background-image: url('/media/img/twitter.png');
+}
+.profile-view-facebook {
+	background-image: url('/media/img/facebook.png');
+}
+.profile-view-linkedin {
+	background-image: url('/media/img/linkedin.png');
+}
+.profile-view-hotmail {
+	background-image: url('/media/img/hotmail.png');
+}
+.profile-view-yahoo {
+	background-image: url('/media/img/yahoo.png');
+}
+.profile-view-imap  {
+	color: #6D6975; 
+}
+
+.profile-view-credentials {
+	background-image: url('/media/img/profile-view-credentials-bg.png');
+}
+
+.profile-view-credentials-loading {
+	background-image: url('/media/img/loading_large.gif');
+	background-repeat: no-repeat;
+	color: white;
+}
+
+profile-view-credentials-loading-icon {
+	background-image: url('/media/img/loading_large.gif');
+}
+
+.flow-label {
+	background-color: white;
+}
+
+.conversation-panel {
+	background-color: @off-white;
+	color: black;
+	-webkit-border-radius: 5px;
+}
+
+.conversation-list-view-item {
+	background-color: white;
+	-webkit-border-radius: 2px;
+}
+
+.topbar {
+	background-color: @background-color;    
+}
+.flow-band {
+	background-color: @background-color;
+}
+.dashboard-content {
+	background-color: @background-color;
+}
+
+.conversation-list-view-item--key-participant {
+	color: black;
+}
+
+.conversation-list-view-item--date {
+	color: #2CA3CC;
+}
+
+.conversation-list-view-item--message-count {
+	color: #33332F;
+	background-color: #F2F9FF;
+	-webkit-border-radius: 3px;
+}
+
+.conversation-list-view-item--summary {
+	color: #8E8D8D; /* gray */
+}
+
+.flow-summary {
+	background-color: #E2E2D5; /* pale beige */
+}
+
+.message-body {
+}
+
+.sc-view .message-meta {
+	position: absolute;
+	padding-top: 30px;
+}
+
+.sc-view .message-block {
+	position: relative;
+	display: block;
+	background-color: white;
+	background-image: url('/media/img/message_bubble.png');
+	background-repeat: no-repeat;
+	background-position: 113px 0px;
+	min-height: 100px; // making sure the bubble isn't clipped for small messages
+	padding-top: 30px;
+}
+
+.sc-view .conversation-item--contact {
+	position: absolute;
+	padding-top: 30px;
+}
+.sc-view .conversation-item {
+	position: relative;
+	display: block;
+	background-color: white;
+	background-image: url('/media/img/message_bubble.png');
+	background-repeat: no-repeat;
+	background-position: 113px 0px;
+	min-height: 100px; // making sure the bubble isn't clipped for small messages
+	padding-top: 30px;
+}

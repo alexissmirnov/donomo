@@ -1,0 +1,464 @@
+Delivered-To: alexis@smirnov.ca
+Received: by 10.223.125.78 with SMTP id x14cs10870far;
+        Sun, 15 Aug 2010 14:42:55 -0700 (PDT)
+Received: by 10.231.39.195 with SMTP id h3mr4809005ibe.88.1281908574354;
+        Sun, 15 Aug 2010 14:42:54 -0700 (PDT)
+Return-Path: <m-mgTLrIOCIxSzu4ddrR9IFlPmWG_x@bounce.linkedin.com>
+Received: from mail16-a-ad.linkedin.com (mail16-a-ad.linkedin.com [208.111.169.140])
+        by mx.google.com with ESMTP id x21si7729752ibf.97.2010.08.15.14.42.52;
+        Sun, 15 Aug 2010 14:42:53 -0700 (PDT)
+Received-SPF: pass (google.com: domain of m-mgTLrIOCIxSzu4ddrR9IFlPmWG_x@bounce.linkedin.com designates 208.111.169.140 as permitted sender) client-ip=208.111.169.140;
+Authentication-Results: mx.google.com; spf=pass (google.com: domain of m-mgTLrIOCIxSzu4ddrR9IFlPmWG_x@bounce.linkedin.com designates 208.111.169.140 as permitted sender) smtp.mail=m-mgTLrIOCIxSzu4ddrR9IFlPmWG_x@bounce.linkedin.com; dkim=pass header.i=@linkedin.com
+DomainKey-Signature: q=dns; a=rsa-sha1; c=nofws;
+	s=prod; d=linkedin.com;
+	h=DKIM-Signature:Sender:Date:From:To:Message-ID:Subject:MIME-Version:Content-Type:X-LinkedIn-Template:X-LinkedIn-fbl;
+	b=vZdbFRl8pdPh3Sd9bHkzePfH5ojWih3FMx3z3DfWzpPDIfhSOk86Wa3Q9yPvE7bt
+	UkCYCff7CM/moYRP+JSk4xR4C49PX4KEqdUFbaNNW3xZeoR5i4DAjYcNFRBAL8/u
+DKIM-Signature: v=1; a=rsa-sha1; d=linkedin.com; s=proddkim; c=relaxed/simple;
+	q=dns/txt; i=@linkedin.com; t=1281908572;
+	h=From:Subject:Date:To:MIME-Version:Content-Type;
+	bh=UHs6fJ5Md0GodLG0wP/3NgYSeMU=;
+	b=BT6xHtqrw3Kg+ON5Ok6fMdh4UR5GYwHU9NwfFbnsvWOyxChb1ZV0F9x9mmvolXsT
+	f1n7vv4bf6nfxuwyGGaaXUr4YrhIfOb4ONQXhfafqX7qzuq4kYwrRUyku3Y12Wic;
+Sender: messages-noreply@bounce.linkedin.com
+Date: Sun, 15 Aug 2010 14:42:52 -0700 (PDT)
+From: LinkedIn Connections <connections@linkedin.com>
+To: Alexis Smirnov <alexis@smirnov.ca>
+Message-ID: <238513737.1810917.1281908572748.JavaMail.app@ech3-cdn13.prod>
+Subject: Learn about Craig, your new connection...
+MIME-Version: 1.0
+Content-Type: multipart/alternative; 
+	boundary="----=_Part_1810916_1726229701.1281908572744"
+X-LinkedIn-Template: accept_invite_snacked_C_01
+X-LinkedIn-fbl: m-mgTLrIOCIxSzu4ddrR9IFlPmWG_x
+
+------=_Part_1810916_1726229701.1281908572744
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+Alexis, Congratulations! You and Craig are now connected.
+
+Craig Silverman
+Digital Journalism Director at OpenFile
+Montreal, Canada Area 
+Writing and Editing Industry
+ordinary@sympatico.ca
+
+To view Craig Silverman's profile, go to http://www.linkedin.com/e/oqvpea-gcwf9l54-4e/fpf/470568/EML-inv-acc-prof/
+
+----------------------------------------------
+(c) 2010, LinkedIn Corporation
+
+
+------=_Part_1810916_1726229701.1281908572744
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+
+<html>
+  <body>
+
+<!-- GREY BORDER -->
+<table width="100%" border="0" cellspacing="10" cellpadding="0" bgcolor="#F4F4F4">
+
+    <tr>       <!-- CONNECTION SNACK -->
+      <td align="center" style="font-family: Arial;">
+        <table width="590" border="0" cellspacing="16" cellpadding="0" bgcolor="#FFFFFF" style="border: solid 1px #DDD;-moz-border-radius:5px; -webkit-border-radius:5px; border-radius:5px;">
+
+          <tr>  <!-- congratulations + logo-->
+            <td>   <!-- congratulation block -->
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#FFFFFF">
+                <tr>
+                  <td style="font-family: Arial;">
+                    <p style="font-size:18px; color:#333; margin:0; padding:0;">
+                      Alexis, Congratulations!
+                    </p>
+                    <p style="font-size:13px; color:#333; margin:0; padding:0;">
+  You and Craig are now connected.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>   <!-- end congratulation block -->
+
+            <td align="right" valign="top" width="98">  <!-- logo block -->
+              <a href="http://www.linkedin.com/" style="display:block;width:100%;height:100%;">
+                <img src="http://www.linkedin.com/img/logos/logo_emails_98x24.png" width="98" height="24" border="0">
+              </a>
+            </td>
+          </tr>  <!-- end congratulations + logo-->
+
+          <tr>   <!-- acceptor info -->
+            <td colspan="2">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#FFFFFF">
+                                
+                <td width="52" valign="top">
+                  <a href="http://www.linkedin.com/e/oqvpea-gcwf9l54-4e/fpf/470568/EML-inv-acc-prof/" style="display:block;height:100%;width:100%;">
+                    <img src="http://media.linkedin.com/mpr/mpr/shrink_80_80/p/2/000/01e/22c/1219331.jpg" width="52" height="52" border="0">
+                  </a>
+                </td>
+                <td width="14">
+                </td>
+                <td width="215"> <!-- name, headline, button -->
+                
+                  <table width="100%"  border="0" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td style="font-family: Arial;">
+                        <a href="http://www.linkedin.com/e/oqvpea-gcwf9l54-4e/fpf/470568/EML-inv-acc-prof/" style="text-decoration:none;font-size:13px;font-weight:bold;color:#069;">
+                          Craig Silverman 
+                        </a>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="font-family: Arial;" width="155">
+                        
+                           <div style="font-size:12px;color:#333;margin-bottom:5px;">Digital Journalism Director at OpenFile</div>
+                         
+ 
+                        <table border="0" cellpadding="0" cellspacing="0">
+                           <tbody>
+                             <tr>
+                               <td style="background:url(http://www.linkedin.com/img/bg/blue_button_back.png)
+                                repeat-x scroll 100% 0 #DEEEF5; background-color:#DEEEF5; border:1px solid #A3CFE4;
+        text-align:center; -moz-border-radius:4px; -webkit-border-radius:4px; border-radius:4px; padding-left: 7px;padding-right:7px;padding-top:2px;padding-bottom:4px;">
+                          <a href="http://www.linkedin.com/e/oqvpea-gcwf9l54-4e/fpf/470568/EML-inv-acc-prof/" style="font-weight:normal; font-size:12px; font-family:arial,sans-serif;
+                                   text-decoration:none; color:#069; display:block; padding-top:4px;padding-bottom:2px;padding-left: 7px;padding-right:7px;"
+                                   target="_blank">
+                          View Craig's Profile
+                                 </a>
+                               </td>
+                             </tr>
+                           </tbody>
+                         </table>
+                      </td>
+                    </tr>
+                  </table>
+                </td> <!-- end name, headline, button -->
+                
+                <td> <!-- location, industry, email -->
+                  <table width="100%">
+                    <tr>
+                      <td style="line-height:1.2;font-size:12px;color:#333;font-family: Arial;" valign="top">
+                        
+                          Montreal, Canada Area<br/>
+                        
+                        
+                          Writing and Editing Industry <br/>
+                        
+                        
+                          <a href="mailto:ordinary@sympatico.ca">ordinary@sympatico.ca</a>
+                        
+                      </td>
+                    </tr>
+                  </table>
+                </td> <!-- location, industry, email -->
+
+              </table>
+            </td>
+          </tr>   <!-- end acceptor info -->
+        </table>
+      </td>
+    </tr> <!-- END CONNECTION SNACK -->
+
+
+  <tr align="center">    <!-- PYMK SNACK -->
+    <td  style="font-family: Arial;">
+      <table width="590" border="0" cellspacing="16" cellpadding="0" bgcolor="#FFFFFF" style="border: solid 1px #DDD;-moz-border-radius:5px; -webkit-border-radius:5px; border-radius:5px;">
+        <tr>
+          <td colspan="3" style="font-family: Arial;">
+            <span style="font-size:14px;color:#333;"> Craig's Connections (448) </span>
+          </td>
+          <td align="right">
+            <a href="http://www.linkedin.com/e/oqvpea-gcwf9l54-4e/pvc/470568/SEML-all-hpymk/" style="font-size:12px;color:#069;text-decoration:none;font-family: Arial;">See All &#187;</a>
+          </td>
+        </tr>
+
+        
+
+        
+        <tr>
+        
+
+	        
+	        
+          <td align="left" valign="top" width="52">
+            <a style="display:block; width:100%; height: 100%; text-decoration: none;" href="http://www.linkedin.com/e/oqvpea-gcwf9l54-4e/mgTLrIOCIxSzu4ddrR9IFlPmWG_x/ins/1498/JD/Lasica/bvJI/EML-inv-acc-pymk/">
+            
+                <img src="http://media.linkedin.com/mpr/mpr/shrink_80_80/p/3/000/01e/21b/2f6fd23.jpg" width="52" height="52" border="0">
+              
+            </a>
+          </td>
+
+          <td valign="top" width="213" style="font-family: Arial;">
+            <a style="display:block; width:100%; height: 100%; text-decoration: none; color: #000" href="http://www.linkedin.com/e/oqvpea-gcwf9l54-4e/mgTLrIOCIxSzu4ddrR9IFlPmWG_x/ins/1498/JD/Lasica/bvJI/EML-inv-acc-pymk/">
+              <span style="font-size:12px;color:#666">
+                <span style="font-weight: bold; color:#333;"> JD Lasica</span>
+                ,
+                  Social media strategist, consultant, trainer, author
+		            
+		          </span>
+              
+                  <p style="font-size: 11px; margin: 3px 0 4px; padding: 3px 0 4px; color:#069; text-transform: uppercase;">
+                
+              
+                 <img src="http://www.linkedin.com/img/email/pymk-connect.gif" style="border: medium none; vertical-align: text-bottom;">&nbsp;Connect
+               
+              </p>
+            </a>
+	        </td>
+
+	        
+	        
+
+        
+        
+
+        
+
+	        
+	        
+          <td align="left" valign="top" width="52">
+            <a style="display:block; width:100%; height: 100%; text-decoration: none;" href="http://www.linkedin.com/e/oqvpea-gcwf9l54-4e/mgTLrIOCIxSzu4ddrR9IFlPmWG_x/ins/2120/Darren/Barefoot/lePo/EML-inv-acc-pymk/">
+            
+                <img src="http://media.linkedin.com/mpr/mpr/shrink_80_80/p/3/000/001/0e2/13d7562.jpg" width="52" height="52" border="0">
+              
+            </a>
+          </td>
+
+          <td valign="top" width="213" style="font-family: Arial;">
+            <a style="display:block; width:100%; height: 100%; text-decoration: none; color: #000" href="http://www.linkedin.com/e/oqvpea-gcwf9l54-4e/mgTLrIOCIxSzu4ddrR9IFlPmWG_x/ins/2120/Darren/Barefoot/lePo/EML-inv-acc-pymk/">
+              <span style="font-size:12px;color:#666">
+                <span style="font-weight: bold; color:#333;"> Darren Barefoot</span>
+                ,
+                  Marketer, Technologist, Professional Speaker
+		            
+		          </span>
+              
+                  <p style="font-size: 11px; margin: 3px 0 4px; padding: 3px 0 4px; color:#069; text-transform: uppercase;">
+                
+              
+                 <img src="http://www.linkedin.com/img/email/pymk-connect.gif" style="border: medium none; vertical-align: text-bottom;">&nbsp;Connect
+               
+              </p>
+            </a>
+	        </td>
+
+	        
+	        
+
+        
+        </tr>
+        
+        
+
+        
+        <tr>
+        
+
+	        
+	        
+          <td align="left" valign="top" width="52">
+            <a style="display:block; width:100%; height: 100%; text-decoration: none;" href="http://www.linkedin.com/e/oqvpea-gcwf9l54-4e/mgTLrIOCIxSzu4ddrR9IFlPmWG_x/ins/3310/Dan/Gillmor/Vp7Z/EML-inv-acc-pymk/">
+            
+                <img src="http://www.linkedin.com/img/icon/icon_no_photo_60x60.png" width="52" height="52" border="0" style="display: block;">
+              
+            </a>
+          </td>
+
+          <td valign="top" width="213" style="font-family: Arial;">
+            <a style="display:block; width:100%; height: 100%; text-decoration: none; color: #000" href="http://www.linkedin.com/e/oqvpea-gcwf9l54-4e/mgTLrIOCIxSzu4ddrR9IFlPmWG_x/ins/3310/Dan/Gillmor/Vp7Z/EML-inv-acc-pymk/">
+              <span style="font-size:12px;color:#666">
+                <span style="font-weight: bold; color:#333;"> Dan Gillmor</span>
+                ,
+                  Author, teacher, investor, etc.
+		            
+		          </span>
+              
+                  <p style="font-size: 11px; margin: 3px 0 4px; padding: 3px 0 4px; color:#069; text-transform: uppercase;">
+                
+              
+                 <img src="http://www.linkedin.com/img/email/pymk-connect.gif" style="border: medium none; vertical-align: text-bottom;">&nbsp;Connect
+               
+              </p>
+            </a>
+	        </td>
+
+	        
+	        
+
+        
+        
+
+        
+
+	        
+	        
+          <td align="left" valign="top" width="52">
+            <a style="display:block; width:100%; height: 100%; text-decoration: none;" href="http://www.linkedin.com/e/oqvpea-gcwf9l54-4e/mgTLrIOCIxSzu4ddrR9IFlPmWG_x/ins/6504/Jeff/Jarvis/2GJG/EML-inv-acc-pymk/">
+            
+                <img src="http://www.linkedin.com/img/icon/icon_no_photo_60x60.png" width="52" height="52" border="0" style="display: block;">
+              
+            </a>
+          </td>
+
+          <td valign="top" width="213" style="font-family: Arial;">
+            <a style="display:block; width:100%; height: 100%; text-decoration: none; color: #000" href="http://www.linkedin.com/e/oqvpea-gcwf9l54-4e/mgTLrIOCIxSzu4ddrR9IFlPmWG_x/ins/6504/Jeff/Jarvis/2GJG/EML-inv-acc-pymk/">
+              <span style="font-size:12px;color:#666">
+                <span style="font-weight: bold; color:#333;"> Jeff Jarvis</span>
+                ,
+                  Blogger, Buzzmachine.com and media pontificator
+		            
+		          </span>
+              
+                  <p style="font-size: 11px; margin: 3px 0 4px; padding: 3px 0 4px; color:#069; text-transform: uppercase;">
+                
+              
+                 <img src="http://www.linkedin.com/img/email/pymk-connect.gif" style="border: medium none; vertical-align: text-bottom;">&nbsp;Connect
+               
+              </p>
+            </a>
+	        </td>
+
+	        
+	        
+
+        
+        </tr>
+        
+        
+
+        
+
+      </table>
+    </td>
+  </tr> <!-- END PYMK SNACK -->
+
+
+
+  
+    
+        <tr align="center">       <!-- COMPANY SNACK -->
+    <td style="font-family: Arial;">
+      <table width="590" border="0" cellspacing="16" cellpadding="0" bgcolor="#FFFFFF" style="border: solid 1px #DDD;-moz-border-radius:5px; -webkit-border-radius:5px; border-radius:5px;">
+
+        <tr>
+          <td colspan="4" style="font-family: Arial;font-size:14px;color:#333;">
+            Companies in Craig's Network:
+          </td>
+        </tr>
+
+               
+          <tr>
+
+            <td align="left" valign="top" width="52">
+              <a style="display:block; width:100%; height: 100%; text-decoration: none;" href="http://www.linkedin.com/companies/239252?trk=SEML_cfw-f239252">
+                      <img src="http://media.linkedin.com/mpr/mpr/shrink_80_80/p/3/000/023/3db/1e0ab26.png" width="52" height="52" border="0">
+              </a>       
+            </td>
+                
+            <td valign="top" width="213" style="font-family: Arial;"> 
+               <a style="display:block; width:100%; height: 100%; text-decoration: none; color: #000" href="http://www.linkedin.com/companies/239252?trk=SEML_cfw-logo">
+                 <span style="font-size:12px;">
+                    <span style="font-weight: bold;color:#333;"> Public Broadcasting Service</span><br/>
+                    <span style="color:#666;">
+                      Craig works here
+                    </span>
+                 </span>
+                   <p style="font-size: 11px; margin: 3px 0 4px; padding: 3px 0 4px;color:#069; text-transform: uppercase;"><img src="http://www.linkedin.com/img/email/pymk-connect.gif" style="border: medium none; vertical-align: text-bottom;">&nbsp;Follow Company</p>
+              </a>
+       	    </td>                
+             
+               
+               
+
+            <td align="left" valign="top" width="52">
+              <a style="display:block; width:100%; height: 100%; text-decoration: none;" href="http://www.linkedin.com/companies/2257?trk=SEML_cfw-f2257">
+                      <img src="http://media.linkedin.com/mpr/mpr/shrink_80_80/p/2/000/029/030/0ff66e7.png" width="52" height="52" border="0">
+              </a>       
+            </td>
+                
+            <td valign="top" width="213" style="font-family: Arial;"> 
+               <a style="display:block; width:100%; height: 100%; text-decoration: none; color: #000" href="http://www.linkedin.com/companies/2257?trk=SEML_cfw-logo">
+                 <span style="font-size:12px;">
+                    <span style="font-weight: bold;color:#333;"> Ordina</span><br/>
+                    <span style="color:#666;">
+                      Craig works here
+                    </span>
+                 </span>
+                   <p style="font-size: 11px; margin: 3px 0 4px; padding: 3px 0 4px;color:#069; text-transform: uppercase;"><img src="http://www.linkedin.com/img/email/pymk-connect.gif" style="border: medium none; vertical-align: text-bottom;">&nbsp;Follow Company</p>
+              </a>
+       	    </td>                
+             
+               
+            </tr>
+               
+          <tr>
+
+            <td align="left" valign="top" width="52">
+              <a style="display:block; width:100%; height: 100%; text-decoration: none;" href="http://www.linkedin.com/companies/10432?trk=SEML_cfw-f10432">
+                  <img src="http://www.linkedin.com/img/icon/icon_no_company_logo_40x40.png" width="52" height="52" border="0">
+              </a>       
+            </td>
+                
+            <td valign="top" width="213" style="font-family: Arial;"> 
+               <a style="display:block; width:100%; height: 100%; text-decoration: none; color: #000" href="http://www.linkedin.com/companies/10432?trk=SEML_cfw-logo">
+                 <span style="font-size:12px;">
+                    <span style="font-weight: bold;color:#333;"> The Globe and Mail</span><br/>
+                    <span style="color:#666;">
+                      Craig worked here
+                    </span>
+                 </span>
+                   <p style="font-size: 11px; margin: 3px 0 4px; padding: 3px 0 4px;color:#069; text-transform: uppercase;"><img src="http://www.linkedin.com/img/email/pymk-connect.gif" style="border: medium none; vertical-align: text-bottom;">&nbsp;Follow Company</p>
+              </a>
+       	    </td>                
+             
+               
+               
+
+            <td align="left" valign="top" width="52">
+              <a style="display:block; width:100%; height: 100%; text-decoration: none;" href="http://www.linkedin.com/companies/12040?trk=SEML_cfw-f12040">
+                      <img src="http://media.linkedin.com/mpr/mpr/shrink_80_80/p/2/000/023/3e5/112c8b4.png" width="52" height="52" border="0">
+              </a>       
+            </td>
+                
+            <td valign="top" width="213" style="font-family: Arial;"> 
+               <a style="display:block; width:100%; height: 100%; text-decoration: none; color: #000" href="http://www.linkedin.com/companies/12040?trk=SEML_cfw-logo">
+                 <span style="font-size:12px;">
+                    <span style="font-weight: bold;color:#333;"> Radialpoint</span><br/>
+                    <span style="color:#666;">
+                      Craig worked here
+                    </span>
+                 </span>
+                   <p style="font-size: 11px; margin: 3px 0 4px; padding: 3px 0 4px;color:#069; text-transform: uppercase;"><img src="http://www.linkedin.com/img/email/pymk-connect.gif" style="border: medium none; vertical-align: text-bottom;">&nbsp;Follow Company</p>
+              </a>
+       	    </td>                
+             
+               
+            </tr>
+
+
+      </table>
+    </td>
+  </tr> <!-- END COMPANY SNACK -->
+
+    
+  
+
+
+  <tr>
+    <td align="center" style="color:#333;" >
+      <table width="590" cellspacing="0" cellpadding="0" border="0" bgcolor="#F4F4F4">
+        <tr>
+          <td style="font-family: Arial;font-size:12px;">
+            &copy; 2010, LinkedIn Corporation
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+</table> <!-- END GREY BORDER -->
+
+<img src="http://www.linkedin.com/emimp/oqvpea-gcwf9l54-4e.gif" style="width:1px; height:1px;"/></body>
+</html>
+------=_Part_1810916_1726229701.1281908572744--

@@ -5,7 +5,7 @@
 /*globals Nav */
 
 require('responders/main');
-
+require('views/profile_view');
 /** @namespace
 
   The active state when the signup panel is showing.
@@ -24,7 +24,8 @@ Nav.states.signup = SC.Responder.create({
 		Nav.signupController.set('content', user); // for editing
 
 		// show signup page
-		Nav.getPath('signupPage.mainPane').append();
+		//Nav.getPath('signupPage.mainPane').append();
+		Nav.profileView.showView();
 	},
 	
 	willLoseFirstResponder: function () {

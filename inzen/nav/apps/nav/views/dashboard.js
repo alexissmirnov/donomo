@@ -1,6 +1,14 @@
+/**
+ * 
+ * Dashboard related views.
+ * 
+ * 
+ */
+
+
 require('responders/main');
 require('responders/flows');
-
+require('resources/conversation_flow_page');
 // all flow dashboard views are here
 
 /******************************************************************************
@@ -8,39 +16,22 @@ require('responders/flows');
 
   @extends SC.View
 */
-Nav.MessageSummaryView = SC.View.extend({
-    classNames:'MessageSummaryView'.w(),
-	content: null,
-	displayProperties: 'content'.w(),
-	render: function(context,firstTime) {
-		var content = this.get('content');
-		if(!content) return;
-		
-		context = context.begin('div').
-				addClass('MessageSummaryView-sender').
-				push(content.get('from').get('attributes').name).
-			end();
-		context = context.begin('div').
-				addClass('MessageSummaryView-subject').
-				push(content.get('subject')).
-			end();
-		context = context.begin('div').
-				addClass('MessageSummaryView-body').
-				push(content.get('body')).
-			end();
-		
-		sc_super();
-	},
+Nav.ConversationSummaryView = Nav.ConversationListItemView.extend({
+	classNames: 'conversation-summary',
     click: function(evt) {
 		this.touchEnd();
 	},
 	touchStart: function(evt) {
 		return YES;
 	},
+	/*
+	 */
 	touchEnd: function(evt) {
-		var controller, index;
-		var content = this.get('content');
-		Nav.states.main.go('main');
+//		var conversations = this.parentView.get('content').get('conversations');//topConversationsController');
+//		conversations.selectObject(this.get('content'));
+		
+		Nav.conversationController.set('content', this.get('content'));
+		Nav.states.flows.showConversationView();
 	}
 });
 
@@ -50,13 +41,15 @@ Nav.MessageSummaryView = SC.View.extend({
 
   @extends SC.LabelView
 */
-Nav.FlowBumperView = SC.View.extend({
-	childViews: "label".w(),
+Nav.FlowSummaryView = SC.View.extend({
+	classNames: 'flow-summary'.w(),
+	childViews: 'label'.w(),
 	label: SC.LabelView.design({
-		textAlign: SC.ALIGN_CENTER,
-		value: 'CLICK HERE FOR MORE FROM THIS SECTION'
+		textAlign: SC.ALIGN_LEFT,
+		controlSize: SC.LARGE_CONTROL_SIZE,
+		valueBinding: '.parentView.content.name'
 	}),
-	
+	   
     click: function(evt) {
 		this.touchEnd();
 	},
@@ -64,8 +57,32 @@ Nav.FlowBumperView = SC.View.extend({
 		return YES;
 	},
 	touchEnd: function(evt) {
-		var content = this.get('content');
-		Nav.states.flows.toFlowState(content);
+		var flow = this.get('content');
+		Nav.states.flows.toFlowState(flow);
+	}
+});
+
+/******************************************************************************
+ *  @class
+
+  @extends SC.LabelView
+*/
+Nav.FlowBumperView = SC.View.extend({
+	childViews: 'label'.w(),
+	label: SC.LabelView.design({
+		textAlign: SC.ALIGN_CENTER,
+		value: 'CLICK HERE FOR MORE FROM THIS SECTION/FLOW/LABEL/LIST'
+	}),
+	   
+    click: function(evt) {
+		this.touchEnd();
+	},
+	touchStart: function(evt) {
+		return YES;
+	},
+	touchEnd: function(evt) {
+		var flow = this.get('content');
+		Nav.states.flows.toFlowState(flow);
 	}
 });
 /******************************************************************************
@@ -80,45 +97,89 @@ Nav.FlowContentView = SC.View.extend({
     columnWidth: 317,
     // observes('*content.[]') makes this handler fire twice, 
     // so skipping the second time.
-	_alreadyRendered: false, 
+	_contentRendered: false, 
+
 	
+	contentLengthDidChange: function() {
+		sc_super();
+		var content = this.get('content');
+		console.log('FlowContentView.contentLengthDidChange len=' + content ? content.get('length') : 0);
+	},
+
+
 	contentObserver: function(target, value) {
 		if( this._contentRendered )
 			return;
 		this._contentRendered = true;
 
-	    var content = this.get('content').get('topFlowMessageController');
+	    var conversations = this.get('content').get('conversations');//topConversationsController');
 	    var height = this.get('rowHeight');
 	    var width = this.get('columnWidth');
 	 	var itemPadding = this.get('itemPadding');
-		var len = content.length();
+		var len = conversations.length();
 		
-		console.log('FlowContentView: content='+content+' len='+len);
+		/*
+		 * cap the number of conversations we're showing
+		 * for performance
+		 */
+		if( len > 5 ) {
+			len = 5;
+			//TODO: invoke the rest later
+		}
+		
+		console.log('FlowContentView: conversations='+conversations+' len='+len);
 	
-	    for (var i=0; i < len + 1; i++) {
+		var runningWidth = 0;
+	    for (var i=0; i < len+1; i++) {
 	    	
 	    	// add a bumper view at the end
-	    	var view, itemContent, viewProto;
-	    	if( i < len ) {
-	    		viewProto = Nav.MessageSummaryView;
-	    		itemContent = content.objectAt(i);
+	    	var view, item, viewProto;
+	    	
+	    	/*
+	    	 * Start the flow band with the summary tile
+	    	 */
+	    	if(i == 0) {
+	    		item = this.get('content'); // get a flow
+	    		
+	    		// Hiding the 'Unsorted' panel
+	    		if( item.get('name') === 'Unsorted' ) {
+	    			continue;
+	    		} else {	    			
+		    		viewProto = Nav.FlowSummaryView;
+		    		width = 100;
+	    		}
+	    	} else { //if( i < len+1 ) {
+	    		/*
+	    		 * Continue with adding conversation tiles
+	    		 */
+	    		viewProto = Nav.ConversationSummaryView,
+	    		item = conversations.objectAt(i-1); // get a conversation
+	    		width = this.get('columnWidth');
 	    	}
-			else {
-				viewProto = Nav.FlowBumperView;
-				itemContent = this.get('content');
-	    	}
-			
+//			else {
+//				/*
+//				 * End with the bumper tile
+//				 */
+//				viewProto = Nav.FlowBumperView;
+//				item = this.get('content'); // get a flow
+//				width = 100;
+//	    	}
+	    	
+			if( item.name != 'Unso')
+	    	// item can be ether a conversation or a flow
 			view = viewProto.create({
-				content:itemContent,
+				content:item,
 				layout: {
 					height: height, 
 					width: width, 
 					top: 0, 
-					left: width * i + ((((i === 0 )? 0 : i )) * itemPadding)
+					left: runningWidth + ((((i < 2 )? 0 : i )) * itemPadding)
 				}
 			});
 
-			this.appendChild(view);
+	    	runningWidth += width;
+
+	    	this.appendChild(view);
 
 			// grow the size of the content view to include the newly 
 			// appended child
@@ -126,9 +187,9 @@ Nav.FlowContentView = SC.View.extend({
 				top: 0, 
 				left: 0, 
 				height: height, 
-				width: (width + itemPadding)*(len+1) // +1 for the bumber
+				width: (width + itemPadding)*(len+1) // +1 for the bumper
 			});
-	    };
+	    }
 	}.observes('*content.[]')
 });
 
@@ -138,17 +199,16 @@ Nav.FlowContentView = SC.View.extend({
   @extends SC.ScrollView
 */
 Nav.FlowScrollView = SC.ScrollView.extend({
-    classNames:'FlowScrollView'.w(),
+    classNames:'flow-band'.w(),
 	alwaysBounceVertical: NO,
 	
 	contentObserver: function(target, value) {
-	    var content = this.get('content');
+	    var flow = this.get('content'); // a flow
 		var contentView = this.contentView;
-		if( contentView.get && !contentView.get('content') && content ) {
-			contentView.set('content', content);
+		if( contentView.get && !contentView.get('content') && flow ) {
+			contentView.set('content', flow);
 		}
-	}.observes('*'), //observing  *content.[] doesn't trigger the call. 
-	// TODO: find out why
+	}.observes('*content.[]'),
 
 	contentView: Nav.FlowContentView.design({
 	})
@@ -160,6 +220,7 @@ Nav.FlowScrollView = SC.ScrollView.extend({
   @extends SC.View
 */
 Nav.FlowLabelView = SC.LabelView.extend({
+	classNames: 'flow-label'.w(),
 	textAlign: SC.ALIGN_LEFT,
     click: function(evt) {
 		this.touchEnd();
@@ -168,8 +229,8 @@ Nav.FlowLabelView = SC.LabelView.extend({
 		return YES;
 	},
 	touchEnd: function(evt) {
-		var content = this.get('content');
-		Nav.states.flows.toFlowState(content);
+		var flow = this.get('content');
+		Nav.states.flows.toFlowState(flow);
 	}
 	
 });
@@ -180,39 +241,54 @@ Nav.FlowLabelView = SC.LabelView.extend({
   @extends SC.View
 */
 Nav.DashboardContentView = SC.View.extend({
-    classNames:'DashboardContentView'.w(),
+    classNames:'dashboard-content'.w(),
+    itemHeight: 170,
+    labelHeight: 30,
 	layout: { top: 0, left: 0, right: 0, bottom: 0},
     contentObserver: function(target, key){
-		console.log('DashboardContentView:'+target+'='+key );
-		console.log('flows='+this.get('content'));
 		var i = 0;
-		var thisView = this;
+		var that = this;
 		
 		//TODO it would be cleaner to detach the observer
 		// than to ignore subsequent calls to it
-		if( thisView.childViews.length > 0)
+		if( this.childViews.length > 0)
 			return;
 		
-		this.get('content').forEach(function(item) {
-			console.log('flow='+item);
-			var view = Nav.FlowLabelView.create({
-					layout: { left: 0, top: (30 + 170) * i, right: 0, height: 30 },
-					value: item.get('name'),
-					content: item
-				});
-			thisView.appendChild(view);
+		// content is an array of flows
+		var flows = this.get('content');
+		flows.forEach(function(flow) {
+			var viewTop = that.labelHeight + (that.labelHeight + that.itemHeight) * i;
 			var view = Nav.FlowScrollView.create({
-				layout: {top: 30 + (30 + 170) * i, left: 0, right: 0, height: 170}
+				layout: {
+					top: viewTop, 
+					left: 0, 
+					right: 0, 
+					height: that.itemHeight
+				}
 			});
 			i = i + 1;
-			thisView.appendChild(view);
-			view.set('content', item);
+			that.appendChild(view);
+			view.set('content', flow);
+			
+
+//			view = Nav.FlowLabelView.create({
+//				layout: { 
+//					left: 0, 
+//					top: viewTop,
+//					right: 0, 
+//					height: that.labelHeight 
+//				},
+//				value: flow.get('name'),
+//				content: flow
+//			});
+//			that.appendChild(view);
+
 		});
 		// grow the size of the content view to 
 		// include the newly appended child
 		this.set('layout', {
 			top: 0, 
-			height: (30 + 170) * this.get('content').get('length'), 
+			height: (this.labelHeight + this.itemHeight) * flows.length(), 
 			left: 0, 
 			right: 0
 		});
@@ -228,7 +304,7 @@ Nav.DashboardScrollView = SC.ScrollView.extend({
 	// make sure the view doesn't react to side-ways swipes
 	alwaysBounceHorizontal: NO,
 	delaysContentTouches: NO,
-	classNames: 'DashboardScrollView'.w(),
+	classNames: 'dashboard'.w(),
 	
 	contentView: Nav.DashboardContentView.design({
 		contentBinding: 'Nav.flowsController.arrangedObjects'

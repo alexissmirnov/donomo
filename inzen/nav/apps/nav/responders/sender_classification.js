@@ -2,6 +2,7 @@
 // Project:   Nav
 // ==========================================================================
 /*globals Nav */
+Nav = Nav;
 require('responders/main');
 
 /** @namespace
@@ -14,7 +15,7 @@ Nav.states.senderClassification = SC.Responder.create({
 	// returns a complete array of flows 
 	// array of {included (bool), flow (object), name (string)} for a given contact
 	 _createContactFlowArray: function (contact) {
-		var allFlows = Nav.store.find(SC.Query.local(Nav.model.Flow));
+		var allFlows = Nav.store.find(Nav.query.GET_FLOWS);
 		var contactFlows = contact.get('flows');
 		var a = [];
 		
@@ -38,18 +39,10 @@ Nav.states.senderClassification = SC.Responder.create({
 	// when we become first responder, show classification panel
 	didBecomeFirstResponder: function () {
 		// setup a controller for the classification page
-		var query = SC.Query.local(Nav.model.Contact, 'isClassified = NO');
-		var senders = Nav.store.find(query);
+		var senders = Nav.store.find(Nav.query.GET_TOP_UNCLASSIFIED_CONTACTS);
 		var controller = Nav.senderClassificationController;
 		
-		controller.set('content', senders);
-		controller.selectObject(controller.objectAt(0));
-		controller.set('senderSelectionIndex', 0);
-		
-		// set the flows. 
-		Nav.senderClassificationFlowsController.set(
-				'content', 
-				Nav.states.senderClassification._createContactFlowArray(controller.objectAt(0)));
+		controller.set('contentBinging', senders);
 		
 		// show the page
 		Nav.getPath('senderClassificationPage.mainPane').append();
@@ -66,7 +59,7 @@ Nav.states.senderClassification = SC.Responder.create({
 		
 		// reached the end, go to flows
 		var currentIndex = controller.get('senderSelectionIndex');
-		if( currentIndex === controller.get('length') - 1) {
+		if( !currentIndex || currentIndex === controller.get('length') - 1) {
 			Nav.states.main.go('flows');
 			return;
 		}
@@ -93,8 +86,8 @@ Nav.states.senderClassification = SC.Responder.create({
 	},
 	
 	createNewFlow: function (name) {
-		var flow = Nav.store.createRecord(Nav.model.Flow, {
-			"name" : name
+		Nav.store.createRecord(Nav.model.Flow, {
+			'name' : name
 		});
 	}
 });

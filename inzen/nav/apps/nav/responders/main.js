@@ -1,3 +1,9 @@
+/**
+ * Program states
+ * 
+ * 
+ */
+Nav = Nav;
 Nav.states = {};
 
 Nav.states.main = SC.Responder.create({
@@ -20,7 +26,7 @@ Nav.states.main = SC.Responder.create({
 	    }
 		
 	    SC.routes.set('location', fragment);
-	    document.title = "inzen - %@".fmt(stateLocation.titleize());
+	    document.title = 'inzen - %@'.fmt(stateLocation.titleize());
 	    // TODO explain what's going on here
 	    // passing a 'URL' to the state
 	    Nav.states[stateLocation].set('resource', fragmentParts[1]);
@@ -38,8 +44,18 @@ Nav.states.main = SC.Responder.create({
 		Nav.getPath('mainPage.mainPane').remove();
 	},
 	
-	didBecomeFirstResponder: function () {
+	/**
+	 * This responder is set by the main entry point. The function a) shows the
+	 * main surface pane b) tries to retrieve the Profile object from the
+	 * database and connect it to the profile controller
+	 * 
+	 * @returns this
+	 */
+	didBecomeFirstResponder : function() {
 		Nav.getPath('mainPage.mainPane').append();
+		
+		
+		return this;
 	},
 	
 	// bound to 'signup' button on the main page
