@@ -25,6 +25,22 @@ class DocumentAdmin(admin.ModelAdmin):
     pass
 admin.site.register(Document, DocumentAdmin)
 
+class MessageAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(Message, MessageAdmin)
+
+class ContactAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(Contact, ContactAdmin)
+
+class AddressAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(Address, AddressAdmin)
+
+class ConversationAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(Conversation, ConversationAdmin)
+
 class PageAdmin(admin.ModelAdmin):
     pass
 admin.site.register(Page, PageAdmin)
@@ -40,3 +56,11 @@ admin.site.register(Asset, AssetAdmin)
 class QueryAdmin(admin.ModelAdmin):
     pass
 admin.site.register(Query, QueryAdmin)
+
+class AccountAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(Account, AccountAdmin)
+
+class AccountClassAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(AccountClass, AccountClassAdmin)

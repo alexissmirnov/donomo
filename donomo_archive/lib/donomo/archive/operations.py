@@ -348,6 +348,8 @@ def create_asset_from_file( file_name, **kwargs ):
     kwargs.setdefault('orig_file_name', os.path.basename(file_name))
     kwargs.setdefault('mime_type', misc.guess_mime_type(file_name))
 
+    logging.info(kwargs)
+    
     asset = manager(Asset).create(**kwargs)
     upload_asset_file( asset, file_name)
 
@@ -361,18 +363,18 @@ def _enqueue_work_item( is_new, asset_list ):
         of assets to the relevant listening services.
 
     """
-
-    logging.info(
-        '%sueuing work items:%s' % (
-            is_new and 'Q' or 'Re-q',
-            ''.join( '\n  %r' % a for a in asset_list )))
-
-    sqs.post_message_list(
-        ( {  'Asset-ID'     : asset.pk,
+    messages = list( {  'Asset-ID'     : asset.pk,
              'Process-Name' : consumer.name,
              'Is-New'       : is_new and 1 or 0 }
-          for asset in asset_list
-          for consumer in asset.consumers ) )
+                  for asset in asset_list
+                  for consumer in asset.consumers )
+
+    logging.info(
+        '%sueuing %d work items:%s' % (
+            is_new and 'Q' or 'Re-q', len(messages), 
+            ''.join( '\n  %r' % a for a in asset_list )))
+
+    sqs.post_message_list( messages )
 
 ###############################################################################
 

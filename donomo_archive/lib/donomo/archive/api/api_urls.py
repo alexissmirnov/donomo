@@ -56,5 +56,33 @@ urlpatterns = patterns(
     url( r'^search/$',
          search,
          name = 'api_search'),
+         
+    url( r'^conversations/$',
+         conversation_list,
+         name = 'api_conversation_list' ),
+
+    url( r'^conversations/(?P<id>[-a-zA-Z0-9_:. \$\>\<\@]+)/$',
+         conversation_info,
+         name = 'api_conversation_info' ),
+
+    url( r'^messages/(?P<id>[-a-zA-Z0-9_:. \$\>\<\@]+)/$',
+         message_info,
+         name = 'api_message_info' ),
+
+    url( r'^messages/$',
+         message_list,
+         name = 'api_message_list' ),
+
+    url( r'^contacts/$',
+         contact_list,
+         name = 'api_contact_list' ),
+         
+    url( r'^accounts/(?P<id>[-a-zA-Z0-9_:. \$\>\<\@]+)/$',
+         account_info,
+         name = 'api_account_info' )
+
+#    url( r'^messages/(?P<label>[-a-zA-Z0-9_:. \$]+)/$',
+#         message_info,
+#         name = 'api_message_info' ),
 )
 

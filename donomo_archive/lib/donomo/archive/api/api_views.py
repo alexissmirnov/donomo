@@ -23,7 +23,14 @@ __all__ = (
     'page_as_pdf',
     'tag_list',
     'tag_info',
-    'search'
+    'search',
+    'message_list',
+    'conversation_list',
+    'conversation_info',
+    'message_info',
+    'message_list',
+    'contact_list',
+    'account_info',
     )
 
 ###############################################################################
@@ -173,5 +180,83 @@ def search():
 
 ###############################################################################
 
+@login_required
+@http_method_dispatcher
+def message_list():
+    """
+    Dispatch map for HTTP operations on search
 
+    """
+    return {
+        'GET'  : get_message_list,
+        }
+
+###############################################################################
+
+@login_required
+@http_method_dispatcher
+def conversation_list():
+    """
+    """
+    return {
+    'GET' : get_conversation_list,
+    }
+
+###############################################################################
+
+@login_required
+@http_method_dispatcher
+def conversation_info():
+    """
+    Dispatch map for HTTP operations on a tag
+
+    """
+    return {
+        'GET'    : get_conversation_info,
+        }
+
+###############################################################################
+
+@login_required
+@http_method_dispatcher
+def message_info():
+    """
+    Dispatch map for HTTP operations on a message
+
+    """
+    return {
+        'GET'    : get_message_info,
+        }
+
+###############################################################################
+@login_required
+@http_method_dispatcher
+def message_list():
+    """
+    Dispatch map for HTTP operations on messages
+
+    """
+    return {
+        'GET'    : get_message_list,
+        }
+###############################################################################
+
+@login_required
+@http_method_dispatcher
+def contact_list():
+    """
+    """
+    return {
+    'GET' : get_contact_list,
+    }
+
+###############################################################################
+
+@http_method_dispatcher
+def account_info():
+    """
+    """
+    return {
+    'PUT' : update_or_create_account,
+    }
 

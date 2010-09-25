@@ -14,6 +14,9 @@ from django.contrib.localflavor.us.models import PhoneNumberField
 from django.db.models                    import permalink
 from django.utils.timesince              import timesince
 
+import logging
+logging = logging.getLogger('models')
+
 ###############################################################################
 
 def manager(model):
@@ -75,6 +78,7 @@ class MimeType(models.Model):
     MAIL = 'message/rfc822'
     TIFF = 'image/tiff'
     BINARY = 'application/octet-stream'
+    TEXT = 'text/plain'
 
     name = models.CharField(
         max_length = 64,
@@ -203,6 +207,9 @@ class TagManager( models.Manager ):
 class Tag(models.Model):
     USER             = 'user'
     UPLOAD_AGGREGATE = 'upload'
+    MAIL_GMAIL_LABEL        = 'mail/gmail-label'
+    MAIL_IMAP_FOLDER        = 'mail/imap-folder'
+    MAIL_INBOX        = 'mail/imap-inbox'
 
     """ Documents can be tagged """
 
@@ -224,6 +231,13 @@ class Tag(models.Model):
         default    = '',
         db_index   = True,
         help_text  = 'Class of this tag' )
+    
+    date_created = models.DateTimeField(
+        auto_now_add = True )
+
+    date_last_modified = models.DateTimeField(
+        auto_now = True )
+
 
     __str__ = lambda self : self.label
 
@@ -312,6 +326,143 @@ class Page(models.Model):
 
 ###############################################################################
 
+class Contact(models.Model):
+    """ A contact has a name and a set of email addresses"""
+    owner = models.ForeignKey(
+        User,
+        related_name = 'contacts')
+
+    name = models.CharField(max_length=128)
+    
+    tags = models.ManyToManyField(
+        Tag,
+        related_name = 'contacts',
+        blank        = True,
+        symmetrical  = True )
+    __str__ = lambda self : '%s (%s)' % (self.name, self.pk)
+    __unicode__ = __str__
+
+###############################################################################
+
+class Address(models.Model):
+    """ Email contact """
+    email = models.EmailField(primary_key=True,
+                              blank = False)
+    contact = models.ForeignKey(Contact,
+                                related_name = 'addresses')
+    owner = models.ForeignKey(
+        User,
+        related_name = 'addresses')
+
+    __str__ = lambda self : str('%s <%s>' % (self.contact.name, self.email))
+    __unicode__ = __str__
+
+###############################################################################
+class Conversation(models.Model):
+    """ Conversation is a tagged list of messages with a common subject """
+    owner = models.ForeignKey(
+        User,
+        related_name = 'conversations')
+    
+    subject = models.CharField(
+        max_length = 512,
+        blank = False,
+        null = False)
+    
+    summary = models.CharField(
+        max_length = 1024,
+        blank = False,
+        null = False)
+    
+    key_participant = models.ForeignKey(Address)
+    
+    tags = models.ManyToManyField(
+        Tag,
+        related_name = 'conversations',
+        blank        = True,
+        symmetrical  = True )
+    
+    # conversation's date is teh date of the most recent message
+    date = property(lambda self: self.messages.order_by('-date')[0].date)
+
+
+    __str__ = lambda self : unicode(self.subject)
+    __unicode__ = __str__
+
+###############################################################################
+
+class Message(models.Model):
+    """ A Message  """
+    message_id = models.CharField(
+        max_length = 512,
+        blank = False,
+        null = False,
+        primary_key=True)
+
+    owner = models.ForeignKey(
+        User,
+        related_name = 'messages')
+
+    subject = models.CharField(
+        max_length = 512,
+        blank = False,
+        null = False)
+    
+    date = models.DateTimeField()
+    
+    reply_to = models.ForeignKey('self', 
+                                 null = True,
+                                 related_name = 'reply_messages')
+
+    sender_address = models.ForeignKey(Address,
+                                 related_name = 'sent_messages')
+    # Not the same thing as to_address
+    # to_address may be empty (in case of BCC or be set to the
+    # address of a mailling list
+    # mailbox address is teh email address of one of the email
+    # accounts for a given user
+    mailbox_address = models.ForeignKey(Address, 
+                                 related_name = 'mailbox_messages')
+    
+    to_addresses = models.ManyToManyField(Address, 
+                                 blank = True,
+                                 null = True,
+                                 related_name = 'received_messages')
+
+    cc_addresses = models.ManyToManyField(Address, 
+                                 blank = True,
+                                 null = True,
+                                 related_name = 'copied_messages')
+
+    conversation = models.ForeignKey(Conversation, 
+                                 related_name = 'messages')
+
+    __str__ = lambda self : '%s [%s]' % (self.subject, self.date) 
+
+    __unicode__ = __str__
+
+    def get_asset(self, asset_class, mime_type):
+        """ Get an asset associated with this message """
+
+        # E1101 = instance of 'Message' has no 'assets' member
+        # pylint: disable-msg=E1101
+
+        logging.info('getting %s %s for Message %s (%s)' %(asset_class, mime_type, self, self.pk))
+        if isinstance(asset_class, AssetClass):
+            return self.assets.get(asset_class__pk = asset_class.pk, 
+                                   mime_type__name = mime_type)
+        else:
+            all = self.assets.filter(asset_class__name = asset_class, 
+                                   mime_type__name = mime_type).all()
+            logging.info(all)
+            if len(all):
+                return all[0] 
+            else:
+                logging.info('NO ASSET %s %s for Message %s (%s)' %(asset_class, mime_type, self, self.pk))
+                return None
+
+###############################################################################
+
 class AssetClass(models.Model):
     """
     A semantic tag on an document asset.
@@ -324,6 +475,7 @@ class AssetClass(models.Model):
     PAGE_THUMBNAIL = 'thumbnail'
     PAGE_BANNER    = 'banner'
     PAGE_TEXT      = 'text'
+    MESSAGE_PART         = 'message.part'
 
     name = models.CharField(
         max_length = 64,
@@ -427,6 +579,12 @@ class Asset(models.Model):
         default      = None,
         related_name = 'assets' )
 
+    related_message = models.ForeignKey(
+        Message,
+        null         = True,
+        default      = None,
+        related_name = 'assets' )
+
     date_created = models.DateTimeField(
         auto_now_add = True )
 
@@ -500,6 +658,9 @@ class Query(models.Model):
         max_length = 255,
         db_index   = True)
 
+    __str__ = lambda self : self.name
+
+    __unicode__ = __str__
 
 ###############################################################################
 
@@ -514,3 +675,59 @@ class EncryptionKey(models.Model):
         max_length = 64,
         blank      = False,
         null       = False )
+    
+    __str__ = lambda self : self.value
+
+    __unicode__ = __str__
+
+
+###############################################################################
+class AccountClass(models.Model):
+    EMAIL_GMAIL    = 'email/gmail'
+    EMAIL_IMAP     = 'email/imap'
+
+    name = models.CharField(
+        max_length = 64,
+        blank      = False,
+        null       = False )
+    
+    __str__ = lambda self : self.name
+
+    __unicode__ = __str__
+
+###############################################################################
+class Account(models.Model):
+    owner = models.ForeignKey(
+        User,
+        null   = False,
+        related_name = 'accounts' )
+
+    id = models.CharField(
+        max_length = 64,
+        primary_key = True)
+    account_class = models.ForeignKey(
+        'AccountClass',
+        null = True,
+        default = None)
+    name = models.CharField(
+        max_length = 64,
+        blank      = False,
+        null       = False )
+    password = models.CharField(
+        max_length = 64,
+        blank      = True,
+        null       = False )
+    server = models.CharField(
+        max_length = 64,
+        blank      = True,
+        null       = False )
+    ssl = models.BooleanField(
+        blank      = True,
+        null       = False )
+
+    __str__ = lambda self : '%s of %s' % (self.name, self.owner.username)
+
+    __unicode__ = __str__
+
+    
+
