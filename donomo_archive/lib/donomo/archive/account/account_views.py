@@ -8,11 +8,12 @@ from django.core.urlresolvers               import reverse
 from django                                 import forms
 from django.utils.translation               import ugettext_lazy as _
 from django.contrib.auth.models             import User
-from registration.models                    import RegistrationProfile
-from donomo.archive.models                  import Page, Document
-from donomo.billing.models                  import Account, Invoice
 from donomo.archive.api                     import api_impl
+from donomo.archive.models                  import Page, Document
+from donomo.archive.utils.http              import http_method_dispatcher
+from donomo.billing.models                  import Account, Invoice
 from recaptcha                              import RecaptchaForm, RecaptchaFieldPlaceholder, RecaptchaWidget
+from registration.models                    import RegistrationProfile
 import os
 import logging
 logging = logging.getLogger(os.path.splitext(os.path.basename(__file__))[0])
