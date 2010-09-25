@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 
 """
@@ -95,7 +96,7 @@ def handle_work_item(processor, item):
     return [ pdf_asset ]
 
 ##############################################################################
-def tag_document(document, treshold):
+def tag_document(document, threshold):
     """
     Find the most recently created upload tag.
     Check to see if the current time is close enough for this document to be part
@@ -106,48 +107,100 @@ def tag_document(document, treshold):
 
     # A document can have only one such tag
     if document.tags.filter(tag_class = models.Tag.UPLOAD_AGGREGATE).count() > 0:
-        return
-    logging.debug('Classifying %s with treshold %s' %(document, treshold))
+        return False
+    
+    # A document that has no pages cannot be converted to PDF, so ignore it
+    if document.pages.all().count() == 0:
+        return False
+    
+    logging.debug('Classifying %s with threshold %s' %(document, treshold))
 
-    try:
-        now = datetime.datetime.fromtimestamp(time.time())
+    now = datetime.datetime.fromtimestamp(time.time())
 
-        # get the document with most recently created PDF asset
-        most_recent_existing_asset = models.Asset.objects.filter(
-                        mime_type__name = models.MimeType.PDF,
-                        asset_class__name = models.AssetClass.DOCUMENT).order_by(
-                            '-date_created')[0]
-
-        if most_recent_existing_asset.date_created + treshold > now:
-            # latest asset is recent, let's use its tag then
-
-            # to get the tag, let's get asset's document
-            most_recent_document = most_recent_existing_asset.related_document
-
-            # get the tag object of class "upload aggregate" of this document
-            upload_aggregate_tag = most_recent_document.tags.filter(
-                                            tag_class = models.Tag.UPLOAD_AGGREGATE)
-
-            if len(upload_aggregate_tag) == 0:
-                raise models.Asset.DoesNotExist()
-            else:
-                upload_aggregate_tag = upload_aggregate_tag[0]
-        else:
-            # pass the control to exception handling to create a new tag object
-            raise models.Asset.DoesNotExist()
-
-    except (IndexError, models.Asset.DoesNotExist):
+    # get the upload time of the 'original' asset of the first page
+    # in this this document
+    first_page = document.pages.all()[0]
+    original_asset = first_page.assets.get(asset_class__name = AssetClass.PAGE_ORIGINAL)
+    original_asset_date_created = original_asset.date_created
+    
+    # find all original assets in the time vicinity
+    # select all PAGE_ORIGINAL assets created no sooner than threshold seconds before
+    # original_asset_date_created and no later than threshold seconds after
+    # original_asset_date_created
+    lower_time_boundary = original_asset.date_created - threshold
+    higher_time_doundary = original_asset.date_created + threshold
+    
+    recent_original_assets = Asset.objects.filter(asset_class__name = AssetClass.PAGE_ORIGINAL, 
+                                                  date_created__gte = lower_time_boundary)
+    recent_original_assets = recent_original_assets.filter(date_created__lte = higher_time_doundary)
+    
+    
+    # find if any of the upload assets has a complete and tagged document
+    # look for tags on original_page_asset.page.document
+    upload_aggregate_tag = None
+    for original_page_asset in recent_original_assets.all(): 
+        existing_tags = original_page_asset.page.document.tags.filter(tag_class = models.Tag.UPLOAD_AGGREGATE)
+        
+        if existing_tags.count():
+            upload_aggregate_tag = existing_tags.all()[0]
+            # tag found - we're done with the loop then. bail out
+            break
+    
+    # tag not found - create new tag and tag this document with it
+    if upload_aggregate_tag is None:
         logging.debug('Creating new UPLOAD_AGGREGATE tag for time %s' % now)
         # create a tag with current time and tag a given document with it
         upload_aggregate_tag = models.Tag.objects.create(
-                                owner = document.owner,
-                                label = '%s' % now,
-                                tag_class = models.Tag.UPLOAD_AGGREGATE)
-        pass
+                            owner = document.owner,
+                            label = '%s' % now,
+                            tag_class = models.Tag.UPLOAD_AGGREGATE)
 
-    # tag a given document with this tag
+    # one way or the other we have a tag at this point
+    # tag the document
     document.tags.add(upload_aggregate_tag)
     document.save()
+    return True
+                
+#            
+#    try:
+#        # tag not found - create new tag and tag this document with it
+#
+#        # get the document with most recently created PDF asset
+#        most_recent_existing_asset = models.Asset.objects.filter(
+#                        mime_type__name = models.MimeType.PDF,
+#                        asset_class__name = models.AssetClass.DOCUMENT).order_by(
+#                            '-date_created')[0]
+#
+#        if most_recent_existing_asset.date_created + treshold > now:
+#            # latest asset is recent, let's use its tag then
+#
+#            # to get the tag, let's get asset's document
+#            most_recent_document = most_recent_existing_asset.related_document
+#
+#            # get the tag object of class "upload aggregate" of this document
+#            upload_aggregate_tag = most_recent_document.tags.filter(
+#                                            tag_class = models.Tag.UPLOAD_AGGREGATE)
+#
+#            if len(upload_aggregate_tag) == 0:
+#                raise models.Asset.DoesNotExist()
+#            else:
+#                upload_aggregate_tag = upload_aggregate_tag[0]
+#        else:
+#            # pass the control to exception handling to create a new tag object
+#            raise models.Asset.DoesNotExist()
+#
+#    except (IndexError, models.Asset.DoesNotExist):
+#        logging.debug('Creating new UPLOAD_AGGREGATE tag for time %s' % now)
+#        # create a tag with current time and tag a given document with it
+#        upload_aggregate_tag = models.Tag.objects.create(
+#                                owner = document.owner,
+#                                label = '%s' % now,
+#                                tag_class = models.Tag.UPLOAD_AGGREGATE)
+#        pass
+#
+#    # tag a given document with this tag
+#    document.tags.add(upload_aggregate_tag)
+#    document.save()
 
 ##############################################################################
 def handle_trial_account(document, pdf_file_contents):
