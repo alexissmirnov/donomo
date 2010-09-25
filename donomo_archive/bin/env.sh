@@ -10,5 +10,4 @@ AWS_OPTS=/root/.donomo/aws.sh
 [[ -f $USER_DATA ]] && source $USER_DATA
 [[ -f $AWS_OPTS  ]] && source $AWS_OPTS
 
-PAYPAL_SANDBOX=1
 

@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# the reason this wrapper exists is ugly.. the /etc/rc.d/init.d/functions
+# used by service scripts includes a utility function called daemon
+# unfortunately if a user is specified it uses runuser and by defrault
+# that util resets the environment variables.  For now we call this
+# and this reinserts the environment vars
+
+if [ -f /etc/sysconfig/offlineimap ]; then
+	. /etc/sysconfig/offlineimap
+fi
+
+if [ -f "$EXTRACONF" ]; then
+	. "$EXTRACONF"
+fi
+
+pidfile=${PIDFILE-/var/run/donomo/offlineimap.pid}
+bindir=`dirname $0`
+
+$bindir/offlineimap $* >/dev/null 2>&1 &
+
+echo $! > $pidfile

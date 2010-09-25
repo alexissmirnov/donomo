@@ -1,0 +1,7 @@
+#!/bin/sh
+
+export DONOMO_HOME=/home/donomo
+
+source $DONOMO_HOME/bin/env.sh
+
+exec /usr/bin/emacs
