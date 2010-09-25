@@ -68,6 +68,5 @@ def update_sync_config(account):
     return True
 
 def reload_offlineimap():
-    status = os.system(
-            'cd /Users/alexis/workspace/donomo.trunk/donomo_archive/bin/;/Users/alexis/workspace/jgoerzen-offlineimap-9239a2d/bin/offlineimap -u Noninteractive.Basic' )
+    status = os.system('service offlineimap restart')
     
