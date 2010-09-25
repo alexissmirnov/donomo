@@ -20,7 +20,8 @@ from django.conf import settings
 #   C0103 - variables at module scope must be all caps
 #
 
-DEFAULT_PROCESSORS = ( 'pdf_parser',
+DEFAULT_PROCESSORS = ( 'mail_parser',
+                       'pdf_parser',
                        'tiff_parser',
                        'ocr',
                        'indexer',
@@ -79,7 +80,14 @@ def thread_proc( options, work_item ):
                 ' python -m donomo.archive.service.driver.helper' \
                 ' %(Process-Name)s %(Asset-ID)s %(Is-New)s' % work_item )
     finally:
-        operations.close_work_item( work_item, status == 0 )
+        # in debug mode a failure of a processor is likely due to a bug
+        # this means the next time we process this message we'll fail in the same way
+        # no point of keeping such message in the queue because we don't care about
+        # data loss (in DEBUG mode).
+        if settings.DEBUG:
+            operations.close_work_item( work_item, True)
+        else:
+            operations.close_work_item( work_item, status == 0 )
         options.queue.put(True)
 
 
