@@ -16,7 +16,10 @@ admin.autodiscover() #e nable the admin and load each admin.py file:
 
 urlpatterns = patterns(
     '',
-    (r'^admin/(.*)', admin.site.root),
+    # sproutcore requires /static prefix for its application
+    (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'show_indexes': True, 'document_root' : settings.MEDIA_ROOT + '/static/'}),
+    #(r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root' : settings.MEDIA_ROOT + '/sc/build/static/'}),
     (r'^media/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT }),
+    (r'^admin/(.*)', admin.site.root),
     (r'^', include('donomo.archive.urls')),
 )
