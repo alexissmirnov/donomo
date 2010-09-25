@@ -1,12 +1,9 @@
-// ==========================================================================
-// Project:   Nav
-// ==========================================================================
+sc_require ('responders/state');
 require ('views/conversation_view');
 
-/*globals Nav */
 
 // This page describes the main user interface for your application.  
-Nav.flowsPage = SC.Page.design({
+App.flowsPage = SC.Page.design({
 	mainPane: SC.MainPane.design({
 		classesName: 'flow-pane'.w(),
 		childViews: 'topbar flows conversation'.w(),
@@ -19,10 +16,7 @@ Nav.flowsPage = SC.Page.design({
 	        
 	        settings: SC.ButtonView.design({
 	            layout: {top:7,right:20,height:31,width:47},
-	            title: 'settings',
-	            action: 'go',
-	            target: Nav.states.main,
-	            location: 'settings'
+	            title: 'settings'
 	        }),
 	        
 	        logo: SC.ImageView.design({
@@ -32,17 +26,17 @@ Nav.flowsPage = SC.Page.design({
 		    })
 	    }),
 	    
-	    flows: Nav.DashboardScrollView.design({
+	    flows: App.DashboardScrollView.design({
 	    	layout: {top:45,right:0,bottom:0,left:0}
 	    }),
 	    
-	    conversation: Nav.ConversationPanel.design(SC.Animatable, {
+	    conversation: App.ConversationPanel.design(SC.Animatable, {
 	    	classNames: 'conversation-panel'.w(),
 	    	layout: {top: 55, bottom: 10, right: 0, width: 0 }, // initially hidden (width: 0)
 	    	transitions: {
 	    		 width: { duration: .25, timing: SC.Animatable.TRANSITION_EASE_IN_OUT } // with timing curve
 	    	},
-	    	contentBinding: 'Nav.conversationController.content.messages'
+	    	contentBinding: 'App.conversationController.content.messages'
 	    })
 	})
 });

@@ -105,7 +105,7 @@ Signup.mainPage = SC.Page
 									},
 									escapeHTML : NO,
 									classNames : 'desc',
-									value : '<h1>Creating a user profile and managing accounts.</h1><p><ul><li>Click "Add Account"</li><li>Complete the form and press "Done"</li><li>Repeat.</li></u></p>'
+									value : '<h1>Test for just-in-time user registration and account creation.</h1><p><ul><li>Click "Add Account"</li><li>Complete the form and press "Done"</li><li>Repeat.</li><li>"Remove All" to reset the browser\'s DB.</li></u></p>'
 								})
 					}),
 
@@ -123,14 +123,21 @@ Signup.mainPage = SC.Page
 				value : 'No Accounts created. Add one'
 			}),
 
-			accounts : SC.ScrollView
-					.design( {
+			accounts : SC.View.design({
+				layout : {
+					top : 0,
+					bottom : 0,
+					left : 0,
+					right : 0
+				},
+				childViews: [
+				    SC.ScrollView.design( {
 						hasHorizontalScroller : NO,
 						layout : {
 							top : 0,
 							bottom : 0,
 							left : 0,
-							right : 0
+							width : 200
 						},
 						backgroundColor : 'white',
 						contentView : SC.ListView
@@ -138,5 +145,32 @@ Signup.mainPage = SC.Page
 									contentBinding : 'Signup.accountsController.arrangedObjects',
 									contentValueKey : 'name'
 								})
-					})
+					}),
+				    SC.ScrollView.design( {
+						hasHorizontalScroller : NO,
+						layout : {
+							top : 0,
+							height : 200,
+							width : 300,
+							right : 0
+						},
+						backgroundColor : 'white',
+						contentView : SC.ListView
+								.design( {
+									contentBinding : 'Signup.messagesController.arrangedObjects',
+									contentValueKey : 'body'
+								})
+					}),
+					SC.LabelView.design({
+				    	layout : {
+							top : 250,
+							height : 200,
+							width : 300,
+							right : 0
+						},
+						backgroundColor : 'gray',
+						valueBinding: 'Signup.userController.username'
+				    })
+				]
+			})
 		});

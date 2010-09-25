@@ -52,12 +52,12 @@ Nav.ProfileView = SC.View.extend(SC.Animatable, {
 			email: SC.FormView.row(SC.TextFieldView.design({
 				layout: { left: 0, width: 300, height: 44, centerY: 0},
 				hint: 'steve@gmail.com',
-				valueBinding: 'Nav.profileController.email'
+				valueBinding: 'App.state.MANAGING_PROFILE.controller.name'
 			}), { classNames: ['first'] }),
 			
 			password: SC.FormView.row(SC.TextFieldView.design({
 				layout: { left: 0, width: 300, height: 44, centerY: 0},
-				valueBinding: 'Nav.profileController.password',
+				valueBinding: 'App.state.MANAGING_PROFILE.controller.password',
 				isPassword: YES
 			}), { classNames: ['last'] }),
 			
@@ -66,7 +66,7 @@ Nav.ProfileView = SC.View.extend(SC.Animatable, {
 				layout: { width: 100, height: 44, bottom: 5, left: 5 },
 				title: 'Done',
 				isDefault: YES,
-				action: 'Nav.mainPage.mainPane.profileView.submitCredentials'
+				action: 'onSubmit'
 			})
 		}),
 		loading: SC.LabelView.design(SC.Animatable, {
@@ -132,17 +132,15 @@ Nav.ProfileView = SC.View.extend(SC.Animatable, {
 	
 	
 	showView: function() {
-		var view = Nav.mainPage.mainPane.profileView;
-		this.adjust('left', view.finalLayout.left);
+		this.adjust('left', this.finalLayout.left);
 	},
-	submitCredentials: function() {
-		Nav.mainPage.mainPane.profileView.credentials.loading.adjust('opacity', 1.0);
-		
-		Nav.store.find(SC.Query.local(Nav.model.Contact));
+	onSubmit: function() {
+		this.credentials.loading.adjust('opacity', 1.0);
+		App.state.MANAGING_PROFILE.submit();
 	},
 
 	hideView: function() {
-		var view = Nav.mainPage.mainPane.profileView;
-		this.adjust('left', view.layout.left);
+		this.adjust('left', this.layout.left);
+		this.removeFromParent();
 	}
 });

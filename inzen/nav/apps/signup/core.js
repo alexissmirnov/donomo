@@ -1,7 +1,3 @@
-// ==========================================================================
-// Project:   Signup
-// Copyright: ©2009 Apple Inc.
-// ==========================================================================
 /*globals Signup */
 
 /**
@@ -22,5 +18,4 @@ Signup = SC.Application.create( {
 
 	// turn on logging for action notifications
 	trace : YES
-
 });

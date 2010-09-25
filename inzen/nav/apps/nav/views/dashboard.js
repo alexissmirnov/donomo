@@ -6,7 +6,7 @@
  */
 
 
-require('responders/main');
+require('responders/state');
 require('responders/flows');
 require('resources/conversation_flow_page');
 // all flow dashboard views are here
@@ -16,7 +16,7 @@ require('resources/conversation_flow_page');
 
   @extends SC.View
 */
-Nav.ConversationSummaryView = Nav.ConversationListItemView.extend({
+App.ConversationSummaryView = App.ConversationListItemView.extend({
 	classNames: 'conversation-summary',
     click: function(evt) {
 		this.touchEnd();
@@ -27,11 +27,7 @@ Nav.ConversationSummaryView = Nav.ConversationListItemView.extend({
 	/*
 	 */
 	touchEnd: function(evt) {
-//		var conversations = this.parentView.get('content').get('conversations');//topConversationsController');
-//		conversations.selectObject(this.get('content'));
-		
-		Nav.conversationController.set('content', this.get('content'));
-		Nav.states.flows.showConversationView();
+		App.state.FLOWS.selectConversation(this.get('content'));
 	}
 });
 
@@ -41,7 +37,7 @@ Nav.ConversationSummaryView = Nav.ConversationListItemView.extend({
 
   @extends SC.LabelView
 */
-Nav.FlowSummaryView = SC.View.extend({
+App.FlowSummaryView = SC.View.extend({
 	classNames: 'flow-summary'.w(),
 	childViews: 'label'.w(),
 	label: SC.LabelView.design({
@@ -58,7 +54,7 @@ Nav.FlowSummaryView = SC.View.extend({
 	},
 	touchEnd: function(evt) {
 		var flow = this.get('content');
-		Nav.states.flows.toFlowState(flow);
+		App.states.flows.toFlowState(flow);
 	}
 });
 
@@ -67,7 +63,7 @@ Nav.FlowSummaryView = SC.View.extend({
 
   @extends SC.LabelView
 */
-Nav.FlowBumperView = SC.View.extend({
+App.FlowBumperView = SC.View.extend({
 	childViews: 'label'.w(),
 	label: SC.LabelView.design({
 		textAlign: SC.ALIGN_CENTER,
@@ -82,7 +78,7 @@ Nav.FlowBumperView = SC.View.extend({
 	},
 	touchEnd: function(evt) {
 		var flow = this.get('content');
-		Nav.states.flows.toFlowState(flow);
+		App.states.flows.toFlowState(flow);
 	}
 });
 /******************************************************************************
@@ -90,7 +86,7 @@ Nav.FlowBumperView = SC.View.extend({
 
   @extends SC.View
 */
-Nav.FlowContentView = SC.View.extend({
+App.FlowContentView = SC.View.extend({
     classNames:'FlowContentView'.w(),
 	itemPadding: 10,
     rowHeight: 161,
@@ -145,14 +141,14 @@ Nav.FlowContentView = SC.View.extend({
 	    		if( item.get('name') === 'Unsorted' ) {
 	    			continue;
 	    		} else {	    			
-		    		viewProto = Nav.FlowSummaryView;
+		    		viewProto = App.FlowSummaryView;
 		    		width = 100;
 	    		}
 	    	} else { //if( i < len+1 ) {
 	    		/*
 	    		 * Continue with adding conversation tiles
 	    		 */
-	    		viewProto = Nav.ConversationSummaryView,
+	    		viewProto = App.ConversationSummaryView,
 	    		item = conversations.objectAt(i-1); // get a conversation
 	    		width = this.get('columnWidth');
 	    	}
@@ -160,7 +156,7 @@ Nav.FlowContentView = SC.View.extend({
 //				/*
 //				 * End with the bumper tile
 //				 */
-//				viewProto = Nav.FlowBumperView;
+//				viewProto = App.FlowBumperView;
 //				item = this.get('content'); // get a flow
 //				width = 100;
 //	    	}
@@ -198,7 +194,7 @@ Nav.FlowContentView = SC.View.extend({
 
   @extends SC.ScrollView
 */
-Nav.FlowScrollView = SC.ScrollView.extend({
+App.FlowScrollView = SC.ScrollView.extend({
     classNames:'flow-band'.w(),
 	alwaysBounceVertical: NO,
 	
@@ -210,7 +206,7 @@ Nav.FlowScrollView = SC.ScrollView.extend({
 		}
 	}.observes('*content.[]'),
 
-	contentView: Nav.FlowContentView.design({
+	contentView: App.FlowContentView.design({
 	})
 });
 
@@ -219,7 +215,7 @@ Nav.FlowScrollView = SC.ScrollView.extend({
 
   @extends SC.View
 */
-Nav.FlowLabelView = SC.LabelView.extend({
+App.FlowLabelView = SC.LabelView.extend({
 	classNames: 'flow-label'.w(),
 	textAlign: SC.ALIGN_LEFT,
     click: function(evt) {
@@ -230,7 +226,7 @@ Nav.FlowLabelView = SC.LabelView.extend({
 	},
 	touchEnd: function(evt) {
 		var flow = this.get('content');
-		Nav.states.flows.toFlowState(flow);
+		App.states.flows.toFlowState(flow);
 	}
 	
 });
@@ -240,7 +236,7 @@ Nav.FlowLabelView = SC.LabelView.extend({
 
   @extends SC.View
 */
-Nav.DashboardContentView = SC.View.extend({
+App.DashboardContentView = SC.View.extend({
     classNames:'dashboard-content'.w(),
     itemHeight: 170,
     labelHeight: 30,
@@ -258,7 +254,7 @@ Nav.DashboardContentView = SC.View.extend({
 		var flows = this.get('content');
 		flows.forEach(function(flow) {
 			var viewTop = that.labelHeight + (that.labelHeight + that.itemHeight) * i;
-			var view = Nav.FlowScrollView.create({
+			var view = App.FlowScrollView.create({
 				layout: {
 					top: viewTop, 
 					left: 0, 
@@ -271,7 +267,7 @@ Nav.DashboardContentView = SC.View.extend({
 			view.set('content', flow);
 			
 
-//			view = Nav.FlowLabelView.create({
+//			view = App.FlowLabelView.create({
 //				layout: { 
 //					left: 0, 
 //					top: viewTop,
@@ -300,13 +296,13 @@ Nav.DashboardContentView = SC.View.extend({
 
   @extends SC.ScrollView
 */
-Nav.DashboardScrollView = SC.ScrollView.extend({
+App.DashboardScrollView = SC.ScrollView.extend({
 	// make sure the view doesn't react to side-ways swipes
 	alwaysBounceHorizontal: NO,
 	delaysContentTouches: NO,
 	classNames: 'dashboard'.w(),
 	
-	contentView: Nav.DashboardContentView.design({
-		contentBinding: 'Nav.flowsController.arrangedObjects'
+	contentView: App.DashboardContentView.design({
+		contentBinding: 'App.flowsController.arrangedObjects'
 	})
 });

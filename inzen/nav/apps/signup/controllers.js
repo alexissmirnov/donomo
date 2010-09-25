@@ -4,8 +4,14 @@
 // ==========================================================================
 /*globals Signup */
 Signup.userController = SC.ObjectController.create({
-//	isCreatingUser: NO
+	  allowsMultipleContent: NO,
+	  username: function() {
+		  if( this.content && this.content.objectAt(0) )
+			  return this.content.objectAt(0).get('username')
+	  }.property()
 });
+
+Signup.messagesController = SC.ArrayController.create();
 
 Signup.accountsController = SC.ArrayController.create( {
 	/**

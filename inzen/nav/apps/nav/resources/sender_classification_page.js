@@ -1,11 +1,4 @@
-// ==========================================================================
-// Project:   Nav
-// Copyright: ©2010 My Company, Inc.
-// ==========================================================================
-/*globals Nav */
-
-// Sender classification as part of signup flow
-Nav.senderClassificationPage = SC.Page.design({
+App.senderClassificationPage = SC.Page.design({
 	newFlowPage: SC.PanelPane.design({
 		layout: { centerX: 0, centerY: 0, width: 400, height: 400 },
 		childViews: 'form'.w(),
@@ -37,18 +30,14 @@ Nav.senderClassificationPage = SC.Page.design({
 		        layout: { height: 44, width: 100, centerY: 0 },
 		        title: 'done',
 		        isDefault: YES,
-		        location: 'senderClassification',
-		        action: 'go',
-		        target: Nav.states.main
+		        action: function() { App.state.transitionTo(App.state.SENDER_CLASSIFICATION); } //TODO get rid of inline function
 		      }),
 
 		    cancel: SC.ButtonView.design({
 		        controlSize: SC.AUTO_CONTROL_SIZE,
 		        layout: { height: 44, width: 100, centerY: 0 },
 		        title: 'cancel',
-		        location: 'main',
-		        action: 'go',
-		        target: Nav.states.main
+		        action: function() { App.state.transitionTo(App.state.START); }
 		      })
 		  })
 		})
@@ -66,17 +55,14 @@ Nav.senderClassificationPage = SC.Page.design({
 		homeButton: SC.ButtonView.extend({
 			layout: { height: 44, left: 12, top: 10, width: 120 },
 			title: 'Flows',
-	        location: 'flows',
-	        action: 'go',
-	        target: Nav.states.main
+	        action: function() { App.state.transitionTo(App.state.START); }
 		}),
 		nextButton: SC.ButtonView.extend({
 			layout: { centerY: 0, right: 12, width: 120, height: 44 },
             controlSize: SC.HUGE_CONTROL_SIZE,
             theme: 'point-right',
 			title: 'Next Sender',
-			action: 'nextSender',
-			target: Nav.states.senderClassification
+			action: 'nextSender'
 		}),		
 		currentContactView:  SC.PanelPane.design({
 			layout: { width: 600, height: 500, centerX: 0, centerY: 0 },

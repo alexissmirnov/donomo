@@ -88,8 +88,7 @@ LawnchairSC.DataSource = SC.DataSource.extend({
 				table : tableName,
 				adaptor : 'webkit',
 				onError : function(tx, e, msg) {
-					SC.Logger.error("Lawnchair error: " + msg);
-					SC.Logger.error(e);
+					SC.Logger.error("Lawnchair error: %@ (%@)".fmt(msg, e.message));
 				}
 			});
 			this._tables[tableName] = table;

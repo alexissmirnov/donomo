@@ -15,3 +15,7 @@ Signup.User = SC.Record.extend( {
 	username : SC.Record.attr(String)
 });
 
+Signup.Message = SC.Record.extend( {
+	body : SC.Record.attr(String)
+});
+

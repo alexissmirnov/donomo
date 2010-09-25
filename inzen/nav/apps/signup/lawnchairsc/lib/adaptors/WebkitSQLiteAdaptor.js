@@ -41,12 +41,23 @@ WebkitSQLiteAdaptor.prototype = {
 
 		// instantiate the store
 		this.db = openDatabase(this.name, this.version, this.display, this.max);
+		console.log( 'Opened database %@ database name=%@ version=%@ display=%@ max=%@'.fmt(this.db, this.name, this.version, this.display, this.max));
+		
+//		this.db.transaction(function(tx) {
+//			tx.executeSql("SELECT COUNT(*) FROM " + that.table, [], function(){}, function(tx, error) {
+//				tx.executeSql("CREATE TABLE "+ that.table + " (id NVARCHAR(32) UNIQUE PRIMARY KEY, value TEXT, timestamp REAL)", [], function(){
+//					console.log('created table %@'.fmt(that.table))
+//				}, that.onError);
+//			});
+//		});
 
 		// create a default database and table if one does not exist
 		this.db.transaction(function(tx) {
 			tx.executeSql("SELECT COUNT(*) FROM " + that.table, [], function(){}, function(tx, error) {
 				that.db.transaction(function(tx) {
-					tx.executeSql("CREATE TABLE "+ that.table + " (id NVARCHAR(32) UNIQUE PRIMARY KEY, value TEXT, timestamp REAL)", [], function(){}, that.onError);
+					tx.executeSql("CREATE TABLE "+ that.table + " (id NVARCHAR(32) UNIQUE PRIMARY KEY, value TEXT, timestamp REAL)", [], function(){
+						console.log('created table %@'.fmt(that.table))
+					}, that.onError);
 				});
 			});
 		});
@@ -180,6 +191,7 @@ WebkitSQLiteAdaptor.prototype = {
 	},
 	nuke:function(callback) {
 		var that = this;
+		console.log('Nuking ' + that.table);
         if (callback)
             callback = that.terseToVerboseCallback(callback);
 		this.db.transaction(function(tx) {

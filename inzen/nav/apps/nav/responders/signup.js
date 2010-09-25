@@ -4,7 +4,7 @@
 // ==========================================================================
 /*globals Nav */
 
-require('responders/main');
+require('responders/state');
 require('views/profile_view');
 /** @namespace
 
@@ -12,20 +12,20 @@ require('views/profile_view');
   
   @extends SC.Responder
 */
-Nav.states.signup = SC.Responder.create({
+App.state.SIGNUP = SC.Responder.create({
 	didBecomeFirstResponder: function () {
 		// Create a new user and set it as the root of the signup controller
 		// so that we can edit it.
 		var store, user, pane;
 		
-		this._store = Nav.store.chain(); // buffer changes
+		this._store = App.store.chain(); // buffer changes
 		store = this._store;
-		user = store.createRecord(Nav.model.User, {}); // create a new user record
-		Nav.signupController.set('content', user); // for editing
+		user = store.createRecord(App.model.User, {}); // create a new user record
+		App.signupController.set('content', user); // for editing
 
 		// show signup page
-		//Nav.getPath('signupPage.mainPane').append();
-		Nav.profileView.showView();
+		//App.getPath('signupPage.mainPane').append();
+		App.profileView.showView();
 	},
 	
 	willLoseFirstResponder: function () {
@@ -35,9 +35,9 @@ Nav.states.signup = SC.Responder.create({
 			this._store = null;
 		}
 	
-	    Nav.signupController.set('content', null); // cleanup controller	
+	    App.signupController.set('content', null); // cleanup controller	
 		// remove signup page
-		Nav.getPath('signupPage.mainPane').remove();
+		App.getPath('signupPage.mainPane').remove();
 	},
 
 	// called when the OK button is pressed.
@@ -45,7 +45,7 @@ Nav.states.signup = SC.Responder.create({
 		this._store.commitChanges();
 		this._store = null;
     
-		Nav.state.main.go('senderClassification');
+		App.state.transitionTo('SENDER_CLASSIFICATION');
 	},
   
 	// called when the Cancel button is pressed
@@ -54,6 +54,6 @@ Nav.states.signup = SC.Responder.create({
 		this._store = null;
 	
 		// go back to root state
-		Nav.state.main.go('main');
+		App.state.transitionTo('START');
 	}
 });

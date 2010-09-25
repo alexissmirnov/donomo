@@ -3,7 +3,7 @@
  *  @class
  * @extends View
 */
-Nav.ConversationItemView = SC.View.extend(SC.StaticLayout, {
+App.ConversationItemView = SC.View.extend(SC.StaticLayout, {
     classNames: 'conversation-item'.w(),
     useStaticLayout: YES,
 
@@ -34,9 +34,9 @@ Nav.ConversationItemView = SC.View.extend(SC.StaticLayout, {
 
   @extends SC.View
 */
-Nav.ConversationContentView = SC.StackedView.extend({
-	contentBinding: 'Nav.conversationController.messages', // content is one an array of messages
-	exampleView: Nav.ConversationItemView
+App.ConversationContentView = SC.StackedView.extend({
+	contentBinding: 'App.conversationController.messages', // content is one an array of messages
+	exampleView: App.ConversationItemView
 });
 
 /******************************************************************************
@@ -44,22 +44,22 @@ Nav.ConversationContentView = SC.StackedView.extend({
  *  Assumes content will be set to a conversation object
  *  @extends SC.ScrollView
 */
-Nav.ConversationScrollPanel = SC.ScrollView.extend({
+App.ConversationScrollPanel = SC.ScrollView.extend({
 	classNames: 'conversation-content'.w(),
 	// make sure the view doesn't react to side-ways swipes
 	alwaysBounceHorizontal: NO,
-	contentView: Nav.ConversationContentView.design({})
+	contentView: App.ConversationContentView.design({})
 });
 
-Nav.ConversationPanel = SC.View.extend({
+App.ConversationPanel = SC.View.extend({
 	childViews: 'scroll close'.w(),
 	close: SC.ButtonView.design({
         layout: {top:0,right:0,height:20,width:20},
         title: 'X',
         action: 'showFlowsFullScreen',
-        target: Nav.states.flows
+        target: App.state.FLOWS
       }),
-	scroll: Nav.ConversationScrollPanel.design({
+	scroll: App.ConversationScrollPanel.design({
 		layout: {top:10},
 		contentBinding: '.parentView.content'
 	})

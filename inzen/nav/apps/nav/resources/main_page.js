@@ -1,9 +1,3 @@
-// ==========================================================================
-// Project:   Nav - mainPage
-// Copyright: ©2010 My Company, Inc.
-// ==========================================================================
-/*globals Nav */
-require('responders/main');
 require('views/conversation_view');
 require('views/profile_view');
 
@@ -13,13 +7,12 @@ require('views/profile_view');
 // This page describes the main user interface for your application.  
 Nav.mainPage = SC.Page.design({
 
-  // The main pane is made visible on screen as soon as your app is loaded.
   // Add childViews to this pane for views to display immediately on page 
   // load.
 	mainPane: SC.MainPane.design({
 	        classNames: 'main-pane'.w(),
 			//defaultResponder: Nav.states.main,
-			childViews: 'welcomeLabel profileButton profileView'.w(),
+			childViews: 'welcomeLabel profileButton statusLabel'.w(),
     
 			welcomeLabel: SC.StaticContentView.design({
 				layout: { centerX: 0, centerY: 0, width: 200, height: 44 },
@@ -30,8 +23,14 @@ Nav.mainPage = SC.Page.design({
 				textAlign: SC.AUTO_CONTROL_SIZE,
 				title: 'Profile',
 				isDefault: YES,
-				action: 'Nav.mainPage.mainPane.profileView.showView'
+				action: 'onProfile'
 			}),
-			profileView: Nav.ProfileView.design({})
+			statusLabel: SC.StaticContentView.design({
+				layout: {bottom: 0, left: 0, width: 200, top: 400},
+				contentBinding: 'App.userController.username'
+//				contentBinding: 'App.statusMessageController.content'
+			})
+			
 		})
 });
+

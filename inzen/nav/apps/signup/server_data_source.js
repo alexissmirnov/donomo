@@ -1,9 +1,4 @@
 Signup.ServerDataSource = SC.DataSource.extend({
-	
-	user : function(store) {
-		return store.retrieveRecord(Signup.User, '1');
-	}.cacheable(),
-	
 	createRecord : function(store, storeKey, params) {
 		if (SC.kindOf(store.recordTypeFor(storeKey), Signup.Account)) {
 			// check to see if we already have a user object
@@ -31,12 +26,19 @@ Signup.ServerDataSource = SC.DataSource.extend({
 			//store.dataSourceDidComplete(storeKey, null, url); // update ID
 			
 			// create a User object if it doesn't yet exist
-			if( !store.find(Signup.User, '1') )
+			if( !Signup.store.dataHashes[Signup.store.storeKeyFor(Signup.User, '1')] )
 				store.createRecord(Signup.User, response.get('body'), '1');
+			
+			this.invokeLater('downloadMessages', 5000);
 		} else {
 			console.log(response.rawRequest.responseText);
 			store.dataSourceDidError(storeKey, response);
 		}
+	},
+	
+	downloadMessages: function() {
+		Signup.store.createRecord(Signup.Message, {body: 'body body %@'.fmt(this.toString())});
+		this.invokeLater('downloadMessages', 5000);
 	},
 	
 	retrieveRecord : function(store, storeKey, id, callback) {

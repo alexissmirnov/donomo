@@ -10,9 +10,15 @@ Signup.START = SC.Responder.create( {
 			}));
 		Signup.set('store', store);
 
-		Signup.accountsController.set('content', Signup.store
-				.find(Signup.Account));
-		Signup.userController.set('content', Signup.store.find(Signup.User));
+		this.invokeLater(function() {
+				Signup.accountsController.set('content', Signup.store.find(SC.Query.local(Signup.Account)));
+			}, 2000);
+		this.invokeLater(function() {
+				Signup.userController.set('content', Signup.store.find(SC.Query.local(Signup.User)));
+			}, 4000);
+		this.invokeLater(function() {
+				Signup.messagesController.set('content', Signup.store.find(SC.Query.local(Signup.Message)));
+			}, 6000);
 	}
 });
 /*---------------------------------------------------------------------------*/
@@ -49,7 +55,6 @@ Signup.READY = SC.Responder.create( {
 
 /*---------------------------------------------------------------------------*/
 /**
- * @namespace
  * 
  * The active state when the signup dialog is showing.
  * 

@@ -1,11 +1,4 @@
-// ==========================================================================
-// Project:   Nav
-// Copyright: ©2009 Apple Inc.
-// ==========================================================================
-/*globals Nav */
-
-// This page describes a part of the interface for your application.
-Nav.signupPage = SC.Page.design({
+App.signupPage = SC.Page.design({
 	// The main signup pane.  used to show info
 	mainPane: SC.MainPane.design({
 		childViews: 'form'.w(),
@@ -54,9 +47,7 @@ Nav.signupPage = SC.Page.design({
 		        layout: { height: 44, width: 100, centerY: 0 },
 		        title: 'submit',
 		        isDefault: YES,
-		        location: 'senderClassification',
-		        action: 'go',
-		        target: Nav.states.main
+		        action: function() { App.state.transitionTo('SENDER_CLASSIFICATION'); }
 		      }),
 
 		    cancel: SC.ButtonView.design({
@@ -64,8 +55,7 @@ Nav.signupPage = SC.Page.design({
 		        layout: { height: 44, width: 100, centerY: 0 },
 		        title: 'cancel',
 		        location: 'main',
-		        action: 'go',
-		        target: Nav.states.main
+		        action: function() { App.state.transitionTo('START'); }
 		      })
 		  })
 		})
@@ -89,7 +79,7 @@ Nav.signupPage = SC.Page.design({
 //email: SC.TextFieldView.design({
 //	layout: { top: 68, left: 100, height: 20, width: 270 },
 //	hint: '_email@example.com'.loc(),
-//	valueBinding: 'Nav.signupController.email'
+//	valueBinding: 'App.signupController.email'
 //	}),
 //
 //// PASSWORD
@@ -101,7 +91,7 @@ Nav.signupPage = SC.Page.design({
 //    
 //password: SC.TextFieldView.design({
 //	layout: { top: 98, left: 100, height: 20, width: 270 },
-//	valueBinding: 'Nav.signupController.password'
+//	valueBinding: 'App.signupController.password'
 //	}),
 //	
 //// BUTTONS
@@ -111,7 +101,7 @@ Nav.signupPage = SC.Page.design({
 //    isDefault: YES,
 //    location: 'senderClassification',
 //    action: 'go',
-//    target: Nav.states.main
+//    target: App.states.main
 //}),
 //
 //cancelButton: SC.ButtonView.design({
@@ -120,7 +110,7 @@ Nav.signupPage = SC.Page.design({
 //	isCancel: YES,
 //    location: 'main',
 //    action: 'go',
-//    target: Nav.states.main
+//    target: App.states.main
 //})
 
 

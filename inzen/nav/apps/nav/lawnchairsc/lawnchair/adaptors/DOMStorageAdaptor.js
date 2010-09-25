@@ -46,6 +46,12 @@ DOMStorageAdaptor.prototype = {
 		};
 	},
 
+	insert:function(obj, callback) {
+		return this.save(obj, callback);
+	},
+	update:function(obj, callback) {
+		return this.save(obj, callback);
+	},
 	save:function(obj, callback) {
 		var id = this.table + '::' + (obj.key || this.uuid());
 		delete obj.key;

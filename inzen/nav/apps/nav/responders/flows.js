@@ -2,9 +2,8 @@
 // Project:   Nav
 // ==========================================================================
 /*globals Nav */
-Nav = Nav; // reduce jslint warnings about unresolved variable
-require('responders/main');
-require('responders/flow');
+sc_require('responders/state');
+sc_require('responders/flow');
 
 /** @namespace
 
@@ -12,12 +11,14 @@ require('responders/flow');
   
   @extends SC.Responder
 */
-Nav.states.flows = SC.Responder.create({
+App.state.FLOWS = SC.Responder.create({
+	name: 'FLOWS',
+	
 	// when we become first responder, show classification panel
 	didBecomeFirstResponder: function () {
 		// set the controller to show all flows 
 		// TODO: only show the flows that have conversations in them 
-		Nav.contactsController.set('content', Nav.store.find(Nav.query.GET_CONTACTS));
+		App.contactsController.set('content', App.store.find(App.query.GET_CONTACTS));
 		
 		/*
 		 * The reason for invokeLast here is to make sure the flows and conversations
@@ -26,16 +27,18 @@ Nav.states.flows = SC.Responder.create({
 		 * when the conversation changes. When UI starts rendering the conversation,
 		 * we want the contacts to be available.
 		 */
-		Nav.flowsController.invokeLast(function(){
-				this.set('content', Nav.store.find(Nav.query.GET_FLOWS));});
-					
+		App.flowsController.invokeLast(function(){
+				this.set('content', App.store.find(App.query.GET_FLOWS));});
+		
+		App.store.dataSource.getNestedDataSource().startDownloadMessages();
+		
 		// show the page
-		Nav.getPath('flowsPage.mainPane').append();
+		App.getPath('flowsPage.mainPane').append();
 	},
 	
 	willLoseFirstResponder: function () {
 		// hide the page
-	    Nav.getPath('flowsPage.mainPane').remove();
+	    App.getPath('flowsPage.mainPane').remove();
 	},
 	
 	// advance selection to the next sender
@@ -44,38 +47,24 @@ Nav.states.flows = SC.Responder.create({
 	},
 	
 	toFlowState : function(flow) {
-		Nav.states.flow.set('content', flow);
-		var flowID = flow.get('guid');
-		Nav.states.main.go('flow/' + flowID); //TODO: need a better way to go from state to send state than by a URL fragment
+		App.state.FLOW.set('content', flow);
+		App.state.transitionTo(App.state.FLOW);
+	},
+	
+	showConversationView : function() {
+		var conversationView = App.getPath('flowsPage.mainPane.conversation');
+		conversationView.adjust('width', 724); // TODO: move this into the view to improve abstraction
 	},
 	
 	/**
 	 * Handles click/touch on the conversation summary.
 	 * The conversation view's content is set to the selected conversation
 	 * 
-	 * Nav.conversationController is already set to a conversation record
-	 * we want to show. However, it may be that the store doesn't
-	 * yet have all the messages cached. So we need to run a query to
-	 * load potentially missing Message records.
-	 * 
-	 * No need to modify the actual controller because it should already have all
-	 * IDs to Message objects. After the query runs, those IDs won't be dandling
-	 * anymore. 
+	 * Assumes that all messages that make-up the conversation are loaded and are available  
 	 */
-	showConversationView : function() {
-		var conversationGuid = Nav.conversationController.get('content').get('guid');
-		
-		Nav.store.find(
-				SC.Query.local(Nav.model.Conversation, {
-					conditions: 'guid={conversationGuid}',
-					conversationGuid: conversationGuid
-				})
-		);
-		
-		var conversationView = Nav.getPath('flowsPage.mainPane.conversation');
-		conversationView.adjust('width', 724);
-		
-		//Nav.getPath('flowsPage.mainPane.flows').adjust('width', 300);
+	selectConversation: function(conversation) {
+		App.conversationController.set('content', conversation);
+		this.showConversationView();
 	},
 	/**
 	 * Handles click/touch on the 'full screen' button.
@@ -83,7 +72,7 @@ Nav.states.flows = SC.Responder.create({
 	 * mode
 	 */
 	showFlowsFullScreen : function() {
-		Nav.getPath('flowsPage.mainPane.flows').adjust('width', 1024); // TODO remove 1024
-		Nav.getPath('flowsPage.mainPane.conversation').adjust('width', 0);
+		App.getPath('flowsPage.mainPane.flows').adjust('width', 1024); // TODO remove 1024
+		App.getPath('flowsPage.mainPane.conversation').adjust('width', 0);
 	}
 });

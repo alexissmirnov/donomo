@@ -1,6 +1,3 @@
-// ==========================================================================
-// Project:   Nav
-// ==========================================================================
 
 SC.Query.registerQueryExtension('AS_GUID_IN', {
 	reservedWord:     true,
@@ -35,6 +32,14 @@ SC.Query.registerQueryExtension('OF_LENGTH', {
   });
 
 
+
+/**
+ * App.model represents a syntaxic sugar to tell model objects apart from views
+ * etc. We still have only one namespace App
+ * TODO: http://markmail.org/message/sdyvzighmr47z355
+ */
+App.model = App;
+
 /** @class
 
   Represents a contact (email address and possibly a name). Contacts
@@ -45,21 +50,33 @@ SC.Query.registerQueryExtension('OF_LENGTH', {
 */
 
 
-Nav.model = {};
-
-Nav.model.Address = SC.Record.extend({
-	primaryKey:			'email',
-	email:				SC.Record.attr(String),
-	contact:			SC.Record.toOne('Nav.model.Contact', {inverse: 'addresses'})
+App.model.SyncTracker = SC.Record.extend({
+	date: SC.Record.attr(String)
 });
 
-Nav.model.Contact = SC.Record.extend({
-	addresses:			SC.Record.toMany('Nav.model.Address', {inverse: 'contact'}),
+App.model.Account = SC.Record.extend( {
+	accountClass : SC.Record.attr(String, {defaultValue: 'email/gmail'}),
+	password : SC.Record.attr(String),
+	name : SC.Record.attr(String)
+});
+
+App.model.User = SC.Record.extend( {
+	username : SC.Record.attr(String)
+});
+
+App.model.Address = SC.Record.extend({
+	primaryKey:			'email',
+	email:				SC.Record.attr(String),
+	contact:			SC.Record.toOne('App.model.Contact', {inverse: 'addresses'})
+});
+
+App.model.Contact = SC.Record.extend({
+	addresses:			SC.Record.toMany('App.model.Address', {inverse: 'contact'}),
 	name:				SC.Record.attr(String),
-	flows: 				SC.Record.toMany('Nav.model.Flow', {inverse: 'contacts', isMater: YES}),
-	sentMessages:		SC.Record.toMany('Nav.model.Message', {inverse: 'from'}),
-	receivedMessages:	SC.Record.toMany('Nav.model.Message', {inverse: 'to'}),
-	copiedMessages:		SC.Record.toMany('Nav.model.Message', {inverse: 'cc'}),
+	flows: 				SC.Record.toMany('App.model.Flow', {inverse: 'contacts', isMater: YES}),
+	sentMessages:		SC.Record.toMany('App.model.Message', {inverse: 'from'}),
+	receivedMessages:	SC.Record.toMany('App.model.Message', {inverse: 'to'}),
+	copiedMessages:		SC.Record.toMany('App.model.Message', {inverse: 'cc'}),
 	
 	// computed property
 	isClassified: function () { 
@@ -70,36 +87,20 @@ Nav.model.Contact = SC.Record.extend({
 
 /** @class
 
-Describes the user created during signup.
-For now the user owns the one email account.
-
-@extends SC.Record
-@version 0.1
-*/
-Nav.model.User = SC.Record.extend(
-/** @scope Nav.User.prototype */ {
-	name:	   SC.Record.attr(String),
-	email:     SC.Record.attr(String),
-	password:  SC.Record.attr(String),
-	description: SC.Record.attr(String)
-});
-
-/** @class
-
 Describes the flow - a high-level classification of the message stream
 and contacts
 
 @extends SC.Record
 @version 0.1
 */
-Nav.model.Flow = SC.Record.extend(
-/** @scope Nav.Flow.prototype */ {
+App.model.Flow = SC.Record.extend(
+/** @scope App.Flow.prototype */ {
 	date:			SC.Record.attr(String),
 	name:			SC.Record.attr(String),
 	tag_class:		SC.Record.attr(String),
-	contacts:		SC.Record.toMany('Nav.model.Contact', {inverse: 'flows'}),
-	conversations:	SC.Record.toMany('Nav.model.Conversation', {inverse: 'flows', isMaster: YES}),
-	documents:		SC.Record.toMany('Nav.model.Document', {inverse: 'flow'})
+	contacts:		SC.Record.toMany('App.model.Contact', {inverse: 'flows'}),
+	conversations:	SC.Record.toMany('App.model.Conversation', {inverse: 'flows', isMaster: YES}),
+	documents:		SC.Record.toMany('App.model.Document', {inverse: 'flow'})
 });
 
 /** @class
@@ -109,16 +110,16 @@ Defines an email message with its attributes. A message belongs to one conversat
 @extends SC.Record
 @version 0.1
 */
-Nav.model.Message = SC.Record.extend(
-/** @scope Nav.Flow.prototype */ {
-	conversation:	SC.Record.toOne('Nav.model.Conversation', {inverse: 'messages', isMaster: NO}),
+App.model.Message = SC.Record.extend(
+/** @scope App.Flow.prototype */ {
+	conversation:	SC.Record.toOne('App.model.Conversation', {inverse: 'messages', isMaster: NO}),
 	date:			SC.Record.attr(String), // sent or received
 	subject:		SC.Record.attr(String),
 	body:			SC.Record.attr(String),
-	sender_address:	SC.Record.toOne('Nav.model.Address', {inverse: 'sentMessages'}),
-	to:				SC.Record.toMany('Nav.model.Contact', {inverse: 'receivedMessages'}),
-	cc:				SC.Record.toMany('Nav.model.Contact', {inverse: 'copiedMessages'}),
-	attachments:	SC.Record.toMany('Nav.model.Document', {inverse: 'message'})
+	sender_address:	SC.Record.toOne('App.model.Address', {inverse: 'sentMessages'}),
+	to:				SC.Record.toMany('App.model.Contact', {inverse: 'receivedMessages'}),
+	cc:				SC.Record.toMany('App.model.Contact', {inverse: 'copiedMessages'}),
+	attachments:	SC.Record.toMany('App.model.Document', {inverse: 'message'})
 });
 
 /** @class
@@ -128,12 +129,12 @@ Defines a conversation. A named group of messages that may belong to one flow.
 @extends SC.Record
 @version 0.1
 */
-Nav.model.Conversation = SC.Record.extend(
-/** @scope Nav.Flow.prototype */ {
-	messages:			SC.Record.toMany('Nav.model.Message', {inverse: 'conversation', isMaster: YES}),
+App.model.Conversation = SC.Record.extend(
+/** @scope App.Flow.prototype */ {
+	messages:			SC.Record.toMany('App.model.Message', {inverse: 'conversation', isMaster: YES}),
 	subject:			SC.Record.attr(String),
-	flows:				SC.Record.toMany('Nav.model.Flow', {inverse: 'conversations', isMaster: NO}),
-	key_participant:	SC.Record.toOne('Nav.model.Address'),
+	flows:				SC.Record.toMany('App.model.Flow', {inverse: 'conversations', isMaster: NO}),
+	key_participant:	SC.Record.toOne('App.model.Address'),
 	summary:			SC.Record.attr(String),
 	date:				SC.Record.attr(String)
 });
@@ -147,14 +148,14 @@ Defines an attachment/document
 @extends SC.Record
 @version 0.1
 */
-Nav.model.Document = SC.Record.extend(
-/** @scope Nav.Flow.prototype */ {
-	message:		SC.Record.toOne('Nav.model.Message', {inverse: 'attachments'}),
-	flow:			SC.Record.toOne('Nav.model.Flow', {inverse: 'documents'}),
+App.model.Document = SC.Record.extend(
+/** @scope App.Flow.prototype */ {
+	message:		SC.Record.toOne('App.model.Message', {inverse: 'attachments'}),
+	flow:			SC.Record.toOne('App.model.Flow', {inverse: 'documents'}),
 	name:			SC.Record.attr(String)
 });
 
-Nav.model.Contact.FIXTURES = [
+App.model.Contact.FIXTURES = [
 	{
     'guid': 'contact-1',
     'name': 'Alexis',
@@ -211,7 +212,7 @@ Nav.model.Contact.FIXTURES = [
 	
 ];
 
-Nav.model.Message.FIXTURES = [
+App.model.Message.FIXTURES = [
 	{
     'guid': 'msgID-1', 
     'subject': 'Hello from Alexis',
@@ -320,7 +321,7 @@ Nav.model.Message.FIXTURES = [
 ];
 
 
-Nav.model.Flow.FIXTURES = [
+App.model.Flow.FIXTURES = [
 	{
     'guid': 'flowID-work',
     'name': 'Work',
@@ -344,7 +345,7 @@ Nav.model.Flow.FIXTURES = [
 	}
 ];
 
-Nav.model.Conversation.FIXTURES = [
+App.model.Conversation.FIXTURES = [
     {
     	'guid': 'conv-1',
     	'subject': 'Good Lunch',

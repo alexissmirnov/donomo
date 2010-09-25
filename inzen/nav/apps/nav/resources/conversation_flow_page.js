@@ -3,14 +3,14 @@
 // Copyright: ©2010 My Company, Inc.
 // ==========================================================================
 /*globals Nav */
-require('responders/main');
+require('responders/state');
 require('responders/flow');
 require('controllers/controllers');
 require('views/conversation_view');
 
 /*jslint undef: true */
 
-Nav.ConversationListItemView = SC.View.extend({
+App.ConversationListItemView = SC.View.extend({
 	classNames: 'conversation-list-view-item'.w(),
 
 	messages: function() {
@@ -70,7 +70,7 @@ Nav.ConversationListItemView = SC.View.extend({
 
 
 // This page describes the main user interface for your application.  
-Nav.conversationFlowPage = SC.Page.design({
+App.conversationFlowPage = SC.Page.design({
 
   // The main pane is made visible on screen as soon as your app is loaded.
   // Add childViews to this pane for views to display immediately on page 
@@ -78,7 +78,7 @@ Nav.conversationFlowPage = SC.Page.design({
 	mainPane: SC.MainPane.design({
 			// setting default responder to the app namespace causes general actions
 			// to fire on the current first responder for signup
-			defaultResponder: Nav.states.flow,    
+			defaultResponder: App.state.FLOW,
 
 			childViews: [
 				SC.MasterDetailView.design({
@@ -108,24 +108,22 @@ Nav.conversationFlowPage = SC.Page.design({
 						              useAbsoluteLayout: YES,
 						              layout: { left: 100, right: 0, centerY: 0, height: 20 },
 						              textAlign: SC.ALIGN_LEFT,
-						              valueBinding: 'Nav.conversationsBrowserController.flowName'
+						              valueBinding: 'App.conversationsBrowserController.flowName'
 					            }),
 					            SC.ButtonView.design({
 					                layout: { left: 10, top: 0, width: 80, height: 44 },
 					                controlSize: SC.REGULAR_CONTROL_SIZE,
 					                title: 'Flows',
-						            action: 'go',
-						            target: Nav.states.main,
-						            location: 'flows',
-					                theme: 'point-left'
+					                theme: 'point-left',
+						            action: function() { App.state.transitionTo('FLOWS'); }
 					            })
 				            ]
 				        }),
 						contentView: SC.ScrollView.design({
 							contentView: SC.SourceListView.design({
-								contentBinding: 'Nav.conversationsBrowserController.arrangedObjects',
-								selectionBinding: 'Nav.conversationsBrowserController.selection',
-								exampleView: Nav.ConversationListItemView,
+								contentBinding: 'App.conversationsBrowserController.arrangedObjects',
+								selectionBinding: 'App.conversationsBrowserController.selection',
+								exampleView: App.ConversationListItemView,
 								rowHeight: 100,
 								rowSpacing: 5
 							})
@@ -140,9 +138,9 @@ Nav.conversationFlowPage = SC.Page.design({
 				          this.topToolbar.set('masterIsHidden', this.get('masterIsHidden'));
 				        }.observes('masterIsHidden'),
 						
-				        contentView: Nav.ConversationPanel.design({
+				        contentView: App.ConversationPanel.design({
 				        	layout: { top: 44, right: 0, left: 0, bottom: 0 },
-				        	contentBinding: 'Nav.conversationsBrowserController.selectionMessages'
+				        	contentBinding: 'App.conversationsBrowserController.selectionMessages'
 				        }),
 				        
 				        topToolbar: SC.ToolbarView.design(SC.Animatable, {
@@ -167,14 +165,14 @@ Nav.conversationFlowPage = SC.Page.design({
 									useAbsoluteLayout: YES,
 									layout: { left: 0, right: 0, centerY: 0, height: 20 },
 									textAlign: SC.ALIGN_CENTER,
-									valueBinding: 'Nav.conversationController.subject'
+									valueBinding: 'App.conversationController.subject'
 						        }),
 						        SC.ButtonView.design({
 					                layout: { left: 10, top: 0, width: 44, height: 44 },
 					                theme: 'icon',
 					                icon: 'previous',
 					                isEnabled: NO,
-					                isEnabledBinding: 'Nav.conversationsBrowserController.hasPreviousConversation',
+					                isEnabledBinding: 'App.conversationsBrowserController.hasPreviousConversation',
 					                action: 'previousConversation'
 					            }),
 					            SC.ButtonView.design({
@@ -183,11 +181,11 @@ Nav.conversationFlowPage = SC.Page.design({
 					                icon: 'next',
 					                action: 'nextConversation',
 					                isEnabled: NO,
-					                isEnabledBinding: 'Nav.conversationsBrowserController.hasNextConversation'
+					                isEnabledBinding: 'App.conversationsBrowserController.hasNextConversation'
 					            }),
 					            SC.ButtonView.design({
 									layout: { left: 64, width: 100, height: 44 },
-									titleBinding: 'Nav.conversationsBrowserController.flowName',
+									titleBinding: 'App.conversationsBrowserController.flowName',
 									theme: 'chromeless',
 									isVisible: NO,
 									action: 'toggleMasterPicker',

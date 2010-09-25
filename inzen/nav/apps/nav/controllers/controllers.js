@@ -1,13 +1,20 @@
 /*globals Nav,console*/
-Nav.accountController = SC.ObjectController.create();
-Nav.signupController = SC.ObjectController.create();
-Nav.contactsController = SC.ArrayController.create();
-Nav.senderClassificationController = SC.ArrayController.create({
+App.accountController = SC.ObjectController.create();
+App.signupController = SC.ObjectController.create();
+
+App.contactsController = SC.ArrayController.create();
+App.conversationsController = SC.ArrayController.create();
+App.messagesController = SC.ArrayController.create();
+App.documentsController = SC.ArrayController.create();
+App.syncTrackerController = SC.ArrayController.create();
+App.addressesController = SC.ArrayController.create();
+
+App.senderClassificationController = SC.ArrayController.create({
 	senderSelectionIndex: null,
 	allowsMultipleSelection: NO
 });
 
-Nav.senderClassificationFlowsController = SC.ArrayController.create({
+App.senderClassificationFlowsController = SC.ArrayController.create({
 	allowsMultipleSelection: NO,
 	enumerableContentDidChange: function(start, len) {
 		sc_super();
@@ -19,9 +26,9 @@ Nav.senderClassificationFlowsController = SC.ArrayController.create({
 			this.set('senderSelectionIndex', 0);
 			
 			// set the flows. 
-			Nav.senderClassificationFlowsController.set(
+			App.senderClassificationFlowsController.set(
 					'content', 
-					Nav.states.senderClassification._createContactFlowArray(this.objectAt(0)));
+					App.states.senderClassification._createContactFlowArray(this.objectAt(0)));
 		}
 	}
 });
@@ -29,16 +36,26 @@ Nav.senderClassificationFlowsController = SC.ArrayController.create({
 
 /**
  * Updated by changing selection on any instance of
- * Nav.ConversationsController
+ * App.ConversationsController
  */
-Nav.conversationController = SC.ObjectController.create();
+App.conversationController = SC.ObjectController.create({
+	messagesDidChange: function() {
+		console.log('%@: messagesDidChange. content.messages.length=%@'.fmt(this.toString(), this.get('content').get('messages').length()));
+	}.observes('.content.messages'),
+	contentDidChange: function() {
+		console.log('%@: contentDidChange. content.messages.length=%@ content.subject=%@ '.fmt(this.toString(), this.get('content').get('messages').length(), this.get('content').get('subject')));
+	}.observes('.content')
+	
+});
+
+App.conversationMessagesController = SC.ArrayController.create();
 
 
 /******************************************************************************
  * The content of this controller is set by
- * Nav.states.flows.didBecomeFirstResponder
+ * App.states.flows.didBecomeFirstResponder
  */
-Nav.flowsController = SC.ArrayController.create({
+App.flowsController = SC.ArrayController.create({
 	allowsMultipleSelection: NO//,
 	
 //	enumerableContentDidChange: function(start, len) {
@@ -48,7 +65,7 @@ Nav.flowsController = SC.ArrayController.create({
 //		
 //		// create controllers for top conversations for each of the flow
 //		this.forEach( function(flow) {
-//			var topConversations = Nav.ConversationsController.create();
+//			var topConversations = App.ConversationsController.create();
 //			topConversations.set('content', flow.get('conversations'));
 //			
 //			flow.set('topConversationsController', topConversations);
@@ -59,9 +76,9 @@ Nav.flowsController = SC.ArrayController.create({
 /******************************************************************************
  * This controller is included into every flow provided by flowController.
  * The selection indicates currently shown conversation.
- * The setup is done in Nav.states.flows.didBecomeFirstResponder
+ * The setup is done in App.states.flows.didBecomeFirstResponder
  * */
-Nav.ConversationsController = SC.ArrayController.extend({
+App.ConversationsController = SC.ArrayController.extend({
 	flow: null,
 	allowsMultipleSelection: NO,
 	allowsEmptySelection: NO,
@@ -106,8 +123,8 @@ Nav.ConversationsController = SC.ArrayController.extend({
 		
 		if( flow ) {
 			// set flow's conversations as content
-			var q = SC.Query.local(Nav.model.Conversation, '{id} AS_GUID_IN flows', {id: flow.get('guid')});
-			conversations = Nav.store.find(q);
+			var q = SC.Query.local(App.model.Conversation, '{id} AS_GUID_IN flows', {id: flow.get('guid')});
+			conversations = App.store.find(q);
 			this.set('content', conversations);
 		}
 		this.set('content', conversations);	
@@ -121,7 +138,7 @@ Nav.ConversationsController = SC.ArrayController.extend({
 		if (!set) return null;
 		
 		var first = set.get('firstObject');
-		Nav.conversationController.set('content', ao.objectAt(first));
+		App.conversationController.set('content', ao.objectAt(first));
 	}.observes('selection'),
 	
 	flowName: function () {
@@ -159,4 +176,6 @@ Nav.ConversationsController = SC.ArrayController.extend({
  * Used by master/detail view to show all conversations in master view
  * and selected conversations in detail view
  */
-Nav.conversationsBrowserController = Nav.ConversationsController.create();
+App.conversationsBrowserController = App.ConversationsController.create();
+
+App.statusMessageController = SC.ObjectController.create();
