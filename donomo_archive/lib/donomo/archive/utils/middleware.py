@@ -15,6 +15,9 @@ import httplib
 import traceback
 import logging
 import sys
+import pprint
+import time
+
 
 #
 # pylint: disable-msg=C0103,W0142
@@ -27,9 +30,25 @@ logging = logging.getLogger('middleware')
 
 
 JSON_CONTENT_TYPE  = 'text/plain'
+SC_CONTENT_TYPE  = 'text/html'
+SC_POST_CONTENT_TYPE  = 'text/html; charset=utf-8'
 XML_CONTENT_TYPE   = 'application/xml'
-AJAX_CONTENT_TYPES = ( JSON_CONTENT_TYPE, XML_CONTENT_TYPE)
+AJAX_CONTENT_TYPES = ( JSON_CONTENT_TYPE, XML_CONTENT_TYPE, SC_CONTENT_TYPE, SC_POST_CONTENT_TYPE)
 
+
+def long_poll( view_func ):
+    """
+    Delays the execution of the response by a number of seconds provided in timeout paramater.
+    This is intended as a simplest implementation of the long polling feature for the API.
+    """
+    def wrapper( request, *args, **kwargs ):
+        timeout = request.REQUEST.get('timeout', 0)
+        time.sleep(float(timeout)/1000)
+        response = view_func(request, *args, **kwargs)
+        return response
+    
+    return wrapper
+    
 # ----------------------------------------------------------------------------
 
 def json_view( view_func ):

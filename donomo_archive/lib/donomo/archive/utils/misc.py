@@ -4,6 +4,7 @@ Miscellaneous stuff.
 """
 
 from django.core.urlresolvers import reverse
+import datetime
 import re
 import mimetypes
 import BeautifulSoup
@@ -220,4 +221,25 @@ def days_since(d, now=None):
     delta = now - (d - datetime.timedelta(0, 0, d.microsecond))
     if delta.days <= 0:
         return 0
-    
+
+def humanize_date(date):
+    """
+    Takes a date object and returns a human-readable representation how
+    long ago was it
+    """
+    days = days_since(datetime.datetime.strptime(str(date), '%Y-%m-%d %H:%M:%S'))
+    if days == 0:
+        name = 'Today'
+    elif days == 1:
+        name = 'Yesterday'
+    elif days < 8:
+        name = 'This week'
+    elif days < 14:
+        name = 'Last Week'
+    elif days < 31:
+        name = 'This month'
+    elif days < 62:
+        name = 'Last Month'
+    else:
+        name = 'Over two months ago'
+    return name
