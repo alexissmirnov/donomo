@@ -180,7 +180,7 @@ logging.getLogger('boto').setLevel(logging.INFO)
 DATABASE_ENGINE    = (DEPLOYMENT_MODE != 'unittest') and 'mysql' or 'sqlite3'
 DATABASE_NAME      = 'donomo_%s' % DEPLOYMENT_MODE
 DATABASE_USER      = 'donomo'
-DATABASE_PASSWORD  = query_env('DATABASE_PASSWORD')
+DATABASE_PASSWORD  = query_env('DATABASE_PASSWORD', '')
 DATABASE_HOST      = query_env('DATABASE_HOST', '')
 DATABASE_PORT      = query_env('DATABASE_PORT', '')
 
@@ -284,7 +284,6 @@ INSTALLED_APPS = (
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
-    'donomo.archive.account.auth_backend.OpenIDAuthBackend',
     )
 
 AUTH_PROFILE_MODULE = 'billing.Account'
@@ -337,3 +336,5 @@ else:
     PAYPAL_CERT = '/etc/paypal/paypal_public_cert.pem'
     PAYPAL_RECEIVER_EMAIL = 'paypal@donomo.com'
 
+OFFLINEIMAP_CONFIG_FILE = '/etc/offlineimap.conf' #/Users/alexis/.offlineimaprc'
+OFFLINEIMAP_DATA_DIR = '/data/offlineimap' #/Users/alexis/offlineimap.data'
