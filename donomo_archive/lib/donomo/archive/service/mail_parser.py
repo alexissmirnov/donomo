@@ -260,7 +260,8 @@ def handle_work_item( processor, work_item ):
                       reply_to = in_reply_to_message,
                       conversation = conversation,
                       sender_address = sender_address)
-
+    message.save()
+    
     if raw_message.get_all('to'):              
         for a in email.utils.getaddresses(raw_message.get_all('to')):
             address, contact = get_or_create_adddress_and_contact(
