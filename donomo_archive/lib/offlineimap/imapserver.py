@@ -183,11 +183,8 @@ class IMAPServer:
 
     def plainauth(self, imapobj):
         UIBase.getglobalui().debug('imap',
-                                   'Attempting plain authentication')
-        print self.username
-        print self.password
+                                   'Attempting plain authentication for %s' % self.username)
         imapobj.login(self.username, self.repos.getpassword())
-        print 'after login'
 
     def gssauth(self, response):
         data = base64.b64encode(response)
@@ -269,8 +266,6 @@ class IMAPServer:
                     imapobj = UsefulIMAP4(self.hostname, self.port)
 
                 imapobj.mustquote = imaplibutil.mustquote
-                print 'AS: WILL DO AUTH'
-
                 if not self.tunnel:
                     try:
                         # Try GSSAPI and continue if it fails
@@ -300,7 +295,6 @@ class IMAPServer:
                                 self.plainauth(imapobj)
                         # Would bail by here if there was a failure.
                         success = 1
-                        print 'AS: AUTH DONE'
                         self.goodpassword = self.password
                     except imapobj.error, val:
                         self.passworderror = str(val)
