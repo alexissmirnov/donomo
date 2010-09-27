@@ -26,7 +26,7 @@ from donomo.archive.utils.sync       import update_sync_config
 from donomo.billing.models           import get_remaining_credit
 import email.utils
 import datetime
-import json
+import simplejson as json
 import logging
 import os
 import shutil
@@ -184,8 +184,8 @@ def tag_as_json_dict(
     else:
         name = tag.label
 
-    out_dict  = {'name' : name, 
-                 'label' : tag.label, 
+    out_dict  = {'name' : name,
+                 'label' : tag.label,
                  'date' : str(date),
                  'tag_class' : tag.tag_class }
 
@@ -198,7 +198,7 @@ def tag_as_json_dict(
                 conversations = [
                     conversation_as_json_dict(conversation, show_message_bodies)
                     for conversation in conversations ] )
-        
+
     if show_doc_count or show_documents:
         documents = tag.documents.all()
 
@@ -213,7 +213,7 @@ def tag_as_json_dict(
 
     if show_id:
         out_dict.update(guid = '%s.tag' % tag.pk)
-        
+
     return out_dict
 
 ##############################################################################
@@ -627,19 +627,19 @@ def get_tag_list(request):
         tag_set = request.user.tags.filter(label__istartswith=prefix.lower())
     else:
         tag_set = request.user.tags.all()
-        
+
     if exclude_prefix:
         tag_set = set(tag_set)
         exclude_tag_set = set(request.user.tags.filter(label__istartswith=exclude_prefix.lower()))
         tag_set = tag_set.difference(exclude_tag_set)
 
     tag_list = list()
-    
+
     for t in tag_set:
         if t.conversations.count() > 0:
             tag_list.append({'date': t.conversations.order_by('messages__date')[0].date, 'tag': t})
     tag_list.sort(reverse=True)
-    
+
     return {
         'content' : [
             tag_as_json_dict(
@@ -653,8 +653,8 @@ def get_tag_list(request):
                 relative_time  = relative_time )
             for list_entry in tag_list ],
         }
-    
-        
+
+
 ##############################################################################
 
 @json_view
@@ -673,15 +673,15 @@ def tag_documents(request, label):
         logging.debug("raise KeyError('at least one document is requried')")
     else:
         doc_pk_list = request.POST.getlist('doc')
-    
+
         documents = request.user.documents.filter(
             pk__in = [ int(pk) for pk in doc_pk_list ] )
-    
+
         if len(documents) != len(doc_pk_list):
             raise ObjectDoesNotExist(
                 'One or more of the document pks given is invalid')
-    
-    
+
+
         tag.documents.add(documents)
 
     return tag_as_json_dict(tag)
@@ -758,15 +758,15 @@ def get_message_list(request):
     """
     Get a list of the user's messages
     """
-    message_set = [{'body': 'this is message body'}, 
+    message_set = [{'body': 'this is message body'},
                    {'body': 'this is another message body'}]
 
     return {
-        'content' : [ message_as_json_dict( message ) 
+        'content' : [ message_as_json_dict( message )
                      for message in message_set ],
         }
 
-def conversation_as_json_dict(conversation, 
+def conversation_as_json_dict(conversation,
                               message_body = True):
     messages = conversation.messages.all().order_by('-date')
     json = {
@@ -774,7 +774,7 @@ def conversation_as_json_dict(conversation,
         'subject'   : conversation.subject,
         'summary'   : conversation.summary,
         'date'      : humanize_date(messages[0].date),
-        'tags'     : [ '%s.tag' % tag.pk 
+        'tags'     : [ '%s.tag' % tag.pk
                        for tag in conversation.tags.all() ],
         'key_participant' : {
             'email' : conversation.key_participant.email,
@@ -786,7 +786,7 @@ def conversation_as_json_dict(conversation,
     else:
         json.update(messages = [ '%s' % message.pk
                        for message in messages])
-        
+
     return json
 
 
@@ -812,18 +812,18 @@ def get_conversation_info(request, id):
     id = id.split('.')[0] # strip the '.conversation' at the end of the id
     conversation = request.user.conversations.get(pk = id)
     return conversation_as_json_dict(conversation)
-    
+
 def contact_as_json_dict(contact):
     json = {
         'guid'      : '%s.contact' % contact.pk,
         'name'      : contact.name,
         'addresses' : [ { 'email' : address.email }
                        for address in contact.addresses.all() ],
-        'tags'     : [ '%s.tag' % tag.pk 
+        'tags'     : [ '%s.tag' % tag.pk
                        for tag in contact.tags.all() ],
         }
-    
-    
+
+
     return json
 
 @json_view
@@ -836,7 +836,7 @@ def get_contact_list(request):
             'content' : [ contact_as_json_dict(contact)
                     for contact in contact_set ],
     }
-    
+
 def message_as_json_dict(message, include_body = True):
     """
     Serializes message metadata and (optionnaly) message body into JSON
@@ -850,30 +850,30 @@ def message_as_json_dict(message, include_body = True):
 
     if include_body:
         body_type = models.MimeType.HTML
-        message_asset = message.get_asset(models.AssetClass.MESSAGE_PART, 
+        message_asset = message.get_asset(models.AssetClass.MESSAGE_PART,
                                           body_type)
         if not message_asset:
             body_type = models.MimeType.TEXT
-            message_asset = message.get_asset(models.AssetClass.MESSAGE_PART, 
+            message_asset = message.get_asset(models.AssetClass.MESSAGE_PART,
                                               body_type)
         if message_asset:
             message_file = instantiate_asset(message_asset)['Local-Path']
             message_text = open(message_file,'r').read()
-        
+
             #TODO: figure out why a message has some non-ascii chars
             # i need to call decode here
             message_text = message_text.decode('utf8','ignore')
 
-            #TODO: extract the message from conversation. 
+            #TODO: extract the message from conversation.
             # This will be much more complex than looking for -----Original Message-----
             if body_type == models.MimeType.TEXT:
                 json.update(body = message_text.split('-----Original Message-----')[0])
             else:
                 json.update(body = message_text)
             json.update(body_type = body_type)
-            
+
     return json
-    
+
 @json_view
 def get_message_info(request, id):
     """
@@ -895,19 +895,19 @@ def get_message_list(request):
     include_conversations = bool(request.REQUEST.get('conversations', True))
     include_contacts = bool(request.REQUEST.get('contacts', True))
     include_tags = bool(request.REQUEST.get('tags', True))
-    
+
     limit = int(request.REQUEST.get('limit', 10))
-    
-    modified_since = request.REQUEST.get('modified_since', 
-                                         None) or request.META.get('If-Modified-Since', 
+
+    modified_since = request.REQUEST.get('modified_since',
+                                         None) or request.META.get('If-Modified-Since',
                                                                    None)
-    if modified_since: 
+    if modified_since:
         modified_since = datetime.datetime(*email.utils.parsedate(modified_since)[:6])
-        
+
     modified_before = request.REQUEST.get('modified_before', None)
-    if modified_before: 
+    if modified_before:
         modified_before = datetime.datetime(*email.utils.parsedate(modified_before)[:6])
-    
+
     if modified_since and modified_before:
         messages = request.user.messages.filter(date__gte = modified_since, date__lt = modified_before)
     elif modified_since:
@@ -916,64 +916,64 @@ def get_message_list(request):
         messages = request.user.messages.filter(date__lt = modified_before)
     else:
         messages = request.user.messages.all()
-        
+
     message_count = messages.count()
     messages = messages.order_by('-date')[:limit]
-    
+
     conversation_set = set()
     tag_set = set()
     contact_set = set()
     address_set = set()
-    
+
     for message in messages:
         conversation_set.add(message.conversation)
         tag_set.update(set(message.conversation.tags.all()))
         address_set.update(set(message.to_addresses.all()))
         address_set.update(set(message.cc_addresses.all()))
         address_set.add(message.sender_address)
-    
+
     for address in address_set:
         contact_set.add(address.contact)
-        
+
     return {
             'message_count' : message_count,
             'message_limit' : limit,
             'messages' : [ message_as_json_dict(message)
                     for message in messages ],
-                    
+
             'conversations' : [ conversation_as_json_dict(conversation, False)
                     for conversation in conversation_set ],
             'tags' : [ tag_as_json_dict(tag)
                     for tag in tag_set ],
             'contacts' : [ contact_as_json_dict(contact)
                     for contact in contact_set ],
-    }    
+    }
 
-        
+
 def update_or_create_account(request, id):
     """
     Handles PUT /accounts/<id>/
-    
+
     May create new or update an existing account identified by ID.
-    
+
     This method also does lazy-creation of user objects.
-    
+
     Each account must be associated to a user object. If a user object
     isn't supplied this means we're dealing with the first-time signup.
-    
+
     """
     username = request.REQUEST.get('username', None)
     if not username:
         # No username? Let's create one and log it in.
         # username is in reality a unique secret key shared with the client
-        username = str(uuid.uuid4())
+        username = str(uuid.uuid4())[:16]
         user = User.objects.create_user(username, username, username)
         user = authenticate(username=user.username, password=user.username)
         user.save()
     else:
         # Username provided? Then it must be found in the db
         user = User.objects.get(username=username)
-        
+
     user = authenticate(username=user.username, password=user.username)
     if user is not None:
         if user.is_active:
@@ -984,19 +984,19 @@ def update_or_create_account(request, id):
     else:
         #TODO Return an 'invalid login' error message
         pass
-        
+
     #load json from the request body
     body = json.loads(request.raw_post_data)
-    
+
     #TODO: validate the account credentials with the external service
-    
+
     account_class, created = models.AccountClass.objects.get_or_create(name = body['accountClass'])
-    account, created = models.Account.objects.get_or_create(id = id, 
+    account, created = models.Account.objects.get_or_create(id = id,
                                   defaults={'owner': user,
                                             'account_class': account_class,
                                             'name': body['name'],
                                             'password': body['password']})
-    
+
     if created:
         response = HttpResponseCreated(request.get_host() + request.path)
         response.content = json.dumps( {'username' : username} )
@@ -1006,7 +1006,7 @@ def update_or_create_account(request, id):
         account.password = body['password']
         account.save()
         response = HttpResponse()
-    
+
     if not update_sync_config(account):
         raise HttpRequestValidationError('Invalid account (only Gmail is supported at the moment)')
 
