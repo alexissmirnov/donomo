@@ -773,7 +773,8 @@ def conversation_as_json_dict(conversation,
         'guid'      : '%s.conversation' % conversation.pk,
         'subject'   : conversation.subject,
         'summary'   : conversation.summary,
-        'date'      : humanize_date(messages[0].date),
+        'date'      : str(messages[len(messages)-1].date.ctime()),
+        'humanized_age' : humanize_date(messages[len(messages)-1].date),
         'tags'     : [ '%s.tag' % tag.pk
                        for tag in conversation.tags.all() ],
         'key_participant' : {
@@ -817,7 +818,7 @@ def contact_as_json_dict(contact):
     json = {
         'guid'      : '%s.contact' % contact.pk,
         'name'      : contact.name,
-        'addresses' : [ { 'email' : address.email }
+        'addresses' : [ { 'email' : address.email, 'guid' : address.email }
                        for address in contact.addresses.all() ],
         'tags'     : [ '%s.tag' % tag.pk
                        for tag in contact.tags.all() ],
@@ -908,17 +909,26 @@ def get_message_list(request):
     if modified_before:
         modified_before = datetime.datetime(*email.utils.parsedate(modified_before)[:6])
 
+    # messages modified since date X will be ordered by date.
+    # this is to make sure that when we apply the 'limit' on the resultset the client
+    # is able to use the date of the most recent messages as the next value of modified_since
+    #
+    # inversely, when asking for messages modified before a given date, the messages are ordered 
+    # in reverse chronological order to allow using the date of the last message as the next
+    # value of modified_before
+    #
+    # TODO figure out the case when all three values are provided - modified_before, modified_since and limit
     if modified_since and modified_before:
-        messages = request.user.messages.filter(date__gte = modified_since, date__lt = modified_before)
+        messages = request.user.messages.filter(date__gt = modified_since, date__lt = modified_before).order_by('date')
     elif modified_since:
-        messages = request.user.messages.filter(date__gte = modified_since)
+        messages = request.user.messages.filter(date__gt = modified_since).order_by('date')
     elif modified_before:
-        messages = request.user.messages.filter(date__lt = modified_before)
+        messages = request.user.messages.filter(date__lt = modified_before).order_by('-date')
     else:
-        messages = request.user.messages.all()
+        messages = request.user.messages.all().order_by('-date')
 
     message_count = messages.count()
-    messages = messages.order_by('-date')[:limit]
+    messages = messages[:limit]
 
     conversation_set = set()
     tag_set = set()
