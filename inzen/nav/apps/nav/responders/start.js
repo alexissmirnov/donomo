@@ -3,7 +3,8 @@
  * 
  * 
  */
-require('responders/state');
+sc_require('responders/state');
+sc_require('models');
 
 App.state.CLEAR = SC.Responder.create({
 	name: 'CLEAR',
@@ -11,10 +12,22 @@ App.state.CLEAR = SC.Responder.create({
 		console.log('deleting all local data');
 		App.store.dataSource._dropAllTables();
 		window.localStorage.clear();
+		document.cookie = "sessionid=;expires=%@;;".fmt((new Date()).toGMTString());
+
 		App.state.transitionTo('START');
 	}
 });
-	
+
+App.state.REDOWNLOAD = SC.Responder.create({
+	name: 'REDOWNLOAD',
+	didBecomeFirstResponder : function() {
+		
+		App.store.destroyRecord(App.model.SyncTracker, '1');
+		this.invokeLater(function() { App.state.transitionTo('START');}, 200);
+	}
+});
+
+
 App.state.START = SC.Responder.create({
 	name: 'START',
 	
