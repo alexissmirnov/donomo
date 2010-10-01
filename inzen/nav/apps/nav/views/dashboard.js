@@ -108,7 +108,15 @@ App.FlowContentView = SC.View.extend({
 			return;
 		this._contentRendered = true;
 
-	    var conversations = this.get('content').get('conversations');//topConversationsController');
+		/*
+		 * Here I'm using a query instead of tag.conversations in order to 
+		 * sort the resulting conversations by date.
+		 */
+	    var conversations = App.store.find(
+	    		SC.Query.local(App.model.Conversation, {
+	    			conditions: "{tg} AS_GUID_IN tags", 
+	    			parameters: { tg: this.get('content').get('guid')}, 
+	    			orderBy: 'date DESC'}));
 	    var height = this.get('rowHeight');
 	    var width = this.get('columnWidth');
 	 	var itemPadding = this.get('itemPadding');
@@ -118,12 +126,10 @@ App.FlowContentView = SC.View.extend({
 		 * cap the number of conversations we're showing
 		 * for performance
 		 */
-		if( len > 5 ) {
-			len = 5;
+		if( len > 20 ) {
+			len = 20;
 			//TODO: invoke the rest later
 		}
-		
-		console.log('FlowContentView: conversations='+conversations+' len='+len);
 	
 		var runningWidth = 0;
 	    for (var i=0; i < len+1; i++) {
