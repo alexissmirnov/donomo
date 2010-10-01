@@ -25,10 +25,49 @@ App.ServerDataSource = SC.DataSource.extend({
 		//App.store.createRecord(App.model.SyncTracker, {date: String(new Date())}, '1');
 		
 		// Give it 2 seconds to pull it from DB
-		this.invokeLater('downloadMessages', 2);
+		this.invokeLater('downloadEarlyMessages', 10);
+		
+		// start in 10 sec
+		this.invokeLater('downloadNewMessages', 10000);
 	},
 	
-	downloadMessages: function() {
+	downloadNewMessages: function() {
+		// find the most recent message in the db
+		var messages = App.store.find(App.model.Message);
+		
+		if( messages.length() === 0 ) {
+			this.invokeLater('downloadNewMessages', 10000);
+		}
+		
+		// minimal date Dec 31 1969 - i wasn't born yet, so there surely cannot be any email earlier that this
+		var latestMessageDate = new Date(0); 
+		messages.forEach(function(message) {
+			var currentMessageDate = new Date(message.get('date'));
+			if(  currentMessageDate > latestMessageDate )
+				latestMessageDate = currentMessageDate;
+		});
+		
+		// get all messages since that date
+		var r = SC.Request.getUrl('/api/1.0/messages/?modified_since=%@'.fmt(latestMessageDate))
+			.header({'Accept': 'application/json'})
+			.json()
+			.notify(this, '_didGetNewMessages', App.store, App.store.dataSource )
+			.send();
+	},
+	
+	_didGetNewMessages: function(response, store, db) {
+		// state got cleared while we were getting messages? stop it.
+		if( !App.store.dataHashes[App.store.storeKeyFor(App.model.User, '1')] )
+			return;
+			
+		if( SC.ok(response) ) {
+			var messageDate = this._processGetMessagesResponse(response, store, db);
+		
+			this.invokeLater('downloadNewMessages', 10000);
+		}
+	},
+	
+	downloadEarlyMessages: function() {
 		// pull the date cursor from in-memory store -- if we have it in DB it should
 		// now be in memory because of the find() call in startDownloadMessages has pulled it in
 		var earliestMessageDate = App.store.dataHashes[App.store.storeKeyFor(App.model.SyncTracker, '1')];
@@ -41,7 +80,7 @@ App.ServerDataSource = SC.DataSource.extend({
 			// and call this function again in 2s
 
 			App.store.createRecord(App.model.SyncTracker, {date: String(new Date())}, '1');
-			App.store.dataSource.getNestedDataSource().invokeLater('downloadMessages', 2000);
+			App.store.dataSource.getNestedDataSource().invokeLater('downloadEarlyMessages', 2000);
 			return;
 		}
 		
@@ -50,80 +89,96 @@ App.ServerDataSource = SC.DataSource.extend({
 		var r = SC.Request.getUrl('/api/1.0/messages/?limit=%@&modified_before=%@'.fmt(10, earliestMessageDate.date))
 			.header({'Accept': 'application/json'})
 			.json()
-			.notify(this, '_didGetMessages', App.store, App.store.dataSource )
+			.notify(this, '_didGetEarlyMessages', App.store, App.store.dataSource )
 			.send();
 	},
 	
-	_didGetMessages: function(response, store, db) {
+	_processGetMessagesResponse: function(response, store, db) {
+		var messageDate = null;
+		var tags = [];
+		response.get('body').tags.forEach(function(tagHash){
+			var tag = App.store.dataHashes[App.model.Flow.storeKeyFor(tagHash.guid)];
+			if( !tag ) {
+				tag = tagHash;
+			}
+				
+			tags.set(tag.guid, tag);
+			tags.pushObject(tag);
+		});
+		
+		response.get('body').conversations.forEach(function(conversation){
+			conversation.tags.forEach(function(tagGuid){
+				if( tags[tagGuid] ) {
+					if (!tags[tagGuid].conversations)
+						tags[tagGuid].conversations = [];
+					
+					if( !tags[tagGuid].conversations.contains(conversation.guid) )
+						tags[tagGuid].conversations.pushObject(conversation.guid);
+				}
+				else {
+					console.log( 'Malformed /messages/ response? got %@ tags, but no tag %@ in the list'.fmt(tags.length(), tagGuid));
+				}
+			});
+			var storeKey = store.loadRecord(App.model.Conversation, conversation);
+			db.didRetrieveRecordFromNestedStore(store, storeKey);
+		});
+		
+		tags.forEach(function(tag){
+			var storeKey = store.loadRecord(App.model.Flow, tag);
+			db.didRetrieveRecordFromNestedStore(store, storeKey);
+		});
+		
+		response.get('body').contacts.forEach(function(contact){
+			var addressGuids = [];
+			contact.addresses.forEach(function(address){
+				addressGuids.pushObject(address.email);
+				address.contact = contact.guid;
+				var storeKey = store.loadRecord(App.model.Address, address);
+				db.didRetrieveRecordFromNestedStore(store, storeKey);
+			});
+			
+			contact.addresses = addressGuids;
+			var storeKey = store.loadRecord(App.model.Contact, contact);
+			db.didRetrieveRecordFromNestedStore(store, storeKey);
+		});
+		
+		response.get('body').messages.forEach(function(message) {
+			// get HTML or, if not available,
+			// text message body
+			if( message.body_type === 'text/html' ) {
+				message.body = message.body;
+			}
+			else {
+				message.body = message.body.replace(/\r\n/g, '<br>');
+			}
+			
+			var storeKey = store.loadRecord(App.model.Message, message);
+			db.didRetrieveRecordFromNestedStore(store, storeKey);
+			
+			// the messages are in reverse chronological order.
+			// this means the last message we process will carry the timestamp
+			// we need to start the next request from
+			// remember it here and use it after the forEach loop
+			messageDate = message.date;
+		});
+		
+		return messageDate;
+	},
+	
+	_didGetEarlyMessages: function(response, store, db) {
 		
 		// state got cleared while we were getting messages? stop it.
 		if( !App.store.dataHashes[App.store.storeKeyFor(App.model.User, '1')] )
 			return;
 			
 		if( SC.ok(response) ) {
-			var messageDate = null;
+			var messageDate = this._processGetMessagesResponse(response, store, db);
 			
-			var tags = [];
-			response.get('body').tags.forEach(function(tagHash){
-				var tag = App.store.dataHashes[App.model.Flow.storeKeyFor(tagHash.guid)];
-				if( !tag ) {
-					tag = tagHash;
-				}
-					
-				tags.set(tag.guid, tag);
-				tags.pushObject(tag);
-			});
-			
-			response.get('body').conversations.forEach(function(conversation){
-				conversation.tags.forEach(function(tagGuid){
-					tag = tags.get(tagGuid);
-					
-					if (!tags[tagGuid].conversations)
-						tags[tagGuid].conversations = [];
-					
-					if( !tags[tagGuid].conversations.contains(conversation.guid) )
-						tags[tagGuid].conversations.pushObject(conversation.guid);
-				});
-				
-				var storeKey = store.loadRecord(App.model.Conversation, conversation);
-				db.didRetrieveRecordFromNestedStore(store, storeKey);
-			});
-			
-			tags.forEach(function(tag){
-				var storeKey = store.loadRecord(App.model.Flow, tag);
-				db.didRetrieveRecordFromNestedStore(store, storeKey);
-			});
-			
-			response.get('body').contacts.forEach(function(contact){
-				var addressGuids = [];
-				contact.addresses.forEach(function(address){
-					addressGuids.pushObject(address.email);
-					var storeKey = store.loadRecord(App.model.Address, address);
-					db.didRetrieveRecordFromNestedStore(store, storeKey);
-				});
-				
-				contact.addresses = addressGuids;
-				var storeKey = store.loadRecord(App.model.Contact, contact);
-				db.didRetrieveRecordFromNestedStore(store, storeKey);
-			});
-//			
-//			// this batch of messages may include a tag (flow) that
-//			// wasn't yet loaded. so load it
-//			this._loadTags(response.get('body').tags, store, db);
-//			this._loadConversations(response.get('body').conversations, store, db);
-//			this._loadContacts(response.get('body').conversations, store, db);
-//			earliestMessageDate = this._loadMessages(response.get('body').messages, store, db);
-			
-			response.get('body').messages.forEach(function(message) {
-				var storeKey = store.loadRecord(App.model.Message, message);
-				db.didRetrieveRecordFromNestedStore(store, storeKey);
-				
-				// the messages are in reverse chronological order.
-				// this means the last message we process will carry the timestamp
-				// we need to start the next request from
-				// remember it here and use it after the forEach loop
-				messageDate = message.date;
-			});
+			// stop trying to download early messages after we get 100 of them
+			// TODO: when using the DB, continue the download, but offload earlier
+			// messages from memory
+			if( App.store.find(App.model.Message) > 50 )
+				return;
 			
 			if( messageDate ) {
 				// non-empty messageDate means we got some messages i.e. we're
@@ -131,7 +186,7 @@ App.ServerDataSource = SC.DataSource.extend({
 				// let's continue loading then
 				var earliestMessageDate = App.store.find(App.model.SyncTracker, '1');
 				earliestMessageDate.set('date', messageDate);
-				this.invokeLater('downloadMessages', 1000); 
+				this.invokeLater('downloadEarlyMessages', 1000); 
 			} else if( App.store.find(App.model.Message).length() === 0) {
 				// We did not get any messages AND app's store is empty.
 				//
@@ -139,12 +194,12 @@ App.ServerDataSource = SC.DataSource.extend({
 				// before the server has the available data.
 				// Assume that if the app has 0 messages, this means we're in that state
 				// This means the app should continue trying to downloadMessages
-				this.invokeLater('downloadMessages', 1000*5); 
+				this.invokeLater('downloadEarlyMessages', 1000*5); 
 			} else {
 				// We did not get anything from the server, but we have something in the local store
 				//
 				// run a routine check for past messages then, every 1 min
-				this.invokeLater('downloadMessages', 1000*10); 
+				this.invokeLater('downloadEarlyMessages', 1000*10); 
 			} 
 		}
 	},
@@ -192,13 +247,15 @@ App.ServerDataSource = SC.DataSource.extend({
 	 * and map it to the API call
 	 */
 	fetch: function (store, query, params) {
-		if( query === App.query.GET_CONVERSATIONS ) {
-			SC.Request.getUrl('/api/1.0/conversations/')
-				.header({'Accept': 'application/json'})
-				.json()
-				.notify(this, '_didGetConversations', App.model.Conversation, store, query, params )
-				.send();
-			return YES;
+		return NO;
+	},	
+//		if( query === App.query.GET_CONVERSATIONS ) {
+//			SC.Request.getUrl('/api/1.0/conversations/')
+//				.header({'Accept': 'application/json'})
+//				.json()
+//				.notify(this, '_didGetConversations', App.model.Conversation, store, query, params )
+//				.send();
+//			return YES;
 //		} else if ( query === App.query.GET_FLOWS ) {
 //			// skip gmail's own folders
 //			SC.Request.getUrl('/api/1.0/tags/?notstartswith=[Gmail]&conversations=1')
@@ -209,39 +266,39 @@ App.ServerDataSource = SC.DataSource.extend({
 //			
 //			
 //			return YES;
-		} else if ( query === App.query.GET_CONTACTS ) {
-			SC.Request.getUrl('/api/1.0/contacts/')
-				.header({'Accept': 'application/json'})
-				.json()
-				.notify(this, '_didGetContacts', store, query, params )
-				.send();
-		} else if ( query.recordType === App.model.Conversation 
-					&& query.conditions 
-					&& query.conditions.search('{conversationGuid}') != -1) {
-			
-			SC.Request.getUrl('/api/1.0/conversations/' 
-											+ query.conversationGuid 
-											+ '/?message_body=1')
-				.header({'Accept': 'application/json'})
-				.json()
-				.notify(this, '_didGetConversationFromQuery', store, query, params )
-				.send();
-			return YES;			
-		}
-	},
+//		} else if ( query === App.query.GET_CONTACTS ) {
+//			SC.Request.getUrl('/api/1.0/contacts/')
+//				.header({'Accept': 'application/json'})
+//				.json()
+//				.notify(this, '_didGetContacts', store, query, params )
+//				.send();
+//		} else if ( query.recordType === App.model.Conversation 
+//					&& query.conditions 
+//					&& query.conditions.search('{conversationGuid}') != -1) {
+//			
+//			SC.Request.getUrl('/api/1.0/conversations/' 
+//											+ query.conversationGuid 
+//											+ '/?message_body=1')
+//				.header({'Accept': 'application/json'})
+//				.json()
+//				.notify(this, '_didGetConversationFromQuery', store, query, params )
+//				.send();
+//			return YES;			
+//		}
+//	},
 	
-	_didGetConversations: function (response, model, store, query, params) {
-		if (SC.ok(response)) {
-			store.loadRecords(model, response.get('body').content);
-			store.dataSourceDidFetchQuery(query);
-			if( params && params.outerDataSource ) 
-				params.outerDataSource.didRetrieveQueryFromNestedStore(store, query);
-		}
-		else {
-			store.dataSourceDidErrorQuery(query, response);
-		}
-	},
-	
+//	_didGetConversations: function (response, model, store, query, params) {
+//		if (SC.ok(response)) {
+//			store.loadRecords(model, response.get('body').content);
+//			store.dataSourceDidFetchQuery(query);
+//			if( params && params.outerDataSource ) 
+//				params.outerDataSource.didRetrieveQueryFromNestedStore(store, query);
+//		}
+//		else {
+//			store.dataSourceDidErrorQuery(query, response);
+//		}
+//	},
+//	
 	
 	/**
 	 * The conversation JSON includes the message body. We'll use it
@@ -250,47 +307,47 @@ App.ServerDataSource = SC.DataSource.extend({
 	 * For brevity, this handler is called by both fetch() and retrieveRecord(). In case of fetch()
 	 * the query is specified by a 'query' object. In case of retrieveRecord() it is a storeKey.
 	 */
-	_didGetConversationFromQuery: function (response, store, query, params) {
-		if (SC.ok(response)) {
-			// for some reason response.get('body') doesn't
-			// have KVO features, so wrapping it into SC.Object
-			var hashes = SC.Object.create(response.get('body'));
-		
-			var messageIDs = [];
-			hashes.messages.forEach(function(m) {
-				messageIDs.pushObject(m.guid);
-				
-				// get HTML or, if not available,
-				// text message body
-				if( m.body_type === 'text/html' ) {
-					m.body = m.body;
-				}
-				else {
-					m.body = m.body.replace(/\r\n/g, '<br>');
-				}
-			});
-			var storeKeys = store.loadRecords(App.model.Message, hashes.messages);
-			if( params && params.outerDataSource )
-				storeKeys.forEach(function(storeKey) {
-					params.outerDataSource.didRetrieveRecordFromNestedStore(store, storeKey);
-				});
-			
-			hashes.messages = messageIDs;
-
-			// now that the messages are loaded and 'messages'
-			// array is patched to include the IDs we can load
-			// the conversation into the store
-			store.loadRecord(App.model.Conversation, hashes);
-			
-			store.dataSourceDidFetchQuery(query);
-			
-			if( params && params.outerDataSource ) 
-				params.outerDataSource.didRetrieveQueryFromNestedStore(store, query);
-		}
-		else {
-			store.dataSourceDidErrorQuery(queryOrKey, response);
-		}
-	},
+//	_didGetConversationFromQuery: function (response, store, query, params) {
+//		if (SC.ok(response)) {
+//			// for some reason response.get('body') doesn't
+//			// have KVO features, so wrapping it into SC.Object
+//			var hashes = SC.Object.create(response.get('body'));
+//		
+//			var messageIDs = [];
+//			hashes.messages.forEach(function(m) {
+//				messageIDs.pushObject(m.guid);
+//				
+//				// get HTML or, if not available,
+//				// text message body
+//				if( m.body_type === 'text/html' ) {
+//					m.body = m.body;
+//				}
+//				else {
+//					m.body = m.body.replace(/\r\n/g, '<br>');
+//				}
+//			});
+//			var storeKeys = store.loadRecords(App.model.Message, hashes.messages);
+//			if( params && params.outerDataSource )
+//				storeKeys.forEach(function(storeKey) {
+//					params.outerDataSource.didRetrieveRecordFromNestedStore(store, storeKey);
+//				});
+//			
+//			hashes.messages = messageIDs;
+//
+//			// now that the messages are loaded and 'messages'
+//			// array is patched to include the IDs we can load
+//			// the conversation into the store
+//			store.loadRecord(App.model.Conversation, hashes);
+//			
+//			store.dataSourceDidFetchQuery(query);
+//			
+//			if( params && params.outerDataSource ) 
+//				params.outerDataSource.didRetrieveQueryFromNestedStore(store, query);
+//		}
+//		else {
+//			store.dataSourceDidErrorQuery(queryOrKey, response);
+//		}
+//	},
 	/**
 	 * The conversation JSON includes the message body. We'll use it
 	 * to load the Message records.
@@ -298,40 +355,40 @@ App.ServerDataSource = SC.DataSource.extend({
 	 * For brevity, this handler is called by both fetch() and retrieveRecord(). In case of fetch()
 	 * the query is specified by a 'query' object. In case of retrieveRecord() it is a storeKey.
 	 */
-	_didGetConversation: function (response, store, storeKey, id, params) {
-		if (SC.ok(response)) {
-			// for some reason response.get('body') doesn't
-			// have KVO features, so wrapping it into SC.Object
-			var hashes = SC.Object.create(response.get('body'));
-		
-			var messageIDs = [];
-			hashes.messages.forEach(function(m) {
-				messageIDs.pushObject(m.guid);
-				
-				// get HTML or, if not available,
-				// text message body
-				if( m.body_type === 'text/html' ) {
-					m.body = m.body;
-				}
-				else {
-					m.body = m.body.replace(/\r\n/g, '<br>');
-				}
-			});
-			store.loadRecords(App.model.Message, hashes.messages);
-			hashes.messages = messageIDs;
-
-			// now that the messages are loaded and 'messages'
-			// array is patched to include the IDs we can load
-			// the conversation into the store
-			store.loadRecord(App.model.Conversation, hashes);
-			
-			if( params && params.outerDataSource ) 
-				params.outerDataSource.didRetrieveRecordFromNestedStore(store, storeKey, id);
-		}
-		else {
-			store.dataSourceDidErrorQuery(queryOrKey, response);
-		}
-	},
+//	_didGetConversation: function (response, store, storeKey, id, params) {
+//		if (SC.ok(response)) {
+//			// for some reason response.get('body') doesn't
+//			// have KVO features, so wrapping it into SC.Object
+//			var hashes = SC.Object.create(response.get('body'));
+//		
+//			var messageIDs = [];
+//			hashes.messages.forEach(function(m) {
+//				messageIDs.pushObject(m.guid);
+//				
+//				// get HTML or, if not available,
+//				// text message body
+//				if( m.body_type === 'text/html' ) {
+//					m.body = m.body;
+//				}
+//				else {
+//					m.body = m.body.replace(/\r\n/g, '<br>');
+//				}
+//			});
+//			store.loadRecords(App.model.Message, hashes.messages);
+//			hashes.messages = messageIDs;
+//
+//			// now that the messages are loaded and 'messages'
+//			// array is patched to include the IDs we can load
+//			// the conversation into the store
+//			store.loadRecord(App.model.Conversation, hashes);
+//			
+//			if( params && params.outerDataSource ) 
+//				params.outerDataSource.didRetrieveRecordFromNestedStore(store, storeKey, id);
+//		}
+//		else {
+//			store.dataSourceDidErrorQuery(queryOrKey, response);
+//		}
+//	},
 	/**
 	 * The flow JSON includes flows (tags) and conversations as nested objects
 	 * loadRecords() isn't smart enough to figure out how to create store records
