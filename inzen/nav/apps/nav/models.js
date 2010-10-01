@@ -65,7 +65,6 @@ App.model.User = SC.Record.extend( {
 });
 
 App.model.Address = SC.Record.extend({
-	primaryKey:			'email',
 	email:				SC.Record.attr(String),
 	contact:			SC.Record.toOne('App.model.Contact', {inverse: 'addresses'})
 });
@@ -133,10 +132,11 @@ App.model.Conversation = SC.Record.extend(
 /** @scope App.Flow.prototype */ {
 	messages:			SC.Record.toMany('App.model.Message', {inverse: 'conversation', isMaster: YES}),
 	subject:			SC.Record.attr(String),
-	flows:				SC.Record.toMany('App.model.Flow', {inverse: 'conversations', isMaster: NO}),
+	tags:				SC.Record.toMany('App.model.Flow', {inverse: 'conversations', isMaster: NO}),
 	key_participant:	SC.Record.toOne('App.model.Address'),
 	summary:			SC.Record.attr(String),
-	date:				SC.Record.attr(String)
+	date:				SC.Record.attr(SC.DateTime, {format: '%a %b %d %H:%M:%S %Y'}),
+	humanized_age:		SC.Record.attr(String)
 });
 
 
