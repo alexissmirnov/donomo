@@ -19,7 +19,7 @@ App.senderClassificationFlowsController = SC.ArrayController.create({
 	enumerableContentDidChange: function(start, len) {
 		sc_super();
 		
-		console.log('senderClassificationFlowsController.enumerableContentDidChange: ' + start + ',' + len);
+		//console.log('senderClassificationFlowsController.enumerableContentDidChange: ' + start + ',' + len);
 		
 		if( !this.hasSelection() && this.length() > 0 ) {
 			this.selectObject(this.objectAt(0));

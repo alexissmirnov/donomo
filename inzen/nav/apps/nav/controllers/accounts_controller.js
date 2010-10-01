@@ -1,4 +1,5 @@
-require('responders/state');
+sc_require('responders/state');
+sc_require('responders/managing_profile');
 
 App.userController = SC.ObjectController.create({
 	user: function() {
@@ -6,15 +7,13 @@ App.userController = SC.ObjectController.create({
 	},
 	
 	contentDidChange: function() {
-		console.log('userController.contentDidChange. content=%@'.fmt(this.get('content')));
+		//console.log('userController.contentDidChange. content=%@'.fmt(this.get('content')));
 		if( this.get('content') && this.get('content').length() > 0 && this.content.objectAt(0).get('username')) {
-			state = App.state.FLOWS;
-			App.state.transitionTo(state);
+			App.state.transitionTo('FLOWS');
 		}
 	}.observes('content')
 	
 });
-
 
 App.accountsController = SC.ArrayController.create( {
 	
@@ -33,11 +32,10 @@ App.accountsController = SC.ArrayController.create( {
     enumerableContentDidChange: function(start, length) {
         arguments.callee.base.apply(this,arguments);
         
-        console.log('accountsController.enumerableContentDidChange: len=%@, responder=%@'.fmt(length, App.firstResponder ? App.firstResponder.get('name') : 'none'));
+        //console.log('accountsController.enumerableContentDidChange: len=%@, responder=%@'.fmt(length, App.firstResponder ? App.firstResponder.get('name') : 'none'));
 		
-		if( length == 0 && App.state ) {
-			state = App.state.MANAGING_PROFILE;
-			App.state.transitionTo(state);	
+		if( length === 0 && App.firstResponder && !App.store.dataHashes[App.store.storeKeyFor(App.model.User, '1')]) {
+			App.state.transitionTo('MANAGING_PROFILE');	
 		}
 		
 		
