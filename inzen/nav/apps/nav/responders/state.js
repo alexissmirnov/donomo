@@ -3,6 +3,7 @@
  * 
  * 
  */
+
 App.state = {
 	/**
 	 * Wraps makeFirstResponder. Transitions to a given state. Apart from making
@@ -13,7 +14,8 @@ App.state = {
 	 * @param stateName
 	 * @returns
 	 */
-	transitionTo: function(state) {			
+	transitionTo: function(state) {	
+		console.log('transitionTo ' + state);
 		if( SC.typeOf(state) === SC.T_HASH ) {
 			state = state.location;
 		}
