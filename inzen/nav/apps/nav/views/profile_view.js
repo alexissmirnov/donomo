@@ -38,7 +38,19 @@ Nav.ProfileView = SC.View.extend(SC.Animatable, {
 		},
 		layout: {top: 180, height: 0},
 		finalLayout: {height: 210},
-		childViews: 'form loading'.w(),
+		childViews: 'loading form'.w(),
+		loading: SC.LabelView.design(SC.Animatable, {
+			classNames: 'profile-view-credentials-loading'.w(),
+			transitions: {
+				opacity: { duration: .3, timing: SC.Animatable.TRANSITION_EASE_IN }
+			},
+			layout: {bottom: 65, height: 44, width: 200, right: 0},
+			textAlign: SC.ALIGN_CENTER,
+			icon: 'profile-view-credentials-loading-icon',
+			value: 'Loading...',
+			style: {opacity: 0.0 }, // fully transparent initially
+			finalStyle: {opacity: 1.0}
+		}),
 		form: SC.FormView.design({
 			layout: {left: 10, top: 5, right: 10},
 			labelWidth: 100,
@@ -68,20 +80,7 @@ Nav.ProfileView = SC.View.extend(SC.Animatable, {
 				isDefault: YES,
 				action: 'onSubmit'
 			})
-		}),
-		loading: SC.LabelView.design(SC.Animatable, {
-			classNames: 'profile-view-credentials-loading'.w(),
-			transitions: {
-				opacity: { duration: .3, timing: SC.Animatable.TRANSITION_EASE_IN }
-			},
-			layout: {bottom: 65, height: 44, width: 200, right: 0},
-			textAlign: SC.ALIGN_CENTER,
-			icon: 'profile-view-credentials-loading-icon',
-			value: 'Loading...',
-			style: {opacity: 0.0 }, // fully transparent initially
-			finalStyle: {opacity: 1.0}
 		})
-
 	}),
 
 	gmail: SC.View.design(SC.Animatable, {
