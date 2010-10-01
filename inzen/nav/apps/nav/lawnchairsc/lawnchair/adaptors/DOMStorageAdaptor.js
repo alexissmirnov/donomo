@@ -55,6 +55,9 @@ DOMStorageAdaptor.prototype = {
 	save:function(obj, callback) {
 		var id = this.table + '::' + (obj.key || this.uuid());
 		delete obj.key;
+		// see
+		// http://stackoverflow.com/questions/2603682/is-anyone-else-receiving-a-quota-exceeded-err-on-their-ipad-when-accessing-locals
+		this.storage.removeItem(id);
 		this.storage.setItem(id, this.serialize(obj));
 		if (callback) {
 		    obj.key = id.split('::')[1];
@@ -79,7 +82,7 @@ DOMStorageAdaptor.prototype = {
 		var results = [];
 		for (var i = 0, l = this.storage.length; i < l; ++i) {
 			var id = this.storage.key(i);
-			var tbl = id.split('::')[0]
+			var tbl = id.split('::')[0];
 			var key = id.split('::').slice(1).join("::");
 			if (tbl == this.table) {
 				var obj = this.deserialize(this.storage.getItem(id));

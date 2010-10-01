@@ -204,8 +204,8 @@ LawnchairSC.DataSource = SC.DataSource.extend({
 					.fmt(name.table, records.length));
 
 			records.forEach(function(record) {
-				console.log('DatabaseDataSource.fetch: Read from %@ loading record id:%@ %@'
-					.fmt(name.table, record.key, JSON.stringify(record.record) ));
+				console.log('DatabaseDataSource.fetch: Read from %@ loading record id:%@'
+					.fmt(name.table, record.key));
 				store.loadRecord(query.recordType, record.record, record.key);
 			});
 			
