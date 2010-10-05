@@ -144,7 +144,7 @@ def main():
 
     parser.add_option(
         '--max-concurrency',
-        default = 20,
+        default = 10,
         type    = 'int')
 
     parser.add_option(
