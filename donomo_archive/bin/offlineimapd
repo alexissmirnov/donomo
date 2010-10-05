@@ -15,8 +15,9 @@ if [ -f "$EXTRACONF" ]; then
 fi
 
 pidfile=${PIDFILE-/var/run/donomo/offlineimap.pid}
+logfile=${LOGFILE-/var/log/donomo/offlineimap.log}
 bindir=`dirname $0`
 
-$bindir/offlineimap $* >/dev/null 2>&1 &
+$bindir/offlineimap $* >> $logfile 2>&1 &
 
 echo $! > $pidfile

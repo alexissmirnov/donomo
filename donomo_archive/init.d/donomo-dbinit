@@ -9,6 +9,18 @@ workdir=/home/donomo
 logfile=/var/log/donomo/dbinit.log
 prog="Donomo Database"
 
+function setup_env
+{
+    export USER=donomo
+    export LOGNAME=$USER
+    export HOME=/home/$USER
+    export DONOMO_HOME=$HOME
+
+    source $DONOMO_HOME/bin/env.sh
+
+    threshold=${DONOMO_PROC_THRESHOLD:-50}
+}
+
 function init_db_i
 {
     source /root/.donomo/db_pwd_root.sh
@@ -50,6 +62,8 @@ function init_db
 {
     init_db_i 2 2>&1 | tee -a "$logfile"
 }
+
+setup_env
 
 case ${1:-blah} in
     start)
