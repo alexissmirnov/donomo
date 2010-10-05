@@ -49,7 +49,7 @@ def main():
         parser.error('Image %s not valid' % options.image_id)
 
     reservation = images[0].run(
-        min_count = max(options.num_instances, 10),
+        min_count = 1,
         max_count = options.num_instances,
         user_data = user_data )
 
