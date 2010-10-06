@@ -54,7 +54,7 @@ def get_or_create_adddress_and_contact(name, address_string, owner):
         # and only when we have a better name to supply i.e. name isn't empty
         contact = address.contact
         
-        logging.info('found address %s with the contact %s' % (address, contact.pk));
+        logging.info('found address %s with the contact %s', address, contact.pk);
         if name and name != '' and is_email(contact.name):
             contact.name = name
             contact.save()
@@ -71,7 +71,7 @@ def get_or_create_adddress_and_contact(name, address_string, owner):
                                                         owner = owner)
         address.contact = contact
         address.save()
-        logging.info('created address %s with the contact %s (created? %d)' % (address, contact, created));
+        logging.info('created address %s with the contact %s (created? %d)', address, contact, created);
 
             
     return address, contact
@@ -106,8 +106,9 @@ def get_mailbox_address_from_asset(mail_asset):
     return get_or_create_adddress_and_contact(mail_asset.owner.username,
                                               email, 
                                               mail_asset.owner)[0]
-    
-def get_read_flag_from_asset(mail_asset):
+
+#TODO
+def get_message_tags_from_asset(mail_asset):
     file_name = mail_asset.orig_file_name
     # FIXME
     # I SOOO suck at regex
@@ -140,8 +141,9 @@ def generate_conversation_summary( body, type, summary_length = 1000 ):
         
         if len(w) and w[0] != '\n':
             summary.write( w.strip('\n') + ' ')
-            
-    return summary.getvalue()
+    
+    # cut the string at summary_length
+    return summary.getvalue()[:summary_length]
 
 ##############################################################################
 
@@ -223,7 +225,7 @@ def handle_work_item( processor, work_item ):
     conversation = None
     in_reply_to_message = None
     try:
-        in_reply_to_message = Message.objects.get( message_id = in_reply_to )
+        in_reply_to_message = Message.objects.get( owner = parent_asset.owner, message_id = in_reply_to )
         conversation = in_reply_to_message.conversation
     except Message.DoesNotExist, e:
         conversation, created = Conversation.objects.get_or_create(
@@ -244,6 +246,7 @@ def handle_work_item( processor, work_item ):
     # associated to a single account
     mailbox_address = get_mailbox_address_from_asset(parent_asset)
     
+    
     # Date field sometimes could be empty
     if message_date:
         message_date = datetime.datetime.fromtimestamp(time.mktime(
@@ -253,7 +256,7 @@ def handle_work_item( processor, work_item ):
         message_date = datetime.datetime.now()
         
     message = Message(owner = parent_asset.owner,
-                      subject = subject,
+                      subject = subject or '-',
                       message_id = message_id,
                       mailbox_address = mailbox_address,
                       date = message_date,
@@ -261,6 +264,14 @@ def handle_work_item( processor, work_item ):
                       conversation = conversation,
                       sender_address = sender_address)
     message.save()
+    
+
+    # tag unread messages
+    # TODO
+#    read_flag = get_message_tags_from_asset(parent_asset)
+#    if read_flag:
+#        seen_tag, created = Tag.objects.get_or_create(tag_class = Tag.MAIL_IMAP_FLAG_SEEN, defaults={label:'Seen'})
+#        message.tags.add(seen_tag)
     
     if raw_message.get_all('to'):              
         for a in email.utils.getaddresses(raw_message.get_all('to')):
@@ -283,29 +294,29 @@ def handle_work_item( processor, work_item ):
     classify_conversation(conversation)
 
     for part in raw_message.walk():
-        logging.info('part.get_content_type()=%s' % part.get_content_type())
+        logging.info('part.get_content_type()=%s', part.get_content_type())
         counter += 1
 
         mime_type = manager(MimeType).filter(name = part.get_content_type())
-        
         if len(mime_type) == 0:
-            logging.error('%s not found in %s. Will not create asset for this part of the message' % (part.get_content_type(), manager(MimeType).all()))
+            logging.info('%s type is unrecognized. Ignoring this message part.', part.get_content_type())
             continue
+        else:
+            mime_type = mime_type[0]
 
-        mime_type = mime_type[0]
+        payload = part.get_payload(decode=True)
+        if not payload:
+            logging.info('No payload of part %s. Ignoring this message part.', part.get_content_type())
+            continue
+        
 
         if not upload_class.has_consumers(part.get_content_type()):
-            logging.info('%s has NO consumers for %s(%s)' % (upload_class, mime_type.name, part.get_content_type()))
+            logging.info('%s has no consumers for %s(%s)', upload_class, mime_type.name, part.get_content_type())
             #continue
 
-        file_name = part.get_filename() or 'part-%04d%s' % (
+        file_name = part.get_filename() or 'part-%04d.%s' % (
             counter,
             mime_type.extension )
-
-        logging.info(
-            'MessagePart<filename=%s, mime_type=%s>' %(
-                file_name,
-                mime_type ))
 
         # Added decode call to avoid errors like
         # UnicodeDecodeError: 'ascii' codec can't decode 
@@ -351,14 +362,14 @@ def _get_owner( email_file ):
     match = fax_gateway_regex.search(message['subject'])
     if match:
         fax_number = '-'.join(match.groups())
-        logging.debug('Found FAX number %s' % fax_number)
+        logging.debug('Found FAX number %s', fax_number)
 
         try:
             return manager(FaxNumber).get(
                 number = fax_number,
                 type   = FaxNumber.USER_SENDS_FROM ).user
         except ObjectDoesNotExist:
-            logging.info('No matching user found for %s' % fax_number)
+            logging.info('No matching user found for %s', fax_number)
 
     return User.objects.get(
         email = email.utils.parseaddr(message['to']) [1] )
@@ -418,7 +429,7 @@ def main():
             new_items = process_mail(owner, processor, file_name)
             operations.publish_work_item(*new_items)
         except:
-            logging.exception("Failed to process %s" % file_name )
+            logging.exception("Failed to process %s", file_name )
         else:
             if options.delete:
                 os.remove(file_name)
