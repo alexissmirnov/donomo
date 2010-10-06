@@ -1,9 +1,8 @@
-/*
 .wf-button {
     background-color: red;
     opacity:0.1;
 }
-*/
+
 .wf-start {
     background-image: url('resources/start.png?v1'); 
     background-repeat: no-repeat;
@@ -26,6 +25,14 @@
 }
 .wf-economist {
     background-image: url('resources/economist.png?v1'); 
+    background-repeat: no-repeat;
+}
+.wf-vmware {
+    background-image: url('resources/vmware.png?v1'); 
+    background-repeat: no-repeat;
+}
+.wf-zagg {
+    background-image: url('resources/zagg.png?v1'); 
     background-repeat: no-repeat;
 }
 .wf-conversation {

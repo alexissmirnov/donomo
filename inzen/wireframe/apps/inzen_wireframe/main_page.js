@@ -65,7 +65,7 @@ InzenWireframe.mainPage = SC.Page.design({
         childViews: [ 
             InzenWireframe.Button.design({
                 layout: { top: 608, left: 393, height: 69, width: 286 },
-                show: 'economist'
+                show: 'vmware'
             }),
             InzenWireframe.Button.design({
                 layout: {top: 466, left: 393, height: 136, width: 286 },
@@ -91,7 +91,7 @@ InzenWireframe.mainPage = SC.Page.design({
         childViews: [ 
             InzenWireframe.Button.design({
                 layout: { top: 598, left: 240, height: 69, width: 286 },
-                show: 'economist'
+                show: 'vmware'
             }),
             InzenWireframe.Button.design({
                 layout: {top: 466, left: 243, height: 126, width: 280 },
@@ -140,7 +140,7 @@ InzenWireframe.mainPage = SC.Page.design({
         }),
         InzenWireframe.Button.design({
             layout: {top: 619, left: 191, height: 72, width: 174 },
-            show: 'economist'
+            show: 'vmware'
         }),
         InzenWireframe.Button.design({
             layout: {bottom: 0, left: 0, height: 25, width: 25 },
@@ -156,7 +156,7 @@ InzenWireframe.mainPage = SC.Page.design({
         }),
         InzenWireframe.Button.design({
             layout: {top: 619, left: 191, height: 72, width: 174 },
-            show: 'economist'
+            show: 'vmware'
         }),
         InzenWireframe.Button.design({
             layout: {bottom: 0, left: 0, height: 25, width: 25 },
@@ -180,5 +180,33 @@ InzenWireframe.mainPage = SC.Page.design({
                 show: 'start'
             })
         ]
+    }),
+    vmware: SC.View.design({
+        classNames: 'wf-vmware'.w(),
+        childViews: [InzenWireframe.Button.design({
+            layout: {top: 10, left: 992, height: 25, width: 25},
+            show: 'expandedFlows'
+        }),
+        InzenWireframe.Button.design({
+            layout: {top: 269, left: 120, height: 153, width: 139 },
+            show: 'zagg'
+        }),
+        InzenWireframe.Button.design({
+            layout: {bottom: 0, left: 0, height: 30, width: 30 },
+            show: 'start'
+        })]
+    }),
+    zagg: SC.View.design({
+        classNames: 'wf-zagg'.w(),
+        childViews: [InzenWireframe.Button.design({
+            layout: {top: 10, left: 992, height: 25, width: 25},
+            show: 'expandedFlows'
+        }),
+        InzenWireframe.Button.design({
+            layout: {bottom: 0, left: 0, height: 25, width: 25 },
+            show: 'start'
+        })]
     })
+    
+
 });
