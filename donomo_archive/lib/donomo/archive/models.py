@@ -209,7 +209,8 @@ class Tag(models.Model):
     UPLOAD_AGGREGATE = 'upload'
     MAIL_GMAIL_LABEL        = 'mail/gmail-label'
     MAIL_IMAP_FOLDER        = 'mail/imap-folder'
-    MAIL_INBOX        = 'mail/imap-inbox'
+    MAIL_INBOX              = 'mail/imap-inbox'
+    MAIL_IMAP_FLAG_SEEN   = 'mail/imap-flag/seen' 
 
     """ Documents can be tagged """
 
@@ -327,12 +328,17 @@ class Page(models.Model):
 ###############################################################################
 
 class Contact(models.Model):
+    BUSINESS = 1
+    PERSON = 2
+    
     """ A contact has a name and a set of email addresses"""
     owner = models.ForeignKey(
         User,
         related_name = 'contacts')
 
     name = models.CharField(max_length=128)
+    
+    type = models.IntegerField(default = PERSON)
     
     tags = models.ManyToManyField(
         Tag,
@@ -397,7 +403,8 @@ class Message(models.Model):
         max_length = 512,
         blank = False,
         null = False,
-        primary_key=True)
+        primary_key = True)
+#        db_index = True)
 
     owner = models.ForeignKey(
         User,
@@ -436,6 +443,12 @@ class Message(models.Model):
 
     conversation = models.ForeignKey(Conversation, 
                                  related_name = 'messages')
+
+#    tags = models.ManyToManyField(
+#        Tag,
+#        related_name = 'messages',
+#        blank        = True,
+#        symmetrical  = True )
 
     __str__ = lambda self : '%s [%s]' % (self.subject, self.date) 
 
