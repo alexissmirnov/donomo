@@ -777,9 +777,7 @@ def conversation_as_json_dict(conversation,
         'humanized_age' : humanize_date(messages[len(messages)-1].date),
         'tags'     : [ '%s.tag' % tag.pk
                        for tag in conversation.tags.all() ],
-        'key_participant' : {
-            'email' : conversation.key_participant.email,
-            'contact' : '%s.contact' % conversation.key_participant.contact.pk }
+        'key_participant' : conversation.key_participant.email
         }
     if message_body:
         json.update(messages = [ message_as_json_dict(message, message_body)
@@ -818,6 +816,7 @@ def contact_as_json_dict(contact):
     json = {
         'guid'      : '%s.contact' % contact.pk,
         'name'      : contact.name,
+        'type'      : contact.type, 
         'addresses' : [ { 'email' : address.email, 'guid' : address.email }
                        for address in contact.addresses.all() ],
         'tags'     : [ '%s.tag' % tag.pk
