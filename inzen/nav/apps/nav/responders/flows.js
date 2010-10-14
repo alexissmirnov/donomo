@@ -7,7 +7,6 @@ sc_require('responders/flow');
 
 /** @namespace
 
-  Hanles sender classification commands
   
   @extends SC.Responder
 */
@@ -53,7 +52,7 @@ App.state.FLOWS = SC.Responder.create({
 	
 	showConversationView : function() {
 		var conversationView = App.getPath('flowsPage.mainPane.conversation');
-		conversationView.adjust('width', 724); // TODO: move this into the view to improve abstraction
+		conversationView.adjustToShow();
 	},
 	
 	/**
@@ -72,7 +71,14 @@ App.state.FLOWS = SC.Responder.create({
 	 * mode
 	 */
 	showFlowsFullScreen : function() {
-		App.getPath('flowsPage.mainPane.flows').adjust('width', 1024); // TODO remove 1024
 		App.getPath('flowsPage.mainPane.conversation').adjust('width', 0);
+	},
+	
+	setCurrentSenderAsNewsletter: function(contact) {
+		contact.set('type', App.model.Contact.BUSINESS);
+		
+		var conversationView = App.getPath('flowsPage.mainPane.conversation');
+		conversationView.adjustToNewsletterLayout();
+		//TODO: store it
 	}
 });

@@ -36,7 +36,7 @@ App.ServerDataSource = SC.DataSource.extend({
 		var messages = App.store.find(App.model.Message);
 		
 		if( messages.length() === 0 ) {
-			this.invokeLater('downloadNewMessages', 10000);
+			this.invokeLater('downloadNewMessages', 20000);
 		}
 		
 		// minimal date Dec 31 1969 - i wasn't born yet, so there surely cannot be any email earlier that this
@@ -63,7 +63,7 @@ App.ServerDataSource = SC.DataSource.extend({
 		if( SC.ok(response) ) {
 			var messageDate = this._processGetMessagesResponse(response, store, db);
 		
-			this.invokeLater('downloadNewMessages', 10000);
+			this.invokeLater('downloadNewMessages', 30000);
 		}
 	},
 	

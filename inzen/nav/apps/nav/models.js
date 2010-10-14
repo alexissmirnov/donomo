@@ -70,8 +70,11 @@ App.model.Address = SC.Record.extend({
 });
 
 App.model.Contact = SC.Record.extend({
+	PERSON: '1',
+	BUSINESS: '2',
 	addresses:			SC.Record.toMany('App.model.Address', {inverse: 'contact'}),
 	name:				SC.Record.attr(String),
+	type:				SC.Record.attr(String),
 	flows: 				SC.Record.toMany('App.model.Flow', {inverse: 'contacts', isMater: YES}),
 	sentMessages:		SC.Record.toMany('App.model.Message', {inverse: 'from'}),
 	receivedMessages:	SC.Record.toMany('App.model.Message', {inverse: 'to'}),

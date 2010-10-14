@@ -87,7 +87,7 @@ App.FlowBumperView = SC.View.extend({
   @extends SC.View
 */
 App.FlowContentView = SC.View.extend({
-    classNames:'FlowContentView'.w(),
+    classNames:'flow-content'.w(),
 	itemPadding: 10,
     rowHeight: 161,
     columnWidth: 317,
@@ -201,7 +201,7 @@ App.FlowContentView = SC.View.extend({
   @extends SC.ScrollView
 */
 App.FlowScrollView = SC.ScrollView.extend({
-    classNames:'flow-band'.w(),
+    classNames:'flow-scroll'.w(),
 	alwaysBounceVertical: NO,
 	
 	contentObserver: function(target, value) {
@@ -216,6 +216,10 @@ App.FlowScrollView = SC.ScrollView.extend({
 	})
 });
 
+App.FlowShadingView = SC.View.extend({
+	classNames: 'flow-shading'.w()
+});
+
 /******************************************************************************
  *  @class
 
@@ -224,17 +228,7 @@ App.FlowScrollView = SC.ScrollView.extend({
 App.FlowLabelView = SC.LabelView.extend({
 	classNames: 'flow-label'.w(),
 	textAlign: SC.ALIGN_LEFT,
-    click: function(evt) {
-		this.touchEnd();
-	},
-	touchStart: function(evt) {
-		return YES;
-	},
-	touchEnd: function(evt) {
-		var flow = this.get('content');
-		App.states.flows.toFlowState(flow);
-	}
-	
+	fontWeight: SC.BOLD_WEIGHT
 });
 
 /******************************************************************************
@@ -260,7 +254,33 @@ App.DashboardContentView = SC.View.extend({
 		var flows = this.get('content');
 		flows.forEach(function(flow) {
 			var viewTop = that.labelHeight + (that.labelHeight + that.itemHeight) * i;
-			var view = App.FlowScrollView.create({
+			
+			// The background element cannot have opacity set because
+			// it will make all child elements also transparent.
+			// Thus, I'm creating a sibling called flow-shading element 
+			// just to set the shading on the flow band
+			var view = App.FlowShadingView.create({
+				layout: {
+					top: viewTop - 25, 
+					left: 0, 
+					right: 0, 
+					height: that.itemHeight + 25
+				}
+			});
+			that.appendChild(view);
+			
+			view = App.FlowLabelView.create({
+				layout: {
+					top: viewTop - 25, 
+					left: 30, 
+					right: 0, 
+					height: 25
+				},
+				value: flow.get('name')
+			});
+			that.appendChild(view);
+			
+			view = App.FlowScrollView.create({
 				layout: {
 					top: viewTop, 
 					left: 0, 
@@ -271,20 +291,6 @@ App.DashboardContentView = SC.View.extend({
 			i = i + 1;
 			that.appendChild(view);
 			view.set('content', flow);
-			
-
-//			view = App.FlowLabelView.create({
-//				layout: { 
-//					left: 0, 
-//					top: viewTop,
-//					right: 0, 
-//					height: that.labelHeight 
-//				},
-//				value: flow.get('name'),
-//				content: flow
-//			});
-//			that.appendChild(view);
-
 		});
 		// grow the size of the content view to 
 		// include the newly appended child
@@ -306,7 +312,7 @@ App.DashboardScrollView = SC.ScrollView.extend({
 	// make sure the view doesn't react to side-ways swipes
 	alwaysBounceHorizontal: NO,
 	delaysContentTouches: NO,
-	classNames: 'dashboard'.w(),
+	classNames: 'dashboard-scroll'.w(),
 	
 	contentView: App.DashboardContentView.design({
 		contentBinding: 'App.flowsController.arrangedObjects'

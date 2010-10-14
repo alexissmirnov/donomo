@@ -63,16 +63,6 @@ App.state.START = SC.Responder.create({
 		//SC.LOG_OBSERVERS = YES;
 		//SC.LOG_BINDINGS = YES;
 		//FIXME: do a proper state sequence
-//		this.invokeLater(function() {App.userController.set('content', App.store.find(SC.Query.local(App.model.User)));}, 1000);
-//		this.invokeLater(function() {App.contactsController.set('content', App.store.find(SC.Query.local(App.model.Contact)));}, 1500);
-//		this.invokeLater(function() {App.messagesController.set('content', App.store.find(SC.Query.local(App.model.Message)));}, 2000);
-//		this.invokeLater(function() {App.conversationsController.set('content', App.store.find(SC.Query.local(App.model.Conversation)));}, 2500);
-//		this.invokeLater(function() {App.documentsController.set('content', App.store.find(SC.Query.local(App.model.Document)));}, 3000);
-//		this.invokeLater(function() {App.flowsController.set('content', App.store.find(SC.Query.local(App.model.Flow)));}, 3500);
-//		this.invokeLater(function() {App.addressesController.set('content', App.store.find(SC.Query.local(App.model.Address)));}, 4000);
-//		this.invokeLater(function() {App.syncTrackerController.set('content', App.store.find(SC.Query.local(App.model.SyncTracker)));}, 4500);
-//		this.invokeLater(function() {App.getPath('mainPage.mainPane').append();}, 5000);
-//		this.invokeLater(function() {App.accountsController.set('content', App.store.find(SC.Query.local(App.model.Account)));}, 5500);
 
 		App.userController.set('content', App.store.find(SC.Query.local(App.model.User)));
 		App.contactsController.set('content', App.store.find(SC.Query.local(App.model.Contact)));
