@@ -27,7 +27,7 @@ App.flowsPage = SC.Page.design({
 	    	transitions: {
 	    		 width: { duration: .25, timing: SC.Animatable.TRANSITION_EASE_IN_OUT } // with timing curve
 	    	},
-	    	contentBinding: 'App.conversationController.content.messages'
+	    	contentBinding: 'App.conversationController.content'
 	    })
 	})
 });

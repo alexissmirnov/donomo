@@ -227,3 +227,13 @@ profile-view-credentials-loading-icon {
 .sc-view.sc-button-view.icon.profile .button-middle .sc-button-label img {
   left: 0px;
 }
+
+.sc-theme .sc-view.ace.sc-large-size.sc-label-view.app-newsletter-header-subject,
+.sc-theme .sc-view.ace.sc-large-size.sc-label-view.app-newsletter-header-sender {
+  line-height: 19px;
+  font-family: "Helvetica Neue"
+}
+
+.sc-theme .sc-view.ace.sc-large-size.sc-label-view.app-newsletter-header-sender {
+  font-weight: bold;
+}

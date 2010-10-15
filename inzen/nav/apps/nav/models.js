@@ -70,8 +70,6 @@ App.model.Address = SC.Record.extend({
 });
 
 App.model.Contact = SC.Record.extend({
-	PERSON: '1',
-	BUSINESS: '2',
 	addresses:			SC.Record.toMany('App.model.Address', {inverse: 'contact'}),
 	name:				SC.Record.attr(String),
 	type:				SC.Record.attr(String),
@@ -85,6 +83,8 @@ App.model.Contact = SC.Record.extend({
 		return this.flows.get('length') ? YES : NO; 
 	}.property('flows').cacheable()
 });
+App.model.Contact.PERSON = '2';
+App.model.Contact.BUSINESS = '1';
 
 
 /** @class

@@ -525,6 +525,27 @@ App.ServerDataSource = SC.DataSource.extend({
 		return NO;
 	},
 	
+	updateRecord: function(store, storeKey, params) {
+		console.log('Will update store key %@ params=%@'.fmt(storeKey, params));
+		if( App.store.recordTypeFor(storeKey).toString().split('.')[1] === 'Contact' ) {
+			var url = '/api/1.0/contacts/%@/'.fmt(App.store.idFor(storeKey));
+			SC.Request.putUrl(url)
+				.header({'Accept': 'application/json'})
+				.json()
+				.notify(this, '_didUpdateContactRecord', store, storeKey, params)
+				.send(store.readDataHash(storeKey));
+			
+			return YES;
+		}
+		return NO;
+	},
+	_didUpdateContactRecord: function(response, store, storeKey, params) {
+		if (SC.ok(response)) {
+			console.log('responce to PUT /contacts/: %@'.fmt(response.get('body')));
+		} else {
+			console.log(response.rawRequest.responseText);
+		}
+	},
 	/**
 	 * When an account record is created on the server, the server sends back
 	 * the JSON representing the User record. We persist this record in

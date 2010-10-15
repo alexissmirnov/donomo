@@ -44,18 +44,7 @@ App.FlowSummaryView = SC.View.extend({
 		textAlign: SC.ALIGN_LEFT,
 		controlSize: SC.LARGE_CONTROL_SIZE,
 		valueBinding: '.parentView.content.name'
-	}),
-	   
-    click: function(evt) {
-		this.touchEnd();
-	},
-	touchStart: function(evt) {
-		return YES;
-	},
-	touchEnd: function(evt) {
-		var flow = this.get('content');
-		App.states.flows.toFlowState(flow);
-	}
+	})
 });
 
 /******************************************************************************
@@ -228,7 +217,8 @@ App.FlowShadingView = SC.View.extend({
 App.FlowLabelView = SC.LabelView.extend({
 	classNames: 'flow-label'.w(),
 	textAlign: SC.ALIGN_LEFT,
-	fontWeight: SC.BOLD_WEIGHT
+	fontWeight: SC.BOLD_WEIGHT,
+	controlSize: SC.LARGE_CONTROL_SIZE
 });
 
 /******************************************************************************

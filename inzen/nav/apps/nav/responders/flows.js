@@ -74,11 +74,7 @@ App.state.FLOWS = SC.Responder.create({
 		App.getPath('flowsPage.mainPane.conversation').adjust('width', 0);
 	},
 	
-	setCurrentSenderAsNewsletter: function(contact) {
-		contact.set('type', App.model.Contact.BUSINESS);
-		
-		var conversationView = App.getPath('flowsPage.mainPane.conversation');
-		conversationView.adjustToNewsletterLayout();
-		//TODO: store it
+	didChangeContactType: function(contact) {
+		//TODO?
 	}
 });
