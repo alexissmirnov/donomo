@@ -76,6 +76,10 @@ urlpatterns = patterns(
     url( r'^contacts/$',
          contact_list,
          name = 'api_contact_list' ),
+
+    url( r'^contacts/(?P<id>[-a-zA-Z0-9_:. \$\>\<\@]+)/$',
+         contact_info,
+         name = 'api_contact_info' ),
          
     url( r'^accounts/(?P<id>[-a-zA-Z0-9_:. \$\>\<\@]+)/$',
          account_info,

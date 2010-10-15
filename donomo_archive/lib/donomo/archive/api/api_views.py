@@ -30,6 +30,7 @@ __all__ = (
     'message_info',
     'message_list',
     'contact_list',
+    'contact_info',
     'account_info',
     )
 
@@ -248,6 +249,16 @@ def contact_list():
     """
     return {
     'GET' : get_contact_list,
+    }
+###############################################################################
+
+@login_required
+@http_method_dispatcher
+def contact_info():
+    """
+    """
+    return {
+    'PUT' : update_contact_info,
     }
 
 ###############################################################################

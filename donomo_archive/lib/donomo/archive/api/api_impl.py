@@ -58,6 +58,7 @@ __all__ = (
     'get_conversation_list',
     'get_conversation_info',
     'get_contact_list',
+    'update_contact_info',
     'get_message_info',
     'get_message_list',
     'update_or_create_account',
@@ -1021,3 +1022,18 @@ def update_or_create_account(request, id):
 
     return response
 
+def update_contact_info(request, id):
+    """
+    Handles PUT /contacts/<id>/
+    Invoked when the contact type is changed by the app.
+    """
+    id = id.split('.')[0]
+    contact = models.Contact.objects.get(id = id)
+    contact_payload = json.loads(request.raw_post_data)
+    
+    contact.type = int(contact_payload['type'])
+    contact.name = contact_payload['name']
+    contact.save()
+    
+    return HttpResponse('Contact %s updated' % id)
+    
