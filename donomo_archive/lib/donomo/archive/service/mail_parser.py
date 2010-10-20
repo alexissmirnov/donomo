@@ -121,6 +121,13 @@ def get_message_tags_from_asset(mail_asset):
     return 'S' in flags
 
 
+def test_generate_conversation_summary(raw_message):
+    for part in raw_message.walk():
+        if( part.get_content_type() != 'multipart/alternative'):
+            print part.get_content_type()
+            payload = part.get_payload(decode=True).decode('utf8', 'ignore')
+            print generate_conversation_summary( payload, part.get_content_type())
+
 ##############################################################################
 def generate_conversation_summary( body, type, summary_length = 1000 ):
     if type == MimeType.HTML:
@@ -128,6 +135,7 @@ def generate_conversation_summary( body, type, summary_length = 1000 ):
     else:
         text = body
         
+    text = text.encode('ascii', 'ignore')
     # FIXME: regex?
     # strip consecutive spaces and newlines while
     # avoiding gluing words together
