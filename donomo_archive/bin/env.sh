@@ -1,5 +1,6 @@
 
-export PYTHONPATH=${DONOMO_HOME:?}/lib${PYTHONPATH:+:$PYTHONPATH}
+export DONOMO_HOME=${DONOMO_HOME:-/home/donomo}
+export PYTHONPATH=${DONOMO_HOME}/lib${PYTHONPATH:+:$PYTHONPATH}
 export DJANGO_SETTINGS_MODULE=donomo.settings
 
 META_DATA=/var/spool/ec2/meta-data.sh

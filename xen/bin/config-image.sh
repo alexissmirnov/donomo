@@ -351,6 +351,7 @@ EOF
     # --- Root's DB Password ---
 #    cat > /root/.donomo/db_pwd_root.sh <<EOF
 #export ROOT_PASSWORD=f360746aba7640928f277b9433a76da4
+#export ROOT_PASSWORD_RDS=d0n0m0nezni
 #EOF
 
     # --- Use Transactional Tables ---

@@ -337,4 +337,4 @@ else:
     PAYPAL_RECEIVER_EMAIL = 'paypal@donomo.com'
 
 OFFLINEIMAP_CONFIG_FILE = '/etc/offlineimap.conf' #/Users/alexis/.offlineimaprc'
-OFFLINEIMAP_DATA_DIR = '/data/offlineimap' #/Users/alexis/offlineimap.data'
+OFFLINEIMAP_DATA_DIR = '/vol/offlineimap' #/Users/alexis/offlineimap.data'

@@ -156,12 +156,12 @@ ${YUM} install scons
 ${YUM} install ruby
 #${YUM_DBG} openssl
 
-wget -N -O "$UPDATES/xen-kernel.tgz" \
+wget -O "$UPDATES/xen-kernel.tgz" \
     "http://ec2-downloads.s3.amazonaws.com/ec2-modules-2.6.18-xenU-ec2-v1.0-i686.tgz"
 
 tar -C "${mount_point}" -xvzf "$UPDATES/xen-kernel.tgz"
 
-wget -N -O "$UPDATES/rightscale_scripts.tgz" \
+wget -O "$UPDATES/rightscale_scripts.tgz" \
     "http://s3.amazonaws.com/rightscale_scripts/rightscale_scripts.tgz"
 
 tar -C "${mount_point}/opt" -xvzf "$UPDATES/rightscale_scripts.tgz"
@@ -176,11 +176,11 @@ ${YUM} install java
 # EC2 Tools
 #
 
-wget -N -O "$UPDATES/ec2-ami-tools.noarch.rpm" \
+wget -O "$UPDATES/ec2-ami-tools.noarch.rpm" \
 	"http://s3.amazonaws.com/ec2-downloads/ec2-ami-tools.noarch.rpm"
 ${CHROOT} rpm -i "/tmp/updates/ec2-ami-tools.noarch.rpm"
 
-wget -N -O "$UPDATES/ec2-api-tools.zip" \
+wget -O "$UPDATES/ec2-api-tools.zip" \
 	"http://s3.amazonaws.com/ec2-downloads/ec2-api-tools.zip"
 
 (cd ${mount_point}/usr/local && unzip "$UPDATES/ec2-api-tools.zip")
@@ -201,7 +201,7 @@ fi
 
 if [[ $solr -eq 1 ]]
 then
-    wget -N -P $UPDATES "http://gulus.usherbrooke.ca/pub/appl/apache/lucene/solr/1.3.0/apache-solr-1.3.0.tgz"
+    wget -P $UPDATES "http://mirror.csclub.uwaterloo.ca/apache//lucene/solr/1.3.0/apache-solr-1.3.0.tgz"
     tar -C $mount_point/usr/local -xvzf $UPDATES/apache-solr-1.3.0.tgz
 fi
 

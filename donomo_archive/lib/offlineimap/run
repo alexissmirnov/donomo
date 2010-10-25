@@ -1,0 +1,3 @@
+#!/usr/bin/env python
+from offlineimap import init
+init.startup('6.2.0')

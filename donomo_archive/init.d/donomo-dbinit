@@ -39,14 +39,14 @@ function init_db_i
         return 0
     fi
 
-    mysqladmin -u root password "$ROOT_PASSWORD"
+    mysqladmin -u $ROOT_USER password "$ROOT_PASSWORD"
 
-    mysql -u root "-p$ROOT_PASSWORD" mysql <<SQL
+    mysql -u $ROOT_USER "-p$ROOT_PASSWORD" mysql <<SQL
 create database $database;
 grant all on $database.* to '$USER'@'%' identified by '$DATABASE_PASSWORD';
 flush privileges;
 SQL
-    mysqladmin -u root "-p$ROOT_PASSWORD" reload
+    mysqladmin -u $ROOT_USER "-p$ROOT_PASSWORD" reload
 
     su -c "$HOME/bin/application syncdb --noinput" $USER
 
