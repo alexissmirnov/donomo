@@ -1,0 +1,76 @@
+#!/bin/sh
+
+# chkconfig: - 99 06
+# description: Donomo OfflineIMAP daemon
+# pidfile: /var/run/donomo/offlineimap.pid
+
+source /etc/rc.d/init.d/functions
+
+workdir=/var/lib/donomo
+pidfile=/var/run/donomo/offlineimap.pid
+logfile=/var/log/donomo/offlineimap.log
+conffile=/etc/offlineimap.conf.new
+prog="Donomo-OfflineIMAP"
+
+
+##############################################################################
+#
+# Run an application shell or database shell
+#
+
+function setup_env
+{
+    export USER=donomo
+    export LOGNAME=$USER
+    export HOME=/home/$USER
+    export DONOMO_HOME=$HOME
+
+    source $DONOMO_HOME/bin/env.sh
+}
+
+function start
+{
+    pid=$(pidofproc -p "$pidfile" "$prog")
+    if [[ -n "$pid" ]]
+    then
+        echo -n "- Already running: pid=$pid"
+        return 1
+    fi
+
+    export KEEP_ENVIRONMENT=true
+
+    nice su -c "$HOME/bin/offlineimapd.py --daemonize --pidfile '$pidfile' --logfile '$logfile' --workdir '$workdir' --config '$conffile'" $USER
+
+    return $?
+}
+
+function stop
+{
+    killproc -p $pidfile "$prog" "$1"
+}
+
+
+setup_env
+
+case ${1:?} in
+    start)
+        action "Starting $prog" start
+        ;;
+    stop)
+        action "Stopping $prog" stop -TERM
+        ;;
+    status)
+        status -p $pidfile "$prog"
+        ;;
+    restart)
+        "$0" stop
+        "$0" start
+        ;;
+    reload)
+        action "Reloading $prog" stop -HUP
+        ;;
+    *)
+        echo "Usage: $(basename $0) start|status|stop|restart|reload"
+        exit 1
+        ;;
+esac

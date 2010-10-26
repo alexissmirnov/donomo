@@ -25,6 +25,9 @@ import tempfile
 
 logging = getLogger('offlineimapd')
 
+MUST_SHUT_DOWN = False
+MUST_RESTART = False
+
 # ----------------------------------------------------------------------------
 
 def on_stop_signal(*args):
@@ -41,10 +44,32 @@ def on_stop_signal(*args):
 
 # ----------------------------------------------------------------------------
 
+def on_restart_signal(*args):
+    # pylint: disable-msg=W0603,W0613
+    #   W0603 - use of global keyword
+    #   W0613 - unused argument
+    logging.info('Restarting offlineimap')
+    global MUST_RESTART
+    MUST_RESTART=True
+    # pylint: enable-msg=W0603,W0613
+
+# ----------------------------------------------------------------------------
+
 def must_shut_down():
-    """ Check if the process driver is supposed to shut down
+    """ Check if the offlineimap daemon supposed to shut down
     """
     return MUST_SHUT_DOWN
+
+def must_restart():
+    """ Check if the offlineimap daemon supposed to restart
+    """
+    return MUST_RESTART
+
+
+def terminate(child):
+    while child.poll is None:
+        os.kill(child.pid, signal.SIGINT)
+        time.sleep(1)
 
 # ----------------------------------------------------------------------------
 
@@ -93,22 +118,13 @@ def get_config_file( name ):
 
 # ----------------------------------------------------------------------------
 
-COMMAND_LINE = (
-    'python'
-    ' -c "from offlineimap import init; init.startup(\'6.2.0\')"'
-    ' -c "%(config-file)s'
-    ' -u "NonInteractive.%(verbosity)s'
-    ' -l "%(log-file)s'
-    ' -o'
-    )
-
 def main():
-
     """ Main.
     """
 
-    signal.signal( signal.SIGTERM, stop_process_driver )
-    signal.signal( signal.SIGINT,  stop_process_driver )
+    signal.signal( signal.SIGTERM, on_stop_signal )
+    signal.signal( signal.SIGINT,  on_stop_signal )
+    signal.signal( signal.SIGHUP,  on_restart_signal )
 
     parser = optparse.OptionParser()
 
@@ -148,23 +164,28 @@ def main():
         with open(options.pidfile, 'wb') as pidfile:
             pidfile.write('%d\n' % os.getpid())
 
-    logging.info('Starting offlineimapd')
-
     while not must_shut_down():
         with get_config_file(options.config_file) as config_file:
             try:
                 generate_config_file(config_file)
-                params = {
-                    'config-file' : config_file.name,
-                    'log-file'    : options.logfile,
-                    'verbosity'   : options.verbosity,
-                    }
-                start_time = time.gmtime()
-                os.system( COMMAND_LINE % params )
-                time_spent = time.gmtime() - start_time
+                params = [
+                    'offlineimap', # will show up as the process name
+                    '-c', "from offlineimap import init; init.startup(\'6.2.0\')",
+                    '-c', config_file.name,
+                    '-u', 'Noninteractive.%s' % options.verbosity,
+                    '-l', options.logfile,
+                    '-o',
+                    ]
 
-                if time_spent < options.frequency:
-                    time.sleep(options.frequency - time_spent)
+                logging.info('Starting offlineimapd')
+                child = subprocess.Popen(params, executable='/usr/bin/python')
+
+                while not must_shut_down() and not must_restart():
+                    if child.poll() is not None:
+                        break
+                    time.sleep(5)
+
+                terminate(child)
 
             except Exception:
                 logging.exception('An exception occurred!')
