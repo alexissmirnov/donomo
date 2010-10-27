@@ -16,6 +16,7 @@ import logging
 import optparse
 import os
 import tempfile
+import subprocess
 
 #
 # pylint: disable-msg=C0103
@@ -70,23 +71,26 @@ def terminate(child):
     while child.poll is None:
         os.kill(child.pid, signal.SIGINT)
         time.sleep(1)
+    global MUST_RESTART
+    MUST_RESTART = False
 
 # ----------------------------------------------------------------------------
 
-def generate_conf_file( out_stream ):
+def generate_config_file( out_stream ):
     config = ConfigParser.RawConfigParser()
 
     all_account_names = []
-    for account in Account.objects.all():
+    for account in Account.objects.filter(owner__is_active = True):
         account_name = '%s.%s' % (account.owner.username, account.name)
-        section_name = 'Account %s' % account_name
         all_account_names.append(account_name)
 
+        section_name = 'Account %s' % account_name
         config.add_section(section_name)
         config.set(section_name, 'localrepository', '%s.local' % account_name)
         config.set(section_name, 'remoterepository', '%s.remote' % account_name)
         config.set(section_name, 'username', account.owner.username)
         config.set(section_name, 'maxconnections', '3')
+        config.set(section_name, 'autorefresh', '5')
 
         section_name = 'Repository %s.local' % account_name
         config.add_section(section_name)
@@ -99,11 +103,12 @@ def generate_conf_file( out_stream ):
         config.set(section_name, 'remoteuser', account.name)
         config.set(section_name, 'remotepass', account.password)
 
-    section_name = general
+    section_name = 'general'
     config.add_section(section_name)
     config.set(section_name, 'maxsyncaccounts', '50')
     config.set(section_name, 'accounts', ','.join(all_account_names))
     config.set(section_name, 'metadata', '%s/metadata' % settings.OFFLINEIMAP_DATA_DIR)
+    config.set(section_name, 'ui', 'Noninteractive.Basic,Noninteractive.Quiet')
 
     config.write(out_stream)
     out_stream.flush()
@@ -138,11 +143,11 @@ def main():
     parser.add_option('--umask', type='int')
     parser.add_option('--pidfile')
     parser.add_option('--frequency', type='int')
-    parser.add_option('--config')
+    parser.add_option('--config', dest='config_file')
     parser.add_option(
         '--quiet',
         dest = 'verbosity',
-        action = store_const,
+        action = 'store_const',
         const = 'Quiet',
         default = 'Basic' )
 
@@ -172,8 +177,6 @@ def main():
                     'offlineimap', # will show up as the process name
                     '-c', "from offlineimap import init; init.startup(\'6.2.0\')",
                     '-c', config_file.name,
-                    '-u', 'Noninteractive.%s' % options.verbosity,
-                    '-l', options.logfile,
                     '-o',
                     ]
 
@@ -183,7 +186,7 @@ def main():
                 while not must_shut_down() and not must_restart():
                     if child.poll() is not None:
                         break
-                    time.sleep(5)
+                    time.sleep(2)
 
                 terminate(child)
 

@@ -9,7 +9,7 @@ source /etc/rc.d/init.d/functions
 workdir=/var/lib/donomo
 pidfile=/var/run/donomo/offlineimap.pid
 logfile=/var/log/donomo/offlineimap.log
-conffile=/etc/offlineimap.conf.new
+conffile=/tmp/offlineimap.conf.new
 prog="Donomo-OfflineIMAP"
 
 

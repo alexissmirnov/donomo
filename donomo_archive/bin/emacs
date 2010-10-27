@@ -4,4 +4,4 @@ export DONOMO_HOME=/home/donomo
 
 source $DONOMO_HOME/bin/env.sh
 
-exec /usr/bin/emacs
+exec /usr/bin/emacs "$@"

@@ -817,7 +817,7 @@ def contact_as_json_dict(contact):
     json = {
         'guid'      : '%s.contact' % contact.pk,
         'name'      : contact.name,
-        'type'      : contact.type, 
+        'type'      : contact.type,
         'addresses' : [ { 'email' : address.email, 'guid' : address.email }
                        for address in contact.addresses.all() ],
         'tags'     : [ '%s.tag' % tag.pk
@@ -913,7 +913,7 @@ def get_message_list(request):
     # this is to make sure that when we apply the 'limit' on the resultset the client
     # is able to use the date of the most recent messages as the next value of modified_since
     #
-    # inversely, when asking for messages modified before a given date, the messages are ordered 
+    # inversely, when asking for messages modified before a given date, the messages are ordered
     # in reverse chronological order to allow using the date of the last message as the next
     # value of modified_before
     #
@@ -1017,8 +1017,7 @@ def update_or_create_account(request, id):
         account.save()
         response = HttpResponse()
 
-    if not update_sync_config(account):
-        raise HttpRequestValidationError('Invalid account (only Gmail is supported at the moment)')
+    update_sync_config()
 
     return response
 
@@ -1030,10 +1029,10 @@ def update_contact_info(request, id):
     id = id.split('.')[0]
     contact = models.Contact.objects.get(id = id)
     contact_payload = json.loads(request.raw_post_data)
-    
+
     contact.type = int(contact_payload['type'])
     contact.name = contact_payload['name']
     contact.save()
-    
+
     return HttpResponse('Contact %s updated' % id)
-    
+
