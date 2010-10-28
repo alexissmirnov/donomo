@@ -59,6 +59,7 @@ __all__ = (
     'publish_work_item',
     'retrieve_work_item',
     'close_work_item',
+    'apply_message_rule_on_message'
     )
 
 ###############################################################################
@@ -504,4 +505,137 @@ def close_work_item(work_item, delete_from_queue):
         shutil.rmtree(os.path.dirname(local_path))
 
 ###############################################################################
+def apply_message_rule(rule):
+    messages = Message.objects.filter(owner = rule.owner)
+    for message in messages:
+        apply_message_rule_on_message(rule, message)
 
+def rule_match(rule, message):
+     if rule.type == MessageRule.NEWSLETTER:
+         return rule.sender_address == message.sender_address
+     elif rule.type == MessageRule.CONVERSATION:
+         return True # any message can be part of conversation
+
+def apply_message_rule_on_message(rule, message = None, raw_message = None):
+    if rule_match(rule, message) and rule.type == MessageRule.NEWSLETTER:
+        apply_newsletter_rule(rule, message)
+    elif rule_match(rule, message) and rule.type == MessageRule.CONVERSATION:
+        apply_conversation_rule(rule, message, raw_message)
+
+def apply_newsletter_rule(rule, message):
+    # Using 'get' because there can only be one
+    # already-existing newsletter aggregate for that sender
+    newsletter, created = MessageAggregate.objects.get_or_create(
+                    owner = rule.owner, 
+                    creator = rule)
+
+    message.aggregates.add(newsletter)
+    message.save()
+    
+    # We just added message to an newsletter aggregate.
+    # Remove this message from a one-message aggregate.
+    # Using 'get' because there can only be one conversation aggregate
+    try:
+        conversation = message.aggregates.get(
+                            creator__type = MessageRule.CONVERSATION)
+        
+        # Transfer all tags from the conversation to the newly created
+        # newsletter
+        for tag in conversation.tags.all():
+            newsletter.tags.add(tag)
+        newsletter.save()
+        
+        # If a newsletter message is part of a conversation, then keep the conversation
+        # A conversation with a single message in it (the newsletter itself) isn't 
+        # a conversation, so remove it.
+        if conversation.messages.count() == 1:
+            conversation.delete()
+    except MessageAggregate.DoesNotExist, e:
+        # The conversation may not exist if the newsletter rule gets run before the
+        # conversation rule
+        pass
+    
+    # It is possible that this message will be put back into a conversation
+    # At some point, a message can come along that includes 
+    # a newsletter as a referred message
+    # This would happen in case a newsletter is forwarded and replied to.
+    
+    
+def apply_conversation_rule(rule, message, raw_message):
+    owner = message.owner
+    
+    conversation = None
+    references = []
+    if raw_message['References']:
+        references = raw_message['References'].split(' ')
+    
+    # While scanning though the list of message IDs, cache the objects for
+    # referred messages. We'll need them later to add them into a conversation.
+    referenced_messages = list()
+    for reference in references:
+        try:
+            # Try getting a referred message
+            referenced_message, created = Message.objects.get_or_create(
+                                owner = owner,
+                                message_id = reference,
+                                mailbox_address = message.mailbox_address)
+            
+            # Cache the object to a local list
+            referenced_messages.append(referenced_message)
+            
+            # Still no conversation? continue looking for it
+            if not conversation:
+                try:
+                    conversation = MessageAggregate.objects.get(
+                        owner = owner,
+                        creator__type = MessageRule.CONVERSATION,
+                        messages__message_id = referenced_message.message_id)
+                except MessageAggregate.DoesNotExist, e:
+                    # We have the message, but it it isn't part of conversation
+                    # Try the next one
+                    pass
+        except Message.DoesNotExist, e:
+            # We've just stumbled on a non-existing reference.
+            # Most likely this is because the referenced message
+            # hasn't been yet processed
+            pass
+
+    # Try getting conversation from the message itself.
+    # It is possible that the message is already part of the conversation
+    # where it was put at the time that message was created based on a reference        
+    try:
+        conversation = MessageAggregate.objects.get(
+                        owner = owner,
+                        creator__type = MessageRule.CONVERSATION,
+                        messages__message_id = message.message_id)
+    except MessageAggregate.DoesNotExist, e:
+        # We have the message, but it it isn't part of conversation
+        # Try the next one
+        pass
+    
+    # Is this message part of a newsletter?
+    try:
+        newsletter = MessageAggregate.objects.get(
+                                owner = owner,
+                                creator__type = MessageRule.NEWSLETTER,
+                                messages__message_id = message.message_id)
+    except MessageAggregate.DoesNotExist, e:
+        newsletter = None
+
+    # This message isn't part of a newsletter AND isn't part of a conversation
+    # create a conversation and add all referred messages in it        
+    if not conversation and not newsletter:
+        conversation = MessageAggregate(owner = owner,
+                            creator = rule)
+        # Saving here because
+        # instance needs to have a primary key value before a 
+        # many-to-many relationship can be used
+        conversation.save()
+    
+    if conversation:
+        # Add all existing referenced messages into this conversation
+        message.aggregates.add(conversation)
+        message.save()
+        for referenced_message in referenced_messages:
+            referenced_message.aggregates.add(conversation)
+            referenced_message.save()

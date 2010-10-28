@@ -1,0 +1,481 @@
+Delivered-To: alexis@smirnov.ca
+Received: by 10.223.97.80 with SMTP id k16cs19772fan;
+        Fri, 22 Oct 2010 14:30:08 -0700 (PDT)
+Received: by 10.101.136.3 with SMTP id o3mr2573975ann.184.1287783007153;
+        Fri, 22 Oct 2010 14:30:07 -0700 (PDT)
+Return-Path: <economist-online-newsletters-admin-ctg0aace2aahqi6bkejwcvgmearzabiq@news.economist.com>
+Received: from mta.news.economist.com (mta.news.economist.com [208.70.136.45])
+        by mx.google.com with ESMTP id f37si8087203anh.50.2010.10.22.14.30.05;
+        Fri, 22 Oct 2010 14:30:06 -0700 (PDT)
+Received-SPF: pass (google.com: domain of economist-online-newsletters-admin-ctg0aace2aahqi6bkejwcvgmearzabiq@news.economist.com designates 208.70.136.45 as permitted sender) client-ip=208.70.136.45;
+DomainKey-Status: good
+Authentication-Results: mx.google.com; spf=pass (google.com: domain of economist-online-newsletters-admin-ctg0aace2aahqi6bkejwcvgmearzabiq@news.economist.com designates 208.70.136.45 as permitted sender) smtp.mail=economist-online-newsletters-admin-ctg0aace2aahqi6bkejwcvgmearzabiq@news.economist.com; domainkeys=pass header.From=economist-online-newsletters-admin@news.economist.com
+Return-Path: <economist-online-newsletters-admin-ctg0aace2aahqi6bkejwcvgmearzabiq@news.economist.com>
+DomainKey-Signature: q=dns; a=rsa-sha1; c=nofws;
+	s=dk; d=news.economist.com;
+	h=Received:Date:Message-Id:From:Reply-To:To:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding;
+	b=nnWOnKBnjXpw4pnhlBEk8TZDHMY6FoCUlfqDv4+4aQNyOqq9VIX6qEIQokbY9B6j
+	Da+mFjCVzLb037Q+PaBs1b5CRSMl0y2XAx1IAZgxJg033G/17QaMH7JVF6w6lhxr
+Received: from [10.50.250.215] ([10.50.250.215:2301] helo=MTA1PUMP1)
+	by piemtanode01 (envelope-from <economist-online-newsletters-admin-ctg0aace2aahqi6bkejwcvgmearzabiq@news.economist.com>)
+	(ecelerity 2.2.2.43 r(32041/32179)) with ESMTP
+	id E8/9E-22784-C5202CC4; Fri, 22 Oct 2010 22:30:04 +0100
+Date: Fri, 22 Oct 2010 22:29:29 +0100 (IST)
+Message-Id: <Kilauea492092-760-353449493-1-1101@flonetwork.com>
+From: "The Economist online" <economist-online-newsletters-admin@news.economist.com>
+Reply-To: <autoreply@economist.com>
+To: alexis@smirnov.ca
+Subject: New on The Economist online - 22nd October 2010
+MIME-Version: 1.0
+Content-Type: text/html; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>The Economist online | HTML Email</TITLE>
+  <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+  <META HTTP-EQUIV="Generator" CONTENT='S264691NJ2EW07 at 13:24 Friday-22-October-2010'>
+</head>
+
+<body bgcolor="#FFFFFF" text="#000000" link="#000000" vlink="#333333" alink="#FF6666" topmargin="3" marginheight="3" leftmargin="5" marginwidth="5">
+  <br />
+  <table width="600" border="0" cellspacing="0" cellpadding="0">  
+    <tr>
+      <td width="601" colspan="2" bgcolor="#FFFFFF" align="RIGHT">
+                                    <a target="advert" href="http://ad.doubleclick.net/jump/email.economist.com/gamail;pos=top;sect=gamail;sz=468x60;ord=90253508?"><img src="http://ad.doubleclick.net/ad/email.economist.com/gamail;pos=top;sect=gamail;sz=468x60;ord=90253508?" border="0" width="468" height="60" alt="Click Here!" align="absmiddle" hspace="2" vspace="2"></a>
+  
+  
+  
+  
+  
+  
+  
+      </td>
+    </tr>
+    <tr>
+      <td width="600"><table width="600" border="0" cellspacing="0" cellpadding="0">
+          <tr>
+            <td width="125"><img src="http://www.economist.com/images/blocks/spacer.gif" width="125" height="3" hspace="0" vspace="0" border="0"><br /><a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJp0E7"><img alt="" src="http://www.economist.com/images/B-the-economist-125x61.gif" width="125" height="61" vspace="3" border="0"></a></td>
+            <td width="17" bgcolor="#FFFFFF"><img alt="" src="http://www.economist.com/images/blocks/spacer.gif" width="17" height="1"></td>
+            <td width="1" bgcolor="#CCCCCC"><img alt="" src="http://www.economist.com/images/blocks/gray.gif" width="1" height="1"></td>
+            <td width="326" bgcolor="#FFFFFF" valign="bottom"><iMG SRC="http://www.economist.com/images/pagehead/ga_newsletter_1006.gif" WIDTH="326" HEIGHT="34" VSPACE="3"></td>
+            <td width="126" align="center">
+              <br />
+              <img alt="" src="http://www.economist.com/images/blocks/spacer.gif" width="126" height="1"><br /></td>
+            <td width="5" bgcolor="#FFFFFF"><IMG ALT="" SRC="http://www.economist.com/images/blocks/spacer.gif" WIDTH="5" HEIGHT="1"></td>
+          </tr>
+        </table>
+      </td>
+      <td width="1" bgcolor="#CCCCCC"><img alt="" src="http://www.economist.com/images/blocks/gray.gif" width="1" height="1"></td>
+    </tr>
+    <tr bgcolor="#FFFFFF">
+      <td colspan="2"><img alt="" src="http://www.economist.com/images/blocks/black.gif" width="601" height="1"><br />
+        <table width="600" border="0" cellspacing="0" cellpadding="0">
+          <tr>
+            <td width="280"><font face="Verdana, Arial, Helvetica, sans-serif" size="-2">Friday&nbsp;October&nbsp;22nd&nbsp;2010</font></td>
+            <td colspan="3" align="right"><font face="Verdana, Arial, Helvetica, sans-serif"
+                 size="-2"><a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJh0Ey">Subscribe
+                 now!</a> | </font><font face="Verdana, Arial, Helvetica, sans-serif" size="-2"><a
+                 href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJq0E8">E-mail &amp; Mobile Editions</a></font>
+                 <font face="Verdana, Arial, Helvetica, sans-serif" size="-2">  
+                 | <a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJr0EA">Feedback</a>
+                 </font>
+            </td>
+            <td align="RIGHT" width="5"><font face="Verdana, Arial, Helvetica, sans-serif" size="-2"></font></td>
+          </tr>
+        </table><img alt="" src="http://www.economist.com/images/blocks/white.gif" width="601"
+             height="1"><br /><img alt="" src="http://www.economist.com/images/blocks/black.gif" width="601" height="1"></td>
+    </tr>
+  </table> 
+		<TABLE WIDTH="601" BORDER="0" CELLSPACING="0" CELLPADDING="0">
+  		<TR>
+		
+	  <TD VALIGN="TOP" width="125">
+	  
+<table border="0" cellpadding="0" cellspacing="0">
+  
+  
+  
+    <tr>
+      <td width="125" colspan="3" valign="bottom">
+        <br>
+        <a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJp0E7"><img src="http://www.economist.com/images/nav/emailnavtop.gif" alt="Visit The Economist online" border="0" width="125" height="15"></a></td> 
+    </tr>
+  
+  <tr>
+    <td width="125" colspan="3">
+            <a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJs0EB"><img src="http://www.economist.com/images/navigation/opinion.gif" width="125" height="15" border="0" alt="OPINION"></a></td> 
+  </tr>
+      <tr>
+        <td width="125" colspan="3"><a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJt0EC"><img src="http://www.economist.com/images/navigation/world.gif" width="125" height="14" border="0" alt="WORLD"></a></td>  
+      </tr>
+
+  <tr>
+    <td width="125" colspan="3"><a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJu0ED"><img src="http://www.economist.com/images/navigation/business.gif" width="125" height="14" border="0" alt="BUSINESS"></a></td> 
+  </tr>
+
+  <tr>
+<td width="125" colspan="3"><a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJv0EE"><img src="http://www.economist.com/images/navigation/finance.gif" width="125" height="14" border="0" alt="FINANCE"></a></td> 
+  </tr>
+
+        <tr>
+        <td width="125" colspan="3"><a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJw0EF"><img src="http://www.economist.com/images/navigation/science.gif" width="125" height="14" border="0" alt="SCIENCE"></a></td>  
+      </tr>
+
+  <tr>
+        <td width="125" colspan="3"><a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJx0EG"><img src="http://www.economist.com/images/navigation/people.gif" width="125" height="14" border="0" alt="PEOPLE"></a></td> 
+      </tr>
+    
+  <tr>
+    <td width="125" colspan="3"><a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJy0EH"><img src="http://www.economist.com/images/navigation/books-arts.gif" width="125" height="14" border="0" alt="BOOKS & ARTS"></a></td> 
+  </tr>         <tr>
+        <td width="125" colspan="3"><a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJz0EI"><img src="http://www.economist.com/images/navigation/markets.gif" width="125" height="14" border="0" alt="MARKETS"></a></td> 
+      </tr><tr>
+    <td width="125" colspan="3"><a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJ10E4"><img src="http://www.economist.com/images/navigation/diversions.gif" width="125" height="14" border="0" alt="DIVERSIONS"></a></td>
+  </tr>
+  <tr>
+    <td width="125" colspan="3"><img src="http://www.economist.com/images/blocks/spacer.gif" width="125" height="17" border="0" alt=""></td>
+  </tr>
+</table>
+
+<table width="125" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<td width="125"><a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJ20E5"><img src="http://media.economist.com/images/nav/ccnav-red-country.gif" width="125" height="14"  border="0" alt="Country briefings"></a></td>
+</tr>
+</table>
+<img alt="" src="http://www.economist.com/images/blocks/spacer.gif" width="125" height="17"><br><img src="http://www.economist.com/images/nav/advt_125_email.gif" width="125" height="9" hspace="0" vspace="3" border="0"><br><a target="advert" href="http://ad.doubleclick.net/jump/email.economist.com/gamail;pos=ltop;sect=gamail;sz=125x125"><img src="http://ad.doubleclick.net/ad/email.economist.com/gamail;pos=ltop;sect=gamail;sz=125x125" border="0" width="125" height="125" alt="Click Here!" align="absmiddle" hspace="0" vspace="0"></a>
+<img alt="" src="http://www.economist.com/images/blocks/spacer.gif" width="125" height="17"><br>     <font face="Verdana, Arial, Helvetica, sans-serif" size="-1"><b>Use <i>The Economist</i> online Classifieds for job listings, business opportunities and more:</b><br>
+<br>
+</font>
+
+<font face="Verdana, Arial, Helvetica, sans-serif" size="-2"><i>The Economist</i> online Classifieds put you in front of our audience of senior business executives, professionals, academics and other specialists.
+<br>
+<br>
+Place your ad today: Visit <a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJ30E6"><i>The Economist</i> online Classifieds</a>.<br>
+<br>
+</font>
+<img alt="" src="http://www.economist.com/images/blocks/spacer.gif" width="125" height="17"><br>
+
+
+   
+  <a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJ40E7"><img alt="" src="http://www.economist.com/images/nav/pedition.gif" width="125" height="19" border="0"></a><br /> 
+  <table width="125" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+      <td width="1" bgcolor="#000000"><img alt="" src="http://www.economist.com/images/blocks/spacer.gif" width="1" height="1"></td>
+      <td width="3"><img alt="" src="http://www.economist.com/images/blocks/spacer.gif" width="3" height="1"></td>
+      <td width="117" bgcolor="#FFFFFF">
+        <font face="Verdana, Arial, Helvetica, sans-serif" size="-2">
+        <a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJ40E7"><img alt="" src="http://www.economist.com/images/Covers/CurrentCover.jpg" width="117" height="155" border="0" hspace="0" vspace="2"></a><br /> 
+        <img alt="" src="http://www.economist.com/images/blocks/spacer.gif" width="3" height="8"><a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJ40E7">Full contents</a><br /> 
+        <img alt="" src="http://www.economist.com/images/blocks/spacer.gif" width="3" height="8"><a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJ50E8">Past issues</a><br />  
+        
+        
+          <img alt="" src="http://www.economist.com/images/blocks/spacer.gif" width="3" height="8"><a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJh0Ey">Subscribe</a><br />
+        
+        
+        <img alt="" src="http://www.economist.com/images/blocks/spacer.gif" width="117" height="5"><br /></font>
+      </td>
+      <td width="3"><img alt="" src="http://www.economist.com/images/blocks/spacer.gif" width="3" height="1"></td>
+      <td width="1" bgcolor="#000000"><img alt="" src="http://www.economist.com/images/blocks/spacer.gif" width="1" height="1"></td>
+    </tr>
+    <tr> 
+      <td width="125" bgcolor="#000000" colspan="5"><img alt="" src="http://www.economist.com/images/blocks/spacer.gif" width="125" height="1"></td>
+    </tr>
+  </table>
+  <img alt="" src="http://www.economist.com/images/blocks/spacer.gif" width="125" height="17"><br>                            <img src="http://www.economist.com/images/nav/advt_125_email.gif" width="125" height="9" hspace="0" vspace="3" border="0"><br><a target="advert" href="http://ad.doubleclick.net/jump/email.economist.com/gamail;pos=sky;sect=gamail;sz=120x800;ord=90253508?"><img src="http://ad.doubleclick.net/ad/email.economist.com/gamail;pos=sky;sect=gamail;sz=120x800;ord=90253508?" border="0" width="120" height="800" alt="Click Here!" align="absmiddle" hspace="2" vspace="2"></a>
+      <img alt="" src="http://www.economist.com/images/blocks/spacer.gif" width="125" height="17"><br>
+  
+  
+  
+  
+  
+  
+   
+	<IMG ALT="" SRC="http://www.economist.com/images/blocks/spacer.gif" WIDTH="125" HEIGHT="1">
+	  </TD>
+	<TD WIDTH="17"><IMG ALT="" SRC="http://www.economist.com/images/blocks/spacer.gif" WIDTH="17" HEIGHT="1"></TD>
+	<TD WIDTH="1" BGCOLOR="CCCCCC"><IMG ALT="" SRC="http://www.economist.com/images/blocks/gray.gif" WIDTH="1" HEIGHT="1"></TD>
+	<TD WIDTH="5"><IMG ALT="" SRC="http://www.economist.com/images/blocks/spacer.gif" WIDTH="5" HEIGHT="1"></TD>
+	
+<TD VALIGN="TOP">
+
+
+        <br /><font face="verdana, geneva, arial, sans serif" size="+1"><b>New or updated articles</b><br /></font> 
+        <font SIZE="-2" face="verdana,geneva,arial,sans serif" color="999999">October 22nd 2010<br /></font><br /><br />
+        <table border="0" cellspacing="0" cellpadding="0">
+        
+        <tr><td>
+        <!-- CC13488 BUTTONWOOD BOX START -->
+        
+      
+        <!-- CC13488 BUTTONWOOD BOX END --> 
+		
+		    
+		  
+			
+		  <A HREF="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJ60EA"><font  FACE="verdana,geneva,arial,sans serif" SIZE="-1"><B><u>The AIA offering: Bailing out</u></B></a> 
+	
+
+
+
+</font> 
+          <br />
+          <font  FACE="verdana,geneva,arial,sans serif" SIZE="-1">American taxpayers should not cheer the sale of AIG's Asian arm too loudly</font><br />
+		
+
+		 
+		  <A HREF="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJ60EA"><font  FACE="verdana,geneva,arial,sans serif" SIZE="-1">Full article</font></A>
+		  
+		  <br /><br />    
+          
+          <A HREF="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJ70EB"><font  FACE="verdana,geneva,arial,sans serif" SIZE="-1"><B><u>Mexico: Court martial</u></B></a> 
+	
+
+
+
+</font> 
+          <br />
+          <font  FACE="verdana,geneva,arial,sans serif" SIZE="-1">Mexico takes a step closer to putting some of its own soldiers in the dock</font><br />
+		
+
+		 
+		  <A HREF="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJ70EB"><font  FACE="verdana,geneva,arial,sans serif" SIZE="-1">Full article</font></A>
+		  
+		  <br /><br />    
+          
+          <A HREF="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJ80EC"><font  FACE="verdana,geneva,arial,sans serif" SIZE="-1"><B><u>Technology: Sleeping tablets</u></B></a> 
+	
+
+
+
+</font> 
+          <br />
+          <font  FACE="verdana,geneva,arial,sans serif" SIZE="-1">Our columnist examines the coming wave of mid-size tablet computers</font><br />
+		
+
+		 
+		  <A HREF="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJ80EC"><font  FACE="verdana,geneva,arial,sans serif" SIZE="-1">Full article</font></A>
+		  
+		  <br /><br />    
+          
+          <A HREF="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aKA0EM"><font  FACE="verdana,geneva,arial,sans serif" SIZE="-1"><B><u>Banyan: Stigmata</u></B></a> 
+	
+
+
+
+</font> 
+          <br />
+          <font  FACE="verdana,geneva,arial,sans serif" SIZE="-1">A long-awaited gathering to examine the spread of AIDS in Asia</font><br />
+		
+
+		 
+		  <A HREF="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aKA0EM"><font  FACE="verdana,geneva,arial,sans serif" SIZE="-1">Full article</font></A>
+		  
+		  <br /><br />    
+          
+          <A HREF="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aKB0EN"><font  FACE="verdana,geneva,arial,sans serif" SIZE="-1"><B><u>United States: Citizens united</u></B></a> 
+	
+
+
+
+</font> 
+          <br />
+          <font  FACE="verdana,geneva,arial,sans serif" SIZE="-1">Is firing Juan Williams good for democracy?</font><br />
+		
+
+		 
+		  <A HREF="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aKB0EN"><font  FACE="verdana,geneva,arial,sans serif" SIZE="-1">Full article</font></A>
+		  
+		  <br /><br />    
+          
+          <A HREF="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aKC0EO"><font  FACE="verdana,geneva,arial,sans serif" SIZE="-1"><B><u>Language: Buzzwords</u></B></a> 
+	
+
+
+
+</font> 
+          <br />
+          <font  FACE="verdana,geneva,arial,sans serif" SIZE="-1">How to win, intransitively</font><br />
+		
+
+		 
+		  <A HREF="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aKC0EO"><font  FACE="verdana,geneva,arial,sans serif" SIZE="-1">Full article</font></A>
+		  
+		  <br /><br />    
+          
+          <A HREF="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aKD0EP"><font  FACE="verdana,geneva,arial,sans serif" SIZE="-1"><B><u>Daily chart: Clicks and mortar</u></B></a> 
+	
+
+
+
+</font> 
+          <br />
+          <font  FACE="verdana,geneva,arial,sans serif" SIZE="-1">An interactive guide to house prices</font><br />
+		
+
+		 
+		  <A HREF="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aKD0EP"><font  FACE="verdana,geneva,arial,sans serif" SIZE="-1">Full article</font></A>
+		  
+		  <br /><br />    
+          
+          <A HREF="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aKE0EQ"><font  FACE="verdana,geneva,arial,sans serif" SIZE="-1"><B><u>Live online debate: Computing</u></B></a> 
+	
+
+
+
+</font> 
+          <br />
+          <font  FACE="verdana,geneva,arial,sans serif" SIZE="-1">In their rebuttals, both debaters look at the world pre-computing. Which view strikes you as more clear headed?</font><br />
+		
+
+		 
+		  <A HREF="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aKE0EQ"><font  FACE="verdana,geneva,arial,sans serif" SIZE="-1">Full article</font></A>
+		  
+		  <br /><br />    
+        
+        </td></tr></table>
+      <br />                     <a target="advert" href="http://ad.doubleclick.net/jump/email.economist.com/gamailslotone;pos=top;sect=gamailslotone;sz=446x236;ord=69455533?"><img src="http://ad.doubleclick.net/ad/email.economist.com/gamailslotone;pos=top;sect=gamailslotone;sz=446x236;ord=69455533?" border="0" width="446" height="236" alt="Click Here!" align="absmiddle"></a> 
+<br>
+<img alt="" src="http://www.economist.com/images/blocks/spacer.gif" width="125" height="17"><br>
+              <a target="advert" href="http://ad.doubleclick.net/jump/email.economist.com/gamarketingbox;pos=top;sect=gamarketingbox;sz=446x236;ord=69455533?"><img src="http://ad.doubleclick.net/ad/email.economist.com/gamarketingbox;pos=top;sect=gamarketingbox;sz=446x236;ord=69455533?" border="0" width="446" height="236" alt="Click Here!" align="absmiddle"></a> 
+<br>
+<img alt="" src="http://www.economist.com/images/blocks/spacer.gif" width="125" height="17"><br>
+  
+  
+               <FONT color="cc0033" face="verdana,geneva,arial,sans serif" size=-1><B>Customer 
+service </B></FONT><BR>
+<p><font size="2" face="Verdana, Arial, Helvetica, sans-serif">To change your subscription settings or to unsubscribe 
+  please <a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJj0E1">click here</a>, (you may need to log in) and select the newsletters you wish to unsubscribe from.</font> </p>
+      <p><font size="2" face="Verdana, Arial, Helvetica, sans-serif">As a registered user of <i>The Economist</i> online, you can sign up for <a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aKF0ER">additional newsletters</a> 
+   or change your e-mail address by <a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aKG0ES">amending 
+        your details</a>. </font> 
+      <p><font size="2" face="Verdana, Arial, Helvetica, sans-serif">If you received this newsletter from a friend and you would like to subscribe to <i>The Economist</i> online's wide range of newsletters, please go to the <i>The Economist</i> online <a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJl0E3">registration 
+        page</a> and fill out the registration form.</font></p>
+      <p><font size="2" face="Verdana, Arial, Helvetica, sans-serif">This mail 
+        has been sent to: alexis@smirnov.ca</font></p>
+      <p><font color="ff0000" face="Verdana, Arial, Helvetica, sans-serif" size="2"> 
+        </font><font face="Verdana, Arial, Helvetica, sans-serif" size="2"> </font></P>
+
+
+<p><font face="Verdana, Geneva, Arial, sans-serif" size="-1">Questions? Comments? <a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJm0E4">Use this form</a> to contact <i>The Economist</i> online staff.  Replies to this e-mail will not reach us.</font>
+  
+  
+  <img alt="" src="http://www.economist.com/images/blocks/spacer.gif" width="125" height="17"><br>
+
+
+<BR><IMG ALT="" SRC="http://www.economist.com/images/blocks/spacer.gif" WIDTH="447" HEIGHT="1"><BR></TD>
+	<TD WIDTH="5"><IMG ALT="" SRC="http://www.economist.com/images/blocks/spacer.gif" WIDTH="5" HEIGHT="1"></TD>
+	<TD WIDTH="1" BGCOLOR="CCCCCC"><IMG ALT="" SRC="http://www.economist.com/images/blocks/gray.gif" WIDTH="1" HEIGHT="1"></TD>
+
+  </TR>
+
+
+  <TR> 
+	<TD WIDTH="600" colspan="6" align="right"><IMG SRC="http://www.economist.com/images/blocks/gray.gif" WIDTH="600" HEIGHT="1" HSPACE="0" VSPACE="0" BORDER="0"></TD>
+	<TD WIDTH="1" BGCOLOR="CCCCCC"><IMG ALT="" SRC="http://www.economist.com/images/blocks/gray.gif" WIDTH="1" height="1"></TD>
+  </TR>
+ 
+
+<!-- begin foot -->
+
+
+<TR>
+	<TD COLSPAN=7 ALIGN="CENTER"> <FONT FACE="Verdana, Arial, Helvetica, sans-serif" SIZE="-2"> 
+	  <A HREF="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aJp0E7">GO TO THE ECONOMIST ONLINE</A></FONT><BR>  
+ 
+  
+
+  
+  
+  <img height=15 alt="" hspace="0" src="http://www.economist.com/images/ads/EconomistGroupBusiness.gif" width="156" vspace="4"><br> 
+  <font face="Verdana, Arial, Helvetica, sans-serif" size="-2" color="Black">
+  <a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aKH0ET">Copyright</a>  &copy; <a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aKI0EU">The Economist Newspaper Limited</a> 2010. All rights reserved.<br>
+  
+    <a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aKJ0EV">Advertising info</a> | <a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aKK0EW">Legal disclaimer</a> | <a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aKL0EX">Privacy Policy</a> | <a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aKM0EY">Terms & Conditions</a> | <a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aKN0EZ">Help</a> 
+    
+  </font>
+   
+    <br><br>
+		<font face="Verdana, Arial, Helvetica, sans-serif" size="-2">        
+		An Economist Group business<br />
+		<a href="http://news.economist.com/cgi-bin1/DM/t/hCQpg0bQUY20Mo0aKI0EU">The Economist Newspaper Limited</a><br>
+		Registered in England and Wales. No.236383<br>
+		VAT no: GB 340 436 876<br>
+		Registered office: 25 St James's Street, London, SW1A 1HG<br>	</font><br>
+  
+
+
+
+  
+  
+
+  
+
+  
+   
+  
+
+  
+    
+    
+  
+
+
+  
+
+
+        
+      
+
+  
+
+
+
+  
+
+
+
+  
+
+
+    
+    
+
+      
+
+    
+
+  
+    
+
+    
+  
+
+
+
+  
+
+
+
+
+  
+	 
+
+
+
+ 
+
+
+
+		 	
+
+<BR><IMG ALT="" SRC="http://www.economist.com/images/blocks/spacer.gif" WIDTH="601" HEIGHT="2"><BR><IMG ALT="" SRC="http://www.economist.com/images/blocks/gray.gif" WIDTH="601" HEIGHT="1"><BR>
+</TD></TR>
+</TABLE>
+
+
+    </body>
+
+<IMG SRC="http://news.economist.com/cgi-bin1/flosensing?y=CQpg0bQUY20Mo0BY"></html>
+

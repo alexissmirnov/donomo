@@ -57,13 +57,13 @@ urlpatterns = patterns(
          search,
          name = 'api_search'),
          
-    url( r'^conversations/$',
-         conversation_list,
-         name = 'api_conversation_list' ),
+    url( r'^aggregates/$',
+         aggregate_list,
+         name = 'api_aggregate_list' ),
 
-    url( r'^conversations/(?P<id>[-a-zA-Z0-9_:. \$\>\<\@]+)/$',
-         conversation_info,
-         name = 'api_conversation_info' ),
+    url( r'^aggregates/(?P<id>[-a-zA-Z0-9_:. \$\>\<\@]+)/$',
+         aggregate_info,
+         name = 'api_aggregate_info' ),
 
     url( r'^messages/(?P<id>[-a-zA-Z0-9_:. \$\>\<\@]+)/$',
          message_info,
@@ -84,9 +84,5 @@ urlpatterns = patterns(
     url( r'^accounts/(?P<id>[-a-zA-Z0-9_:. \$\>\<\@]+)/$',
          account_info,
          name = 'api_account_info' )
-
-#    url( r'^messages/(?P<label>[-a-zA-Z0-9_:. \$]+)/$',
-#         message_info,
-#         name = 'api_message_info' ),
 )
 

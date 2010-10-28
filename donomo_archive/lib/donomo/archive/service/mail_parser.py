@@ -155,28 +155,28 @@ def generate_conversation_summary( body, type, summary_length = 1000 ):
 
 ##############################################################################
 
-def classify_conversation(conversation):
-    """
-    Assumes 'INBOX' folder. If a conversation is tagged ONLY as 'INBOX' this
-    means it is not classified.
-    
-    Remove from INBOX if it is already tagged with something else.
-    """
-    
-    try:
-        inbox = conversation.tags.get(label = 'INBOX')
-    except Tag.DoesNotExist, e:
-        # already classified. fine
-        return
-    
-    # So INBOX is one folder. Is this conversation already classified
-    # in some other folders?
-    count = conversation.tags.filter(tag_class = Tag.MAIL_IMAP_FOLDER).count()
-    if count > 1:
-        # Yes it is, remove the inbox tag then
-        conversation.tags.remove(inbox)
-        conversation.save()
-        
+#def classify_conversation(conversation):
+#    """
+#    Assumes 'INBOX' folder. If a conversation is tagged ONLY as 'INBOX' this
+#    means it is not classified.
+#    
+#    Remove from INBOX if it is already tagged with something else.
+#    """
+#    
+#    try:
+#        inbox = conversation.tags.get(label = 'INBOX')
+#    except Tag.DoesNotExist, e:
+#        # already classified. fine
+#        return
+#    
+#    # So INBOX is one folder. Is this conversation already classified
+#    # in some other folders?
+#    count = conversation.tags.filter(tag_class = Tag.MAIL_IMAP_FOLDER).count()
+#    if count > 1:
+#        # Yes it is, remove the inbox tag then
+#        conversation.tags.remove(inbox)
+#        conversation.save()
+#        
     
 def header_to_unicode(raw_header):
     """
@@ -188,18 +188,24 @@ def header_to_unicode(raw_header):
     header = email.header.decode_header(raw_header)[0]
     if header[1] and header[1].lower() == 'iso-8859-1':
         return header[0].decode('iso-8859-1').encode('utf-8')
+    elif header[1] and header[1].lower() == 'utf-8':
+        return header[0]
     else:
         return unicode(header[0])
+
+def apply_rules(owner, message, raw_message):
+    rules = owner.message_rules
     
+    for rule in rules.all():
+        operations.apply_message_rule_on_message(rule, message, raw_message)
+
+
 #TODO generate subject for conversations with no-subject emails
 #first few words of the body
 def handle_work_item( processor, work_item ):
-
     """ Pick up an uploaded email and break out each attachment we understand
         into its own upload work item.
-
     """
-
     asset_list   = []
     parent_asset = work_item['Asset-Instance']
     upload_class = manager(AssetClass).get( name = AssetClass.UPLOAD )
@@ -207,10 +213,10 @@ def handle_work_item( processor, work_item ):
                                         name = AssetClass.MESSAGE_PART )
     counter      = 0
     
-#    logging.info('*******************************************')
-#    logging.info(file(work_item['Local-Path']).read())
-#    logging.info('*******************************************')
-    # create contacts, message, conversation
+    conversation_rule, created = MessageRule.objects.get_or_create(
+                                    owner = parent_asset.owner, 
+                                    type = MessageRule.CONVERSATION)
+
     raw_message = email.message_from_file(file(work_item['Local-Path']))
     
     # create the record for the sender
@@ -219,6 +225,7 @@ def handle_work_item( processor, work_item ):
     in_reply_to = raw_message['In-Reply-To']
     message_date = raw_message['Date']
     message_id = raw_message['Message-ID']
+    references = raw_message['References']
     
     sender_name, sender_address_string = email.utils.parseaddr(sender)
     sender_name = sender_name.strip('\'')
@@ -227,26 +234,20 @@ def handle_work_item( processor, work_item ):
                                         sender_name, 
                                         sender_address_string,
                                         parent_asset.owner)
-        
-        
+                
     # create a conversation or get one from previously registered email
-    conversation = None
-    in_reply_to_message = None
-    try:
-        in_reply_to_message = Message.objects.get( owner = parent_asset.owner, message_id = in_reply_to )
-        conversation = in_reply_to_message.conversation
-    except Message.DoesNotExist, e:
-        conversation, created = Conversation.objects.get_or_create(
-                    owner = parent_asset.owner,
-                    subject = (subject or '-'). #FIXME regex!
-                            strip('Re: ').strip('RE: ').strip('re: '),
-                    defaults = {'key_participant': sender_address}) 
+#    conversation = None
+#    in_reply_to_message = None
+#    try:
+#        in_reply_to_message = Message.objects.get( owner = parent_asset.owner, message_id = in_reply_to )
+#        conversation = in_reply_to_message.conversation
+#    except Message.DoesNotExist, e:
+#        conversation, created = Conversation.objects.get_or_create(
+#                    owner = parent_asset.owner,
+#                    subject = (subject or '-'). #FIXME regex!
+#                            strip('Re: ').strip('RE: ').strip('re: '),
+#                    defaults = {'key_participant': sender_address}) 
 
-    # tag the conversation
-    tag = get_or_create_tag_from_asset(parent_asset)
-    if tag:
-        conversation.tags.add(tag)
-        conversation.save()
     
     # get the mailbox account address from asset filename
     # this isn't the same thing as "To:" address because the mail
@@ -262,15 +263,24 @@ def handle_work_item( processor, work_item ):
                                                 message_date)))
     else:
         message_date = datetime.datetime.now()
-        
-    message = Message(owner = parent_asset.owner,
-                      subject = subject or '-',
-                      message_id = message_id,
-                      mailbox_address = mailbox_address,
-                      date = message_date,
-                      reply_to = in_reply_to_message,
-                      conversation = conversation,
-                      sender_address = sender_address)
+
+    in_reply_to_message = None
+    if in_reply_to:
+        in_reply_to_message, created = Message.objects.get_or_create( 
+                owner = parent_asset.owner, 
+                message_id = in_reply_to,
+                mailbox_address = mailbox_address )
+    
+    # A message could have been created based on a Reference from another
+    # message. In this case it will only have owner, message_id and mailbox_address
+    message, created = Message.objects.get_or_create(
+                    owner = parent_asset.owner,
+                    message_id = message_id,
+                    mailbox_address = mailbox_address)
+    message.subject = subject or ''
+    message.date = message_date
+    message.reply_to = in_reply_to_message
+    message.sender_address = sender_address
     message.save()
     
 
@@ -299,7 +309,17 @@ def handle_work_item( processor, work_item ):
     
     message.save()
                       
-    classify_conversation(conversation)
+#    classify_conversation(conversation)
+    
+    apply_rules(parent_asset.owner, message, raw_message)
+
+    # tag all aggregates of this message
+    tag = get_or_create_tag_from_asset(parent_asset)
+    if tag:
+        for aggregate in message.aggregates.all():
+            aggregate.tags.add(tag)
+            aggregate.save()
+
 
     for part in raw_message.walk():
         logging.info('part.get_content_type()=%s', part.get_content_type())
@@ -332,10 +352,8 @@ def handle_work_item( processor, work_item ):
         #TODO: figure out why 
         payload = part.get_payload(decode=True).decode('utf8', 'ignore')
 
-        #TODO update the summary with latest message
-        if conversation.summary == '':
-            conversation.summary = generate_conversation_summary(payload, mime_type)
-            conversation.save()
+        message.summary = generate_conversation_summary(payload, mime_type)
+        message.save()
 
         asset_list.append(
             operations.create_asset_from_stream(

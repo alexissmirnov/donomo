@@ -1,0 +1,33 @@
+Delivered-To: alicetest@inzen.me
+Received: by 10.213.109.79 with SMTP id i15cs73372ebp;
+        Mon, 27 Sep 2010 14:52:51 -0700 (PDT)
+Received: by 10.224.69.16 with SMTP id x16mr5982338qai.284.1285624369981;
+        Mon, 27 Sep 2010 14:52:49 -0700 (PDT)
+Return-Path: <alexis@smirnov.ca>
+Received: from mail-qy0-f180.google.com (mail-qy0-f180.google.com [209.85.216.180])
+        by mx.google.com with ESMTP id m26si12094754qck.160.2010.09.27.14.52.49;
+        Mon, 27 Sep 2010 14:52:49 -0700 (PDT)
+Received-SPF: neutral (google.com: 209.85.216.180 is neither permitted nor denied by best guess record for domain of alexis@smirnov.ca) client-ip=209.85.216.180;
+Authentication-Results: mx.google.com; spf=neutral (google.com: 209.85.216.180 is neither permitted nor denied by best guess record for domain of alexis@smirnov.ca) smtp.mail=alexis@smirnov.ca
+Received: by qyk5 with SMTP id 5so8351262qyk.11
+        for <alicetest@inzen.me>; Mon, 27 Sep 2010 14:52:49 -0700 (PDT)
+Received: by 10.229.189.83 with SMTP id dd19mr6188251qcb.92.1285624368534;
+        Mon, 27 Sep 2010 14:52:48 -0700 (PDT)
+Return-Path: <alexis@smirnov.ca>
+Received: from [192.168.1.101] (modemcable160.197-57-74.mc.videotron.ca [74.57.197.160])
+        by mx.google.com with ESMTPS id t18sm7131334qco.8.2010.09.27.14.52.47
+        (version=TLSv1/SSLv3 cipher=RC4-MD5);
+        Mon, 27 Sep 2010 14:52:47 -0700 (PDT)
+From: Alexis Smirnov <alexis@smirnov.ca>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Subject: send on 5:52pm
+Date: Mon, 27 Sep 2010 17:52:44 -0400
+Message-Id: <CF1F87E7-6897-4BCA-9CB5-A1B08BE34935@smirnov.ca>
+To: alicetest@inzen.me
+Mime-Version: 1.0 (Apple Message framework v1081)
+X-Mailer: Apple Mail (2.1081)
+
+test
+
+alexis

@@ -37,10 +37,6 @@ class AddressAdmin(admin.ModelAdmin):
     pass
 admin.site.register(Address, AddressAdmin)
 
-class ConversationAdmin(admin.ModelAdmin):
-    pass
-admin.site.register(Conversation, ConversationAdmin)
-
 class PageAdmin(admin.ModelAdmin):
     pass
 admin.site.register(Page, PageAdmin)

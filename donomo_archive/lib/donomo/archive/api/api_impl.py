@@ -55,11 +55,12 @@ __all__ = (
     'get_search',
     'process_uploaded_files',
     'get_message_list',
-    'get_conversation_list',
-    'get_conversation_info',
+    'get_aggregate_list',
+    'get_aggregate_info',
     'get_contact_list',
     'update_contact_info',
     'get_message_info',
+    'update_message_info',
     'get_message_list',
     'update_or_create_account',
     )
@@ -753,33 +754,21 @@ def get_search(request):
 
 
 ##############################################################################
-
-@json_view
-def get_message_list(request):
-    """
-    Get a list of the user's messages
-    """
-    message_set = [{'body': 'this is message body'},
-                   {'body': 'this is another message body'}]
-
-    return {
-        'content' : [ message_as_json_dict( message )
-                     for message in message_set ],
-        }
-
-def conversation_as_json_dict(conversation,
+def aggregate_as_json_dict(aggregate,
                               message_body = True):
-    messages = conversation.messages.all().order_by('-date')
+    messages = aggregate.messages.all().order_by('-date')
+    latest_message_date = messages[len(messages)-1].date
+    
     json = {
-        'guid'      : '%s.conversation' % conversation.pk,
-        'subject'   : conversation.subject,
-        'summary'   : conversation.summary,
-        'date'      : str(messages[len(messages)-1].date.ctime()),
-        'humanized_age' : humanize_date(messages[len(messages)-1].date),
+        'guid'      : '%s.aggregate' % aggregate.pk,
+        'subject'   : aggregate.name,
+        'summary'   : aggregate.summary,
+        'date'      : str(latest_message_date.ctime()),
+        'humanized_age' : humanize_date(latest_message_date),
         'tags'     : [ '%s.tag' % tag.pk
-                       for tag in conversation.tags.all() ],
-        'key_participant' : conversation.key_participant.email
-        }
+                       for tag in aggregate.tags.all() ],
+        'latest_sender' : aggregate.latest_sender.email
+    }
     if message_body:
         json.update(messages = [ message_as_json_dict(message, message_body)
                        for message in messages])
@@ -792,26 +781,26 @@ def conversation_as_json_dict(conversation,
 
 @long_poll
 @json_view
-def get_conversation_list(request):
+def get_aggregate_list(request):
     """
-    Gets all conversations
+    Gets all aggregates
     """
-    conversation_set = request.user.conversations.all()
+    aggregate_set = request.user.aggregates.all()
     show_message_body  = bool(request.REQUEST.get('message_body', False))
     return {
-            'content' : [ conversation_as_json_dict(conversation,
+            'content' : [ aggregate_as_json_dict(aggregate,
                                                     show_message_body)
-                    for conversation in conversation_set ],
+                    for aggregate in aggregate_set ],
     }
 
 @json_view
-def get_conversation_info(request, id):
+def get_aggregate_info(request, id):
     """
-    Gets all conversations
+    Gets an aggregate
     """
-    id = id.split('.')[0] # strip the '.conversation' at the end of the id
-    conversation = request.user.conversations.get(pk = id)
-    return conversation_as_json_dict(conversation)
+    id = id.split('.')[0] # strip the '.aggregate' at the end of the id
+    aggregate = request.user.aggregates.get(pk = id)
+    return aggregate_as_json_dict(aggregate)
 
 def contact_as_json_dict(contact):
     json = {
@@ -830,7 +819,7 @@ def contact_as_json_dict(contact):
 @json_view
 def get_contact_list(request):
     """
-    Gets all conversations
+    Gets all contacts
     """
     contact_set = request.user.contacts.all()
     return {
@@ -846,7 +835,8 @@ def message_as_json_dict(message, include_body = True):
         'guid'                  : message.pk,
         'subject'               : message.subject,
         'sender_address'        : message.sender_address.email,
-        'date'                  : message.date.ctime()
+        'date'                  : message.date.ctime(),
+        'modified_date'         : message.modified_date.ctime()
         }
 
     if include_body:
@@ -865,7 +855,7 @@ def message_as_json_dict(message, include_body = True):
             # i need to call decode here
             message_text = message_text.decode('utf8','ignore')
 
-            #TODO: extract the message from conversation.
+            #TODO: extract the message from a thread.
             # This will be much more complex than looking for -----Original Message-----
             if body_type == models.MimeType.TEXT:
                 json.update(body = message_text.split('-----Original Message-----')[0])
@@ -878,7 +868,7 @@ def message_as_json_dict(message, include_body = True):
 @json_view
 def get_message_info(request, id):
     """
-    Gets all conversations
+    Gets a message and optionally its body
     """
     include_body  = bool(request.REQUEST.get('body', True))
 
@@ -893,9 +883,10 @@ def get_message_list(request):
     """
     Get messages along with metadata
     """
-    include_conversations = bool(request.REQUEST.get('conversations', True))
-    include_contacts = bool(request.REQUEST.get('contacts', True))
-    include_tags = bool(request.REQUEST.get('tags', True))
+    include_aggregates = bool(int(request.REQUEST.get('aggregates', '1')))
+    include_contacts = bool(int(request.REQUEST.get('contacts', '1')))
+    include_tags = bool(int(request.REQUEST.get('tags', '1')))
+    include_body = bool(int(request.REQUEST.get('body', '1')))
 
     limit = int(request.REQUEST.get('limit', 10))
 
@@ -918,26 +909,34 @@ def get_message_list(request):
     # value of modified_before
     #
     # TODO figure out the case when all three values are provided - modified_before, modified_since and limit
+    # Messages without sender_address
+    # were created based on the message IDs in References
+    # filter them out
     if modified_since and modified_before:
-        messages = request.user.messages.filter(date__gt = modified_since, date__lt = modified_before).order_by('date')
+        messages = request.user.messages.filter(sender_address__isnull = False, 
+                                                modified_date__gt = modified_since, 
+                                                modified_date__lt = modified_before).order_by('date')
     elif modified_since:
-        messages = request.user.messages.filter(date__gt = modified_since).order_by('date')
+        messages = request.user.messages.filter(sender_address__isnull = False, 
+                                                modified_date__gt = modified_since).order_by('date')
     elif modified_before:
-        messages = request.user.messages.filter(date__lt = modified_before).order_by('-date')
+        messages = request.user.messages.filter(sender_address__isnull = False, 
+                                                modified_date__lt = modified_before).order_by('-date')
     else:
         messages = request.user.messages.all().order_by('-date')
 
     message_count = messages.count()
     messages = messages[:limit]
 
-    conversation_set = set()
+    aggregate_set = set()
     tag_set = set()
     contact_set = set()
     address_set = set()
 
     for message in messages:
-        conversation_set.add(message.conversation)
-        tag_set.update(set(message.conversation.tags.all()))
+        for aggregate in message.aggregates.all():
+            aggregate_set.add(aggregate)
+            tag_set.update(set(aggregate.tags.all()))
         address_set.update(set(message.to_addresses.all()))
         address_set.update(set(message.cc_addresses.all()))
         address_set.add(message.sender_address)
@@ -945,18 +944,50 @@ def get_message_list(request):
     for address in address_set:
         contact_set.add(address.contact)
 
+    if not include_aggregates:
+        aggregate_set = set()
+    if not include_tags:
+        tag_set = set()
+    if not include_contacts:
+        contacts_set = set()
+        
     return {
             'message_count' : message_count,
             'message_limit' : limit,
-            'messages' : [ message_as_json_dict(message)
+            'messages' : [ message_as_json_dict(message, include_body)
                     for message in messages ],
 
-            'conversations' : [ conversation_as_json_dict(conversation, False)
-                    for conversation in conversation_set ],
+            'aggregates' : [ aggregate_as_json_dict(aggregate, False)
+                    for aggregate in aggregate_set ],
             'tags' : [ tag_as_json_dict(tag)
                     for tag in tag_set ],
             'contacts' : [ contact_as_json_dict(contact)
                     for contact in contact_set ],
+    }
+
+@json_view
+def update_message_info(request, id):
+    """
+    Updates an aggregate of this message and returns all messages that
+    belong to a given aggregate.
+    """
+    #TODO use a transaction?
+    message = Message.objects.get(pk = id)
+    body = json.loads(request.raw_post_data)
+    
+    if body.type == Message.NEWSLETTER:
+        rule = MessageRule(type = MessageRule.NEWSLETTER, owner = request.user, sender_address = message.sender_address)
+        rule.save()
+        operations.apply_message_rule(rule)
+
+        # The newsletter rule must have created a newsletter aggregate
+        newsletter = MessageAggregate.objects.get(owner = self.user, 
+                                                  creator__type = MessageRule.NEWSLETTER, 
+                                                  messages__message_id = message.message_id)
+    
+    return {
+        'content' : [ message_as_json_dict( message, False )
+                     for message in newsletter.messages.all() ],
     }
 
 
@@ -972,12 +1003,16 @@ def update_or_create_account(request, id):
     isn't supplied this means we're dealing with the first-time signup.
 
     """
+    #load json from the request body
+    body = json.loads(request.raw_post_data)
+
+    email = body['name'].lower()
     username = request.REQUEST.get('username', None)
     if not username:
         # No username? Let's create one and log it in.
         # username is in reality a unique secret key shared with the client
         username = str(uuid.uuid4())[:16]
-        user = User.objects.create_user(username, username, username)
+        user = User.objects.create_user(username, email, username)
         user = authenticate(username=user.username, password=user.username)
         user.save()
     else:
@@ -995,8 +1030,6 @@ def update_or_create_account(request, id):
         #TODO Return an 'invalid login' error message
         pass
 
-    #load json from the request body
-    body = json.loads(request.raw_post_data)
 
     #TODO: validate the account credentials with the external service
 
@@ -1004,7 +1037,7 @@ def update_or_create_account(request, id):
     account, created = models.Account.objects.get_or_create(id = id,
                                   defaults={'owner': user,
                                             'account_class': account_class,
-                                            'name': body['name'],
+                                            'name': email,
                                             'password': body['password']})
 
     if created:
@@ -1012,7 +1045,7 @@ def update_or_create_account(request, id):
         response.content = json.dumps( {'username' : username} )
         response.content_type = JSON_CONTENT_TYPE
     else:
-        account.name = body['name']
+        account.name = email
         account.password = body['password']
         account.save()
         response = HttpResponse()

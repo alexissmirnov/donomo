@@ -25,8 +25,8 @@ __all__ = (
     'tag_info',
     'search',
     'message_list',
-    'conversation_list',
-    'conversation_info',
+    'aggregate_list',
+    'aggregate_info',
     'message_info',
     'message_list',
     'contact_list',
@@ -196,24 +196,24 @@ def message_list():
 
 @login_required
 @http_method_dispatcher
-def conversation_list():
+def aggregate_list():
     """
     """
     return {
-    'GET' : get_conversation_list,
+    'GET' : get_aggregate_list,
     }
 
 ###############################################################################
 
 @login_required
 @http_method_dispatcher
-def conversation_info():
+def aggregate_info():
     """
     Dispatch map for HTTP operations on a tag
 
     """
     return {
-        'GET'    : get_conversation_info,
+        'GET'    : get_aggregate_info,
         }
 
 ###############################################################################
@@ -227,6 +227,7 @@ def message_info():
     """
     return {
         'GET'    : get_message_info,
+        'PUT'    : update_message_info,
         }
 
 ###############################################################################
@@ -270,4 +271,3 @@ def account_info():
     return {
     'PUT' : update_or_create_account,
     }
-

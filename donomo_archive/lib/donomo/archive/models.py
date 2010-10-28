@@ -363,38 +363,8 @@ class Address(models.Model):
     __str__ = lambda self : str('%s <%s>' % (self.contact.name, self.email))
     __unicode__ = __str__
 
-###############################################################################
-class Conversation(models.Model):
-    """ Conversation is a tagged list of messages with a common subject """
-    owner = models.ForeignKey(
-        User,
-        related_name = 'conversations')
-    
-    subject = models.CharField(
-        max_length = 512,
-        blank = False,
-        null = False)
-    
-    summary = models.CharField(
-        max_length = 1024,
-        blank = False,
-        null = False)
-    
-    key_participant = models.ForeignKey(Address)
-    
-    tags = models.ManyToManyField(
-        Tag,
-        related_name = 'conversations',
-        blank        = True,
-        symmetrical  = True )
-    
-    # conversation's date is teh date of the most recent message
-    date = property(lambda self: self.messages.order_by('-date')[0].date)
 
-
-    __str__ = lambda self : unicode(self.subject)
-    __unicode__ = __str__
-
+    
 ###############################################################################
 
 class Message(models.Model):
@@ -403,8 +373,7 @@ class Message(models.Model):
         max_length = 512,
         blank = False,
         null = False,
-        primary_key = True)
-#        db_index = True)
+        db_index = True)
 
     owner = models.ForeignKey(
         User,
@@ -412,21 +381,31 @@ class Message(models.Model):
 
     subject = models.CharField(
         max_length = 512,
+        blank = True,
+        null = True)
+    
+    summary = models.CharField(
+        max_length = 1024,
         blank = False,
         null = False)
     
-    date = models.DateTimeField()
+    date = models.DateTimeField(null = True)
+    
+    modified_date =  models.DateTimeField(null = True, auto_now = True)
+    
+    created_date = models.DateTimeField(null = True, auto_now_add = True)
     
     reply_to = models.ForeignKey('self', 
                                  null = True,
                                  related_name = 'reply_messages')
 
     sender_address = models.ForeignKey(Address,
-                                 related_name = 'sent_messages')
+                                null = True,
+                                related_name = 'sent_messages')
     # Not the same thing as to_address
     # to_address may be empty (in case of BCC or be set to the
     # address of a mailling list
-    # mailbox address is teh email address of one of the email
+    # mailbox address is the email address of one of the email
     # accounts for a given user
     mailbox_address = models.ForeignKey(Address, 
                                  related_name = 'mailbox_messages')
@@ -441,16 +420,7 @@ class Message(models.Model):
                                  null = True,
                                  related_name = 'copied_messages')
 
-    conversation = models.ForeignKey(Conversation, 
-                                 related_name = 'messages')
-
-#    tags = models.ManyToManyField(
-#        Tag,
-#        related_name = 'messages',
-#        blank        = True,
-#        symmetrical  = True )
-
-    __str__ = lambda self : '%s [%s]' % (self.subject, self.date) 
+    __str__ = lambda self : '%s (%s) on %s' % (self.message_id, self.subject, self.date) 
 
     __unicode__ = __str__
 
@@ -473,6 +443,81 @@ class Message(models.Model):
             else:
                 logging.info('NO ASSET %s %s for Message %s (%s)' %(asset_class, mime_type, self, self.pk))
                 return None
+
+###############################################################################
+class MessageRule(models.Model):
+    """
+    """
+    CONVERSATION = 1
+    NEWSLETTER = 2
+    owner = models.ForeignKey(
+        User,
+        related_name = 'message_rules')
+    
+    type = models.IntegerField(default = NEWSLETTER)
+
+    sender_address = models.ForeignKey(Address,
+                                      null = True,
+                                      related_name = 'message_rules')
+
+    __str__ = lambda self : str('%s' % (self.type == 
+                                        MessageRule.NEWSLETTER and 'N' or 'C'))
+    __unicode__ = __str__
+###############################################################################
+
+class MessageAggregate(models.Model):
+    """ A Message aggregate is a ordered set of messages that match a 
+    particular criteria"""
+    
+    owner = models.ForeignKey(
+        User,
+        related_name = 'aggregates')
+
+    creator = models.ForeignKey(
+        MessageRule,
+        related_name = 'aggregates')
+    
+    messages = models.ManyToManyField(
+            Message,
+            related_name = 'aggregates',
+            blank = True,
+            symmetrical = True )
+    
+    tags = models.ManyToManyField(
+        Tag,
+        related_name = 'aggregates',
+        blank        = True,
+        symmetrical  = True )
+
+    
+    def _get_latest_sender(self):
+        messages = self.messages.all().order_by('-date')
+        if messages.count():
+            return messages[0].sender_address
+        else:
+            return None
+    latest_sender = property(_get_latest_sender)
+
+    def _get_name_as_initial_subject(self):
+        messages = self.messages.all().order_by('date')
+        if messages.count():
+            return messages[0].subject
+        else:
+            return ''
+    name = property(_get_name_as_initial_subject)
+    
+    def _get_summary_of_latest_message(self):
+        messages = self.messages.all().order_by('date')
+        if messages.count():
+            return messages[0].summary
+        else:
+            return ''
+    summary = property(_get_summary_of_latest_message)
+
+    __str__ = lambda self : str('%s: %s' % (self.creator__type == 
+                                        MessageRule.NEWSLETTER and 'N' or 'C',
+                                        self.name))
+    __unicode__ = __str__
 
 ###############################################################################
 
@@ -743,4 +788,3 @@ class Account(models.Model):
     __unicode__ = __str__
 
     
-

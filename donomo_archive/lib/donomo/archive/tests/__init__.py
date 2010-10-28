@@ -9,6 +9,13 @@ import unittest
 
 logging = logging.getLogger('test-suite')
 
+from test_messaging_api import *
+from test_mail_parser import *
+from test_operations import *
+from test_pdf import *
+from test_s3 import *
+from test_sqs import *
+
 # ----------------------------------------------------------------------------
 
 def all_modules_from( root_module ):
