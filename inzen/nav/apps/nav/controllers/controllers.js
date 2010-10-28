@@ -1,4 +1,51 @@
 /*globals Nav,console*/
+
+
+App.schemaVersionController = SC.ObjectController.create({
+	contentDidChange: function() {
+		console.log('%@.contentDidChange. %@ '.fmt(this.toString(), this.get('content').toString()));
+		if( this.get('content') ) {
+			schemaVersion = Number(this.get('content').objectAt(0).get('version').split('.')[1]);
+			codeVersion = Number(App.VERSION.split('.')[1]);
+			if( codeVersion > schemaVersion ) {
+				this.get('content').objectAt(0).set('version', App.VERSION);
+
+				App.contactsController.set('content', App.store.find(SC.Query.local(App.model.Contact)));
+				App.messagesController.set('content', App.store.find(SC.Query.local(App.model.Message)));
+				App.conversationsController.set('content', App.store.find(SC.Query.local(App.model.Conversation)));
+				App.documentsController.set('content', App.store.find(SC.Query.local(App.model.Document)));
+				App.flowsController.set('content', App.store.find(SC.Query.local(App.model.Flow)));
+				App.addressesController.set('content', App.store.find(SC.Query.local(App.model.Address)));
+				App.syncTrackerController.set('content', App.store.find(SC.Query.local(App.model.SyncTracker)));
+
+				this.invokeLater(function() {
+					var obj = App.store.recordsFor(App.model.SyncTracker);
+					obj.forEach(function(o) {App.store.destroyRecord(App.model.SyncTracker, o.get('guid'));});
+
+					var obj = App.store.recordsFor(App.model.Message);
+					obj.forEach(function(o) {App.store.destroyRecord(App.model.Message, o.get('guid'));});
+
+					var obj = App.store.recordsFor(App.model.Address);
+					obj.forEach(function(o) {App.store.destroyRecord(App.model.Address, o.get('guid'));});
+
+					var obj = App.store.recordsFor(App.model.Contact);
+					obj.forEach(function(o) {App.store.destroyRecord(App.model.Contact, o.get('guid'));});
+
+					var obj = App.store.recordsFor(App.model.Conversation);
+					obj.forEach(function(o) {App.store.destroyRecord(App.model.Conversation, o.get('guid'));});
+
+					var obj = App.store.recordsFor(App.model.Flow);
+					obj.forEach(function(o) {App.store.destroyRecord(App.model.Flow, o.get('guid'));});
+				}, 500);
+
+				this.invokeLater(function() { App.state.transitionTo('START');}, 800);			
+			} else {
+				App.userController.set('content', App.store.find(SC.Query.local(App.model.User)));
+				this.invokeLater(function() {App.accountsController.set('content', App.store.find(SC.Query.local(App.model.Account)));}, 500);
+			}
+		}
+	}.observes('.content')	
+});
 App.accountController = SC.ObjectController.create();
 App.signupController = SC.ObjectController.create();
 
@@ -56,21 +103,17 @@ App.conversationMessagesController = SC.ArrayController.create();
  * App.states.flows.didBecomeFirstResponder
  */
 App.flowsController = SC.ArrayController.create({
-	allowsMultipleSelection: NO//,
+	allowsMultipleSelection: NO,
 	
-//	enumerableContentDidChange: function(start, len) {
-//		sc_super();
-//		if( len === 0 )
-//			return;
-//		
-//		// create controllers for top conversations for each of the flow
-//		this.forEach( function(flow) {
-//			var topConversations = App.ConversationsController.create();
-//			topConversations.set('content', flow.get('conversations'));
-//			
-//			flow.set('topConversationsController', topConversations);
-//		});
-//	}
+	enumerableContentDidChange: function(start, len) {
+		sc_super();
+		if( len === 0 )
+			return;
+		
+		this.forEach( function(flow) {
+			console.log(flow.get('name'));
+		});
+	}
 });
 
 /******************************************************************************

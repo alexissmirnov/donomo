@@ -17,7 +17,10 @@ App.query.GET_TOP_UNCLASSIFIED_CONTACTS = App.query.GET_CONTACTS; // TODO: add q
 
 
 App.ServerDataSource = SC.DataSource.extend({
-	
+	/**
+	 * Called by didBecomeFirstResponder of FLOWS state
+	 * @returns
+	 */
 	startDownloadMessages: function() {
 		// Launch the query and pull the date of the last message from the DB (if it is there)
 		//TODO: DEBUG RESET 
@@ -106,6 +109,8 @@ App.ServerDataSource = SC.DataSource.extend({
 			tags.pushObject(tag);
 		});
 		
+		//TODO: rename conversation to aggregate
+		response.get('body').conversations = response.get('body').aggregates;
 		response.get('body').conversations.forEach(function(conversation){
 			conversation.tags.forEach(function(tagGuid){
 				if( tags[tagGuid] ) {
@@ -119,6 +124,7 @@ App.ServerDataSource = SC.DataSource.extend({
 					console.log( 'Malformed /messages/ response? got %@ tags, but no tag %@ in the list'.fmt(tags.length(), tagGuid));
 				}
 			});
+			conversation.key_participant = conversation.latest_sender;
 			var storeKey = store.loadRecord(App.model.Conversation, conversation);
 			db.didRetrieveRecordFromNestedStore(store, storeKey);
 		});
@@ -159,7 +165,7 @@ App.ServerDataSource = SC.DataSource.extend({
 			// this means the last message we process will carry the timestamp
 			// we need to start the next request from
 			// remember it here and use it after the forEach loop
-			messageDate = message.date;
+			messageDate = message.modified_date;
 		});
 		
 		return messageDate;

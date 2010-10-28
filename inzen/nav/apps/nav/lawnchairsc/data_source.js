@@ -97,6 +97,11 @@ LawnchairSC.DataSource = SC.DataSource.extend({
 		return table;
 	},
 	
+	getTable: function(recordType) {
+		var name = this._getStoreTableNamesFromRecordType(recordType);
+		return this._getTable(name.store, name.table);
+	},
+	
 	_dropAllTables: function() {
 		for (var table in this._tables) {
 			if ( this._tables.hasOwnProperty(table)) {
@@ -209,6 +214,11 @@ LawnchairSC.DataSource = SC.DataSource.extend({
 				store.loadRecord(query.recordType, record.record, record.key);
 			});
 			
+			if( records.length === 0 && name.table === 'SchemaVersion' ) {
+				var r = App.store.createRecord(App.model.SchemaVersion, {version: '0.1.0'}, '1');
+				store.dataSourceDidFetchQuery(query);
+				return YES;
+			}
 			// If the query returned no results, delegate it to 
 			// the nested datasource.
 			// TODO: We're only dealing with this one special case where the

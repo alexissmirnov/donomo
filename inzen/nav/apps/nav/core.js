@@ -10,7 +10,7 @@ Nav = SC.Application.create(
   /** @scope Nav.prototype */ {
 
 	NAMESPACE: 'Nav',
-	VERSION: '0.1.0'
+	VERSION: '0.11.1'
 	// turn on logging for action notifications
 //	trace : YES,
 });

@@ -9,6 +9,14 @@ App.userController = SC.ObjectController.create({
 	contentDidChange: function() {
 		//console.log('userController.contentDidChange. content=%@'.fmt(this.get('content')));
 		if( this.get('content') && this.get('content').length() > 0 && this.content.objectAt(0).get('username')) {
+			App.contactsController.set('content', App.store.find(SC.Query.local(App.model.Contact)));
+			App.messagesController.set('content', App.store.find(SC.Query.local(App.model.Message)));
+			App.conversationsController.set('content', App.store.find(SC.Query.local(App.model.Conversation)));
+			App.documentsController.set('content', App.store.find(SC.Query.local(App.model.Document)));
+			App.flowsController.set('content', App.store.find(SC.Query.local(App.model.Flow)));
+			App.addressesController.set('content', App.store.find(SC.Query.local(App.model.Address)));
+			App.syncTrackerController.set('content', App.store.find(SC.Query.local(App.model.SyncTracker)));
+
 			App.state.transitionTo('FLOWS');
 		}
 	}.observes('content')

@@ -27,6 +27,16 @@ App.state.REDOWNLOAD = SC.Responder.create({
 	}
 });
 
+App.state.UPGRADE = SC.Responder.create({
+	name: 'UPGRADE',
+	didBecomeFirstResponder : function() {
+		
+		schemaVersion = App.store.find(App.model.SchemaVersion);
+		schemaVersion.objectAt(0).set('version', '0.0.0');
+		this.invokeLater(function() { App.state.transitionTo('START');}, 200);
+	}
+});
+
 
 App.state.START = SC.Responder.create({
 	name: 'START',
@@ -63,17 +73,17 @@ App.state.START = SC.Responder.create({
 		//SC.LOG_OBSERVERS = YES;
 		//SC.LOG_BINDINGS = YES;
 		//FIXME: do a proper state sequence
-
-		App.userController.set('content', App.store.find(SC.Query.local(App.model.User)));
-		App.contactsController.set('content', App.store.find(SC.Query.local(App.model.Contact)));
-		App.messagesController.set('content', App.store.find(SC.Query.local(App.model.Message)));
-		App.conversationsController.set('content', App.store.find(SC.Query.local(App.model.Conversation)));
-		App.documentsController.set('content', App.store.find(SC.Query.local(App.model.Document)));
-		App.flowsController.set('content', App.store.find(SC.Query.local(App.model.Flow)));
-		App.addressesController.set('content', App.store.find(SC.Query.local(App.model.Address)));
-		App.syncTrackerController.set('content', App.store.find(SC.Query.local(App.model.SyncTracker)));
-		App.getPath('mainPage.mainPane').append();
-		App.accountsController.set('content', App.store.find(SC.Query.local(App.model.Account)));
+		App.schemaVersionController.set('content', App.store.find(SC.Query.local(App.model.SchemaVersion)));
+//		App.userController.set('content', App.store.find(SC.Query.local(App.model.User)));
+//		App.contactsController.set('content', App.store.find(SC.Query.local(App.model.Contact)));
+//		App.messagesController.set('content', App.store.find(SC.Query.local(App.model.Message)));
+//		App.conversationsController.set('content', App.store.find(SC.Query.local(App.model.Conversation)));
+//		App.documentsController.set('content', App.store.find(SC.Query.local(App.model.Document)));
+//		App.flowsController.set('content', App.store.find(SC.Query.local(App.model.Flow)));
+//		App.addressesController.set('content', App.store.find(SC.Query.local(App.model.Address)));
+//		App.syncTrackerController.set('content', App.store.find(SC.Query.local(App.model.SyncTracker)));
+//		App.getPath('mainPage.mainPane').append();
+//		App.accountsController.set('content', App.store.find(SC.Query.local(App.model.Account)));
 				
 				
 		App.statusMessageController.set('content', 'Starting up');

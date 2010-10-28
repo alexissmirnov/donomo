@@ -10,64 +10,6 @@ require('views/conversation_view');
 
 /*jslint undef: true */
 
-App.ConversationListItemView = SC.View.extend({
-	classNames: 'conversation-list-view-item'.w(),
-
-	messages: function() {
-		return this.get('content').get('messages');
-	}.property('content').cacheable(),
-	
-	messageCount: function() {
-		return this.get('content').get('messages').length();
-	}.property('content').cacheable(),
-	
-	messageConuntString: function() {
-		return '' + this.get('messageCount');
-	}.property('messageCount').cacheable(),
-	
-	latestMessage: function() {
-		var messages = this.get('messages');
-		var messageCount = this.get('messageCount');
-		return messages.objectAt(messageCount-1);
-	}.property('content').cacheable(),
-	
-	
-	childViews: [
-	    SC.LabelView.design({
-	    	classNames: 'conversation-list-view-item--key-participant'.w(),
-	    	fontWeight: SC.BOLD_WEIGHT,
-	    	isEditable: NO,
-	    	textAlign: SC.ALIGN_LEFT,
-	    	layout: { left: 5, right: 0, top: 0, height: 25 },
-	    	valueBinding: '.parentView.content.key_participant.contact.name'
-	    }),
-	    SC.LabelView.design({
-	    	classNames: 'conversation-list-view-item--date'.w(),
-	    	textAlign: SC.ALIGN_RIGHT,
-	    	layout: { left: 5, right: 5, top: 0, height: 25 },
-	    	valueBinding: '.parentView.content.date'
-	    }),
-	    SC.LabelView.design({
-	    	classNames: 'conversation-list-view-item--subject'.w(),
-	    	textAlign: SC.ALIGN_LEFT,
-	    	layout: { left: 5, right: 20, top: 20, height: 20 },
-	    	valueBinding: '.parentView.content.subject'
-	    }),
-	    SC.LabelView.design({
-	    	classNames: 'conversation-list-view-item--message-count'.w(),
-	    	textAlign: SC.ALIGN_CENTER,
-	    	layout: { width: 30, right: 10, top: 20, height: 20 },
-	    	valueBinding: '.parentView.messageConuntString'
-	    }),
-	    SC.LabelView.design({
-	    	classNames: 'conversation-list-view-item--summary'.w(),
-	    	textAlign: SC.ALIGN_LEFT,
-	    	layout: { left: 5, right: 5, top: 40, height: 60 },
-	    	valueBinding: '.parentView.content.summary'
-	    })
-	]
-});
-
 
 // This page describes the main user interface for your application.  
 App.conversationFlowPage = SC.Page.design({
