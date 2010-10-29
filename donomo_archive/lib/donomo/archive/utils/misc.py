@@ -137,27 +137,27 @@ def extract_text_from_html( html ):
 ###############################################################################
 def get_hocr_page_dimentions(page_soup):
     """
-    Returns width and heigth of an HOCR page. Expects an instance 
+    Returns width and heigth of an HOCR page. Expects an instance
     of BeutifulSoup object that represents HOCR file
     """
     ocr_page = page_soup.find('div', {'class' : 'ocr_page'})
     title_parts = ocr_page['title'].split(';')
-    
+
     page_width = -1
     page_height = -1
     for title_part in title_parts:
         bbox = title_part.strip().split(' ')
-        
+
         if bbox[0] == 'bbox':
             page_width = int(bbox[3]) - int(bbox[1])
             page_height = int(bbox[4]) - int(bbox[2])
-    
+
     return page_width, page_height
 
 ###############################################################################
 def get_hocr_lines(page_soup):
     """
-    Returns a list of HOCR lines (x,y, text) from an HOCR page. 
+    Returns a list of HOCR lines (x,y, text) from an HOCR page.
     Expects an instance of BeutifulSoup
     object that represents HOCR file
     """
@@ -166,7 +166,7 @@ def get_hocr_lines(page_soup):
     for ocr_line in ocr_lines:
         if ocr_line.has_key('title'):
             # HOCR title takes the form of title="bbox 755 909 807 936"
-            ocr_line_title_parts = ocr_line['title'].split(' ') 
+            ocr_line_title_parts = ocr_line['title'].split(' ')
             if ocr_line_title_parts[0] == 'bbox':
                 lines.append(
                              {'x' : int(ocr_line_title_parts[1]),
@@ -194,17 +194,17 @@ def extract_text_from_hocr( hocr ):
 
 
 def days_since(d, now=None):
-    """                                                                                                                                     
-    Takes two datetime objects and returns the number of days between them.                                                                 
-    If d occurs after now, then 0 is returned.                                                                                              
-                                                                                                                                            
-    Adapted from django.utils.timesince                                                                                                     
+    """
+    Takes two datetime objects and returns the number of days between them.
+    If d occurs after now, then 0 is returned.
+
+    Adapted from django.utils.timesince
     """
     import time
     import datetime
     from django.utils.tzinfo import LocalTimezone
 
-    # Convert datetime.date to datetime.datetime for comparison                                                                             
+    # Convert datetime.date to datetime.datetime for comparison
     if d.__class__ is not datetime.datetime:
         d = datetime.datetime(d.year, d.month, d.day)
     if now:
@@ -217,7 +217,7 @@ def days_since(d, now=None):
         tz = None
     now = datetime.datetime(t[0], t[1], t[2], t[3], t[4], t[5], tzinfo=tz)
 
-    # ignore microsecond part of 'd' since we removed it from 'now'                                                                         
+    # ignore microsecond part of 'd' since we removed it from 'now'
     delta = now - (d - datetime.timedelta(0, 0, d.microsecond))
     if delta.days <= 0:
         return 0
@@ -227,7 +227,10 @@ def humanize_date(date):
     Takes a date object and returns a human-readable representation how
     long ago was it
     """
-    days = days_since(datetime.datetime.strptime(str(date), '%Y-%m-%d %H:%M:%S'))
+    if not date:
+        return '?'
+
+    days = days_since(datetime.datetime.strptime(str(date), '%a %b %d %H:%M:%S %Y')) #'%Y-%m-%d %H:%M:%S'))
     if days == 0:
         name = 'Today'
     elif days == 1:

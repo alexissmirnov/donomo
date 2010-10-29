@@ -758,12 +758,13 @@ def aggregate_as_json_dict(aggregate,
                               message_body = True):
     messages = aggregate.messages.all().order_by('-date')
     latest_message_date = messages[len(messages)-1].date
-    
+    latest_message_date = latest_message_date and latest_message_date.ctime() or None
+
     json = {
         'guid'      : '%s.aggregate' % aggregate.pk,
         'subject'   : aggregate.name,
         'summary'   : aggregate.summary,
-        'date'      : str(latest_message_date.ctime()),
+        'date'      : str(latest_message_date),
         'humanized_age' : humanize_date(latest_message_date),
         'tags'     : [ '%s.tag' % tag.pk
                        for tag in aggregate.tags.all() ],
@@ -913,14 +914,14 @@ def get_message_list(request):
     # were created based on the message IDs in References
     # filter them out
     if modified_since and modified_before:
-        messages = request.user.messages.filter(sender_address__isnull = False, 
-                                                modified_date__gt = modified_since, 
+        messages = request.user.messages.filter(sender_address__isnull = False,
+                                                modified_date__gt = modified_since,
                                                 modified_date__lt = modified_before).order_by('date')
     elif modified_since:
-        messages = request.user.messages.filter(sender_address__isnull = False, 
+        messages = request.user.messages.filter(sender_address__isnull = False,
                                                 modified_date__gt = modified_since).order_by('date')
     elif modified_before:
-        messages = request.user.messages.filter(sender_address__isnull = False, 
+        messages = request.user.messages.filter(sender_address__isnull = False,
                                                 modified_date__lt = modified_before).order_by('-date')
     else:
         messages = request.user.messages.all().order_by('-date')
@@ -950,7 +951,7 @@ def get_message_list(request):
         tag_set = set()
     if not include_contacts:
         contacts_set = set()
-        
+
     return {
             'message_count' : message_count,
             'message_limit' : limit,
@@ -974,17 +975,17 @@ def update_message_info(request, id):
     #TODO use a transaction?
     message = Message.objects.get(pk = id)
     body = json.loads(request.raw_post_data)
-    
+
     if body.type == Message.NEWSLETTER:
         rule = MessageRule(type = MessageRule.NEWSLETTER, owner = request.user, sender_address = message.sender_address)
         rule.save()
         operations.apply_message_rule(rule)
 
         # The newsletter rule must have created a newsletter aggregate
-        newsletter = MessageAggregate.objects.get(owner = self.user, 
-                                                  creator__type = MessageRule.NEWSLETTER, 
+        newsletter = MessageAggregate.objects.get(owner = self.user,
+                                                  creator__type = MessageRule.NEWSLETTER,
                                                   messages__message_id = message.message_id)
-    
+
     return {
         'content' : [ message_as_json_dict( message, False )
                      for message in newsletter.messages.all() ],
