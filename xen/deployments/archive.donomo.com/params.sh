@@ -14,3 +14,4 @@ export SOLR_IS_SECURE='no'
 export SUBVERSION_USERNAME='deploy'
 export SUBVERSION_PASSWORD='d0n0m0'
 export SUBVERSION_REPOPATH='http://svn.donomo.com/trunk/donomo_archive'
+export DONOMO_PROC_AMI=ami-680fe801
