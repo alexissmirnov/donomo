@@ -212,7 +212,7 @@ def handle_work_item( processor, work_item ):
     message_part_class, created = manager(AssetClass).get_or_create( 
                                         name = AssetClass.MESSAGE_PART )
     counter      = 0
-    
+
     conversation_rule, created = MessageRule.objects.get_or_create(
                                     owner = parent_asset.owner, 
                                     type = MessageRule.CONVERSATION)
@@ -269,20 +269,22 @@ def handle_work_item( processor, work_item ):
         in_reply_to_message, created = Message.objects.get_or_create( 
                 owner = parent_asset.owner, 
                 message_id = in_reply_to,
-                mailbox_address = mailbox_address )
+                mailbox_address = mailbox_address,
+                defaults = {'status' : Message.STATUS_REFERENCE} )
     
     # A message could have been created based on a Reference from another
     # message. In this case it will only have owner, message_id and mailbox_address
+    
+    # This message starts off as REFERENCE (i.e. incomplete)
     message, created = Message.objects.get_or_create(
                     owner = parent_asset.owner,
                     message_id = message_id,
-                    mailbox_address = mailbox_address)
+                    mailbox_address = mailbox_address,
+                    defaults = {'status' : Message.STATUS_REFERENCE} )
     message.subject = subject or ''
     message.date = message_date
     message.reply_to = in_reply_to_message
     message.sender_address = sender_address
-    message.save()
-    
 
     # tag unread messages
     # TODO
@@ -307,6 +309,8 @@ def handle_work_item( processor, work_item ):
                                                           parent_asset.owner)
             message.to_addresses.add(address)
     
+    # Now that the message is completed, set its status to READY
+    message.status = Message.STATUS_READY
     message.save()
                       
 #    classify_conversation(conversation)

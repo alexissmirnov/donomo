@@ -24,11 +24,11 @@ __all__ = (
     'tag_list',
     'tag_info',
     'search',
-    'message_list',
     'aggregate_list',
     'aggregate_info',
     'message_info',
     'message_list',
+    'sync_event_list',
     'contact_list',
     'contact_info',
     'account_info',
@@ -183,13 +183,13 @@ def search():
 
 @login_required
 @http_method_dispatcher
-def message_list():
+def sync_event_list():
     """
     Dispatch map for HTTP operations on search
 
     """
     return {
-        'GET'  : get_message_list,
+        'GET'  : get_sync_event_list,
         }
 
 ###############################################################################

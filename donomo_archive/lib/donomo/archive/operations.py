@@ -510,24 +510,27 @@ def apply_message_rule(rule):
     for message in messages:
         apply_message_rule_on_message(rule, message)
 
+###############################################################################
 def rule_match(rule, message):
      if rule.type == MessageRule.NEWSLETTER:
          return rule.sender_address == message.sender_address
      elif rule.type == MessageRule.CONVERSATION:
          return True # any message can be part of conversation
 
+###############################################################################
 def apply_message_rule_on_message(rule, message = None, raw_message = None):
     if rule_match(rule, message) and rule.type == MessageRule.NEWSLETTER:
         apply_newsletter_rule(rule, message)
     elif rule_match(rule, message) and rule.type == MessageRule.CONVERSATION:
         apply_conversation_rule(rule, message, raw_message)
 
+###############################################################################
 def apply_newsletter_rule(rule, message):
     # Using 'get' because there can only be one
     # already-existing newsletter aggregate for that sender
     newsletter, created = MessageAggregate.objects.get_or_create(
-                    owner = rule.owner, 
-                    creator = rule)
+                                                        owner = rule.owner, 
+                                                        creator = rule)
 
     message.aggregates.add(newsletter)
     message.save()
@@ -549,7 +552,8 @@ def apply_newsletter_rule(rule, message):
         # A conversation with a single message in it (the newsletter itself) isn't 
         # a conversation, so remove it.
         if conversation.messages.count() == 1:
-            conversation.delete()
+            conversation.status = MessageAggregate.STATUS_DELETED
+            conversation.save()
     except MessageAggregate.DoesNotExist, e:
         # The conversation may not exist if the newsletter rule gets run before the
         # conversation rule
@@ -561,6 +565,7 @@ def apply_newsletter_rule(rule, message):
     # This would happen in case a newsletter is forwarded and replied to.
     
     
+###############################################################################
 def apply_conversation_rule(rule, message, raw_message):
     owner = message.owner
     
@@ -578,7 +583,8 @@ def apply_conversation_rule(rule, message, raw_message):
             referenced_message, created = Message.objects.get_or_create(
                                 owner = owner,
                                 message_id = reference,
-                                mailbox_address = message.mailbox_address)
+                                mailbox_address = message.mailbox_address,
+                                defaults = {'status': Message.STATUS_REFERENCE})
             
             # Cache the object to a local list
             referenced_messages.append(referenced_message)
@@ -607,7 +613,8 @@ def apply_conversation_rule(rule, message, raw_message):
         conversation = MessageAggregate.objects.get(
                         owner = owner,
                         creator__type = MessageRule.CONVERSATION,
-                        messages__message_id = message.message_id)
+                        messages__message_id = message.message_id,
+                        status = MessageAggregate.STATUS_READY)
     except MessageAggregate.DoesNotExist, e:
         # We have the message, but it it isn't part of conversation
         # Try the next one
@@ -618,7 +625,8 @@ def apply_conversation_rule(rule, message, raw_message):
         newsletter = MessageAggregate.objects.get(
                                 owner = owner,
                                 creator__type = MessageRule.NEWSLETTER,
-                                messages__message_id = message.message_id)
+                                messages__message_id = message.message_id,
+                                status = MessageAggregate.STATUS_READY)
     except MessageAggregate.DoesNotExist, e:
         newsletter = None
 

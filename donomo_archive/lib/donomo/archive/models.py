@@ -13,6 +13,8 @@ from django.db                           import models
 from django.contrib.localflavor.us.models import PhoneNumberField
 from django.db.models                    import permalink
 from django.utils.timesince              import timesince
+from datetime import datetime
+import time
 
 import logging
 logging = logging.getLogger('models')
@@ -368,6 +370,24 @@ class Address(models.Model):
 ###############################################################################
 
 class Message(models.Model):
+    STATUS_READY = 1 # fully-formed message, all assets are processed
+    STATUS_DELETED = -1 # deleted message, assets are no longer accessible
+    STATUS_REFERENCE = 0 # message created on the basis of a reference. 
+                         # assets are not yet available
+    
+    def save(self, *args, **kwargs):
+        """
+        Overwriting save to set created_date and modified_date to utcnow()
+        Django uses datetime.now()
+        We want to store and transmit only UTC time, and localize it at rendering time
+        """
+        if not self.created_date:
+            self.created_date = datetime.utcnow()
+        
+        self.modified_date = datetime.utcnow()
+        
+        super(Message, self).save(*args, **kwargs)
+        
     """ A Message  """
     message_id = models.CharField(
         max_length = 512,
@@ -391,10 +411,12 @@ class Message(models.Model):
     
     date = models.DateTimeField(null = True)
     
-    modified_date =  models.DateTimeField(null = True, auto_now = True)
+    modified_date =  models.DateTimeField(null = True)
     
-    created_date = models.DateTimeField(null = True, auto_now_add = True)
+    created_date = models.DateTimeField(null = True)
     
+    status = models.IntegerField()
+
     reply_to = models.ForeignKey('self', 
                                  null = True,
                                  related_name = 'reply_messages')
@@ -460,15 +482,23 @@ class MessageRule(models.Model):
                                       null = True,
                                       related_name = 'message_rules')
 
-    __str__ = lambda self : str('%s' % (self.type == 
-                                        MessageRule.NEWSLETTER and 'N' or 'C'))
+    __str__ = lambda self : str('%s %s' % (self.owner, (self.type == 
+                                        MessageRule.NEWSLETTER and 'N' or 'C')))
     __unicode__ = __str__
+    
+#    def save(self, *args, **kwargs):
+#        logging.info('Saving MessageRule %s', self)
+#        super(MessageRule, self).save(*args, **kwargs)
+        
 ###############################################################################
 
 class MessageAggregate(models.Model):
     """ A Message aggregate is a ordered set of messages that match a 
     particular criteria"""
     
+    STATUS_READY = 1 # fully-formed aggregate
+    STATUS_DELETED = -1 # deleted aggregate
+
     owner = models.ForeignKey(
         User,
         related_name = 'aggregates')
@@ -489,13 +519,22 @@ class MessageAggregate(models.Model):
         blank        = True,
         symmetrical  = True )
 
+    modified_date =  models.DateTimeField(null = True, auto_now = True)
     
-    def _get_latest_sender(self):
+    created_date = models.DateTimeField(null = True, auto_now_add = True)
+    
+    status = models.IntegerField(default = STATUS_READY)
+
+    def _get_latest_message(self):
         messages = self.messages.all().order_by('-date')
         if messages.count():
-            return messages[0].sender_address
+            return messages[0]
         else:
             return None
+    latest_message = property(_get_latest_message)
+    
+    def _get_latest_sender(self):
+        return self.latest_message and self.latest_message.sender_address or None
     latest_sender = property(_get_latest_sender)
 
     def _get_name_as_initial_subject(self):
@@ -786,5 +825,3 @@ class Account(models.Model):
     __str__ = lambda self : '%s of %s' % (self.name, self.owner.username)
 
     __unicode__ = __str__
-
-    

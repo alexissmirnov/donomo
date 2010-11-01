@@ -5,6 +5,7 @@ from donomo.archive           import operations
 from django.test.utils import setup_test_environment
 from donomo.archive.utils import sqs
 import os
+import time
 
 # ----------------------------------------------------------------------------
 
@@ -66,7 +67,7 @@ class TestConversationNewsletter(unittest.TestCase):
 
     def _process_queue(self):
         while True:
-            work_item = operations.retrieve_work_item(max_wait_time = 1)
+            work_item = operations.retrieve_work_item(max_wait_time = 5)
             if work_item:
                 mail_parser.handle_work_item(self.processor, work_item)
                 operations.close_work_item(work_item, True)
@@ -93,14 +94,15 @@ class TestConversationNewsletter(unittest.TestCase):
         """
         Adding a message should produce 1 message object and 1 conversation
         """
-        original_message_count = Message.objects.all().count()
-        original_aggregate_count = MessageAggregate.objects.all().count()
-         
+        MessageAggregate.objects.all().delete()
+        Message.objects.all().delete()
+        MessageRule.objects.all().delete()
+                 
         self._enqueue_message(os.path.join(self.message_dir, 'simple_message.eml'), 'testuser@donomo.com', 'label1', 'S,F')
         self._process_queue();
         
-        self.assertEqual(Message.objects.all().count() - original_message_count, 1)
-        self.assertEqual(MessageAggregate.objects.all().count() - original_aggregate_count, 1)
+        self.assertEqual(Message.objects.all().count(), 1)
+        self.assertEqual(MessageAggregate.objects.all().count(), 1)
 
     def test_conversation(self):        
         """
@@ -117,9 +119,9 @@ class TestConversationNewsletter(unittest.TestCase):
         self._process_queue();
         
         self.assertEqual(Message.objects.all().count() - original_message_count, 3 )
-        self.assertEqual(MessageAggregate.objects.all().count() - original_aggregate_count, 1)
+        self.assertEqual(MessageAggregate.objects.filter(status = MessageAggregate.STATUS_READY).count() - original_aggregate_count, 1)
         
-        new_conversation = MessageAggregate.objects.get(owner = self.user, tags__label = 'label2')
+        new_conversation = MessageAggregate.objects.get(status = MessageAggregate.STATUS_READY, owner = self.user, tags__label = 'label2')
         
         self.assertEqual(new_conversation.creator.type, MessageRule.CONVERSATION)
         self.assertEqual(new_conversation.messages.all().count(), 3)
@@ -137,8 +139,8 @@ class TestConversationNewsletter(unittest.TestCase):
         MessageRule.objects.all().delete()
 
         original_message_count = Message.objects.all().count()
-        original_conversation_count = MessageAggregate.objects.filter(creator__type = MessageRule.CONVERSATION).count()
-        original_newsletter_count = MessageAggregate.objects.filter(creator__type = MessageRule.NEWSLETTER).count()
+        original_conversation_count = MessageAggregate.objects.filter(status = MessageAggregate.STATUS_READY, creator__type = MessageRule.CONVERSATION).count()
+        original_newsletter_count = MessageAggregate.objects.filter(status = MessageAggregate.STATUS_READY, creator__type = MessageRule.NEWSLETTER).count()
 
         self._enqueue_message(os.path.join(self.message_dir, 'newsletter_message1.eml'), 'testuser@donomo.com', 'label3', 'S,F')
         self._process_queue();
@@ -146,14 +148,14 @@ class TestConversationNewsletter(unittest.TestCase):
         # new conversation is created
         new_conversation = MessageAggregate.objects.get(owner = self.user, tags__label = 'label3')
         self.assertEqual(new_conversation.creator.type, MessageRule.CONVERSATION)
-        self.assertEqual(MessageAggregate.objects.filter(creator__type = MessageRule.CONVERSATION).count(), original_conversation_count + 1)
+        self.assertEqual(MessageAggregate.objects.filter(status = MessageAggregate.STATUS_READY, creator__type = MessageRule.CONVERSATION).count(), original_conversation_count + 1)
         
         # another message arrives, another conversation created
         self._enqueue_message(os.path.join(self.message_dir, 'newsletter_message2.eml'), 'testuser@donomo.com', 'label3', 'S,F')
         self._process_queue();
 
         # got two conversations
-        self.assertEqual(MessageAggregate.objects.filter(creator__type = MessageRule.CONVERSATION).count(), original_conversation_count + 2)
+        self.assertEqual(MessageAggregate.objects.filter(status = MessageAggregate.STATUS_READY, creator__type = MessageRule.CONVERSATION).count(), original_conversation_count + 2)
 
         # add a newsletter rule for the sender
         rule = MessageRule(type = MessageRule.NEWSLETTER, owner = self.user, sender_address = new_conversation.messages.all()[0].sender_address)
@@ -161,15 +163,15 @@ class TestConversationNewsletter(unittest.TestCase):
         operations.apply_message_rule(rule)
         
         # conversations got replaced by a newsletter
-        self.assertEqual(MessageAggregate.objects.filter(creator__type = MessageRule.CONVERSATION).count(), original_conversation_count)
-        self.assertEqual(MessageAggregate.objects.filter(creator__type = MessageRule.NEWSLETTER).count(), 1 + original_newsletter_count)
+        self.assertEqual(MessageAggregate.objects.filter(status = MessageAggregate.STATUS_READY, creator__type = MessageRule.CONVERSATION).count(), original_conversation_count)
+        self.assertEqual(MessageAggregate.objects.filter(status = MessageAggregate.STATUS_READY, creator__type = MessageRule.NEWSLETTER).count(), 1 + original_newsletter_count)
         
         # a newsletter was forwarded
         self._enqueue_message(os.path.join(self.message_dir, 'newsletter_message3.eml'), 'testuser@donomo.com', 'label3', 'S,F')
         self._process_queue();
 
         # a new conversation is created
-        self.assertEqual(MessageAggregate.objects.filter(creator__type = MessageRule.CONVERSATION).count(), 1 + original_conversation_count)
+        self.assertEqual(MessageAggregate.objects.filter(status = MessageAggregate.STATUS_READY, creator__type = MessageRule.CONVERSATION).count(), 1 + original_conversation_count)
         
         # a new newsletter was received
         self._enqueue_message(os.path.join(self.message_dir, 'newsletter_message4.eml'), 'testuser@donomo.com', 'label3', 'S,F')
@@ -177,12 +179,12 @@ class TestConversationNewsletter(unittest.TestCase):
         
         # the new newsletter message goes into the existing aggregate
         # the conversation is still present, with 2 messages
-        self.assertEqual(MessageAggregate.objects.filter(creator__type = MessageRule.NEWSLETTER).count(), 1 + original_newsletter_count)
+        self.assertEqual(MessageAggregate.objects.filter(status = MessageAggregate.STATUS_READY, creator__type = MessageRule.NEWSLETTER).count(), 1 + original_newsletter_count)
 
-        newsletter = MessageAggregate.objects.get(owner = self.user, creator__type = MessageRule.NEWSLETTER, tags__label = 'label3')
+        newsletter = MessageAggregate.objects.get(status = MessageAggregate.STATUS_READY, owner = self.user, creator__type = MessageRule.NEWSLETTER, tags__label = 'label3')
         self.assertEqual(newsletter.messages.all().count(), 3)
 
-        conversation = MessageAggregate.objects.get(owner = self.user, creator__type = MessageRule.CONVERSATION, tags__label = 'label3')
+        conversation = MessageAggregate.objects.get(status = MessageAggregate.STATUS_READY, owner = self.user, creator__type = MessageRule.CONVERSATION, tags__label = 'label3')
         self.assertEqual(conversation.messages.all().count(), 2)
 
     def test_newsletter_delayed_rule_application(self):
@@ -197,8 +199,8 @@ class TestConversationNewsletter(unittest.TestCase):
         MessageRule.objects.all().delete()
         
         original_message_count = Message.objects.all().count()
-        original_conversation_count = MessageAggregate.objects.filter(creator__type = MessageRule.CONVERSATION).count()
-        original_newsletter_count = MessageAggregate.objects.filter(creator__type = MessageRule.NEWSLETTER).count()
+        original_conversation_count = MessageAggregate.objects.filter(status = MessageAggregate.STATUS_READY, creator__type = MessageRule.CONVERSATION).count()
+        original_newsletter_count = MessageAggregate.objects.filter(status = MessageAggregate.STATUS_READY, creator__type = MessageRule.NEWSLETTER).count()
 
         self._enqueue_message(os.path.join(self.message_dir, 'newsletter_message1.eml'), 'testuser@donomo.com', 'label4', 'S,F')
         self._enqueue_message(os.path.join(self.message_dir, 'newsletter_message2.eml'), 'testuser@donomo.com', 'label4', 'S,F')
@@ -206,21 +208,29 @@ class TestConversationNewsletter(unittest.TestCase):
         self._enqueue_message(os.path.join(self.message_dir, 'newsletter_message4.eml'), 'testuser@donomo.com', 'label4', 'S,F')
         self._process_queue();
 
-        new_conversation = MessageAggregate.objects.filter(owner = self.user, tags__label = 'label4')[0]
+        new_conversation = MessageAggregate.objects.filter(status = MessageAggregate.STATUS_READY, owner = self.user, tags__label = 'label4')[0]
         
         # add a newsletter rule for the sender
         rule = MessageRule(type = MessageRule.NEWSLETTER, owner = self.user, sender_address = new_conversation.messages.all()[0].sender_address)
         rule.save()
+        time.sleep(2)
         operations.apply_message_rule(rule)
+        time.sleep(2)
 
         # the new newsletter message goes into the existing aggregate
         # the conversation is still present, with 2 messages
-        self.assertEqual(MessageAggregate.objects.filter(owner = self.user, creator__type = MessageRule.NEWSLETTER).count(), 1 + original_newsletter_count)
+        self.assertEqual(MessageAggregate.objects.filter(status = MessageAggregate.STATUS_READY, 
+                                                         owner = self.user, 
+                                                         creator__type = MessageRule.NEWSLETTER).count(), 
+                                                    1 + original_newsletter_count)
 
-        newsletter = MessageAggregate.objects.get(owner = self.user, creator__type = MessageRule.NEWSLETTER, tags__label = 'label4')
+        newsletter = MessageAggregate.objects.get(status = MessageAggregate.STATUS_READY, 
+                                                  owner = self.user, 
+                                                  creator__type = MessageRule.NEWSLETTER, 
+                                                  tags__label = 'label4')
         self.assertEqual(newsletter.messages.all().count(), 3)
 
-        conversation = MessageAggregate.objects.get(owner = self.user, creator__type = MessageRule.CONVERSATION, tags__label = 'label4')
+        conversation = MessageAggregate.objects.get(status = MessageAggregate.STATUS_READY, owner = self.user, creator__type = MessageRule.CONVERSATION, tags__label = 'label4')
         self.assertEqual(conversation.messages.all().count(), 2)
         
         # Aggregate's name is the subject name of the first message

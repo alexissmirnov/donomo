@@ -57,6 +57,10 @@ urlpatterns = patterns(
          search,
          name = 'api_search'),
          
+    url( r'^sync/events/$',
+         sync_event_list,
+         name = 'api_sync_event_list' ),
+
     url( r'^aggregates/$',
          aggregate_list,
          name = 'api_aggregate_list' ),
@@ -69,10 +73,6 @@ urlpatterns = patterns(
          message_info,
          name = 'api_message_info' ),
 
-    url( r'^messages/$',
-         message_list,
-         name = 'api_message_list' ),
-
     url( r'^contacts/$',
          contact_list,
          name = 'api_contact_list' ),
@@ -83,6 +83,7 @@ urlpatterns = patterns(
          
     url( r'^accounts/(?P<id>[-a-zA-Z0-9_:. \$\>\<\@]+)/$',
          account_info,
-         name = 'api_account_info' )
+         name = 'api_account_info' ),
+
 )
 
