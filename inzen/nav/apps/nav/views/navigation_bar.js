@@ -25,7 +25,9 @@ App.NavigationBar = SC.View.extend({
         title: null,
         titleMinWidth: 0,
         controlSize: SC.JUMBO_CONTROL_SIZE,
-        icon: '/media/img/profile_button.png'
+        icon: '/media/img/profile_button.png',
+        
+        action: 'showProfilePage'
     }),
     codeVersion: SC.LabelView.design({
     	controlSize: SC.SMALL_CONTROL_SIZE,
@@ -41,5 +43,9 @@ App.NavigationBar = SC.View.extend({
     	controlSize: SC.SMALL_CONTROL_SIZE,
     	valueBinding: 'App.firstResponder.name',
     	layout: { left: 0, top: 30, width: 45, height: 10 }
-    })
+    }),
+    
+    showProfilePage: function() {
+		App.state.transitionTo(App.state.PROFILE_PAGE);
+    }
 });

@@ -15,12 +15,12 @@ App.state = {
 	 * @returns
 	 */
 	transitionTo: function(state) {	
-		console.log('transitionTo ' + state);
 		if( SC.typeOf(state) === SC.T_HASH ) {
 			state = state.location;
 		}
 		
 		if( SC.typeOf(state) === SC.T_STRING ) {
+			console.log('transitionTo ' + state);
 			// Is there such a state?
 		    if (!App.state.hasOwnProperty(state)) {
 		    	console.log("App.state.transitionTo can't find state %@. Will transition to state START"

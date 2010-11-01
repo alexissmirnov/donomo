@@ -62,56 +62,6 @@ App.signupPage = SC.Page.design({
 		})
 });
 
-//childViews: 'prompt okButton cancelButton emailLabel email passwordLabel password'.w(),
-//
-//prompt: SC.LabelView.design({
-//    layout: { top: 12, left: 20, height: 18, right: 20 },
-//    value: '_Enter your email address and password'.loc()
-//    }),
-//    
-//// EMAIL
-//emailLabel: SC.LabelView.design({
-//	layout: { top: 68, left: 20, width: 70, height: 18 },
-//	textAlign: SC.ALIGN_RIGHT,
-//	value: '_Email:'.loc()
-//	}),
-//    
-//email: SC.TextFieldView.design({
-//	layout: { top: 68, left: 100, height: 20, width: 270 },
-//	hint: '_email@example.com'.loc(),
-//	valueBinding: 'App.signupController.email'
-//	}),
-//
-//// PASSWORD
-//passwordLabel: SC.LabelView.design({
-//	layout: { top: 98, left: 20, width: 70, height: 18 },
-//	textAlign: SC.ALIGN_RIGHT,
-//	value: '_Password:'.loc()
-//	}),
-//    
-//password: SC.TextFieldView.design({
-//	layout: { top: 98, left: 100, height: 20, width: 270 },
-//	valueBinding: 'App.signupController.password'
-//	}),
-//	
-//// BUTTONS
-//okButton: SC.ButtonView.design({
-//	layout: { bottom: 20, right: 20, width: 90, height: 24 },
-//	title: '_OK'.loc(),
-//    isDefault: YES,
-//    location: 'senderClassification',
-//    action: 'go',
-//    target: App.states.main
-//}),
-//
-//cancelButton: SC.ButtonView.design({
-//	layout: { bottom: 20, right: 120, width: 90, height: 24 },
-//	title: '_Cancel'.loc(),
-//	isCancel: YES,
-//    location: 'main',
-//    action: 'go',
-//    target: App.states.main
-//})
 
 
 

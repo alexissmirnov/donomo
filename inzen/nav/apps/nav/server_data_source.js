@@ -3,6 +3,7 @@
  */
 sc_require('models');
 
+
 App.query = {};
 App.query.GET_CONVERSATIONS = SC.Query.local(App.model.Conversation);
 /**
@@ -24,38 +25,45 @@ App.ServerDataSource = SC.DataSource.extend({
 	startDownloadMessages: function() {
 		// Launch the query and pull the date of the last message from the DB (if it is there)
 		//TODO: DEBUG RESET 
-		App.store.find(App.model.SyncTracker, '1');
+		//App.store.find(App.model.SyncTracker, '1');
 		//App.store.createRecord(App.model.SyncTracker, {date: String(new Date())}, '1');
 		
 		// Give it 2 seconds to pull it from DB
-		this.invokeLater('downloadEarlyMessages', 10);
+		// this.invokeLater('downloadEarlyMessages', 10);
 		
-		// start in 10 sec
-		this.invokeLater('downloadNewMessages', 10000);
+		// start in 5 sec
+		//this.invokeLater('downloadNewMessages', 5000);
+		this.downloadNewMessages();
 	},
 	
 	downloadNewMessages: function() {
 		// find the most recent message in the db
-		var messages = App.store.find(App.model.Message);
+		//var messages = App.store.find(App.model.Message);
+
+		var requestUrl = '/api/1.0/sync/events/';
 		
-		if( messages.length() === 0 ) {
-			this.invokeLater('downloadNewMessages', 20000);
+		// Add modified_since if we already have it
+		// If not, request all messages.
+		// Messages come in order of modified date and are limited in number
+		if( App.syncTrackerController.content && App.syncTrackerController.content.length() ) {
+			requestUrl = '%@?modified_since=%@'.fmt(
+					requestUrl, 
+					App.syncTrackerController.content.objectAt(0).get('date'));
 		}
-		
-		// minimal date Dec 31 1969 - i wasn't born yet, so there surely cannot be any email earlier that this
-		var latestMessageDate = new Date(0); 
-		messages.forEach(function(message) {
-			var currentMessageDate = new Date(message.get('date'));
-			if(  currentMessageDate > latestMessageDate )
-				latestMessageDate = currentMessageDate;
-		});
-		
-		// get all messages since that date
-		var r = SC.Request.getUrl('/api/1.0/messages/?modified_since=%@'.fmt(latestMessageDate))
+		SC.Request.getUrl(requestUrl)
 			.header({'Accept': 'application/json'})
 			.json()
 			.notify(this, '_didGetNewMessages', App.store, App.store.dataSource )
 			.send();
+//		
+//		
+//		// minimal date Dec 31 1969 - i wasn't born yet, so there surely cannot be any email earlier that this
+//		var latestMessageDate = new Date(0);
+//		messages.forEach(function(message) {
+//			var currentMessageDate = getDateFromFormat(message.get('modified_date'), "y-M-d H:mm:ss");
+//			if(  currentMessageDate > latestMessageDate )
+//				latestMessageDate = currentMessageDate;
+//		});
 	},
 	
 	_didGetNewMessages: function(response, store, db) {
@@ -66,38 +74,38 @@ App.ServerDataSource = SC.DataSource.extend({
 		if( SC.ok(response) ) {
 			var messageDate = this._processGetMessagesResponse(response, store, db);
 		
-			this.invokeLater('downloadNewMessages', 30000);
+			this.invokeLater('downloadNewMessages', 5000);
 		}
 	},
 	
-	downloadEarlyMessages: function() {
-		// pull the date cursor from in-memory store -- if we have it in DB it should
-		// now be in memory because of the find() call in startDownloadMessages has pulled it in
-		var earliestMessageDate = App.store.dataHashes[App.store.storeKeyFor(App.model.SyncTracker, '1')];
-		
-		if( !earliestMessageDate ) {
-			// no earliestMessageDate means we're dealing with the cold start
-			// and the DB is empty
-			// add a record with the current time -- meaning we'll be
-			// loading messages from the current time going back
-			// and call this function again in 2s
-
-			App.store.createRecord(App.model.SyncTracker, {date: String(new Date())}, '1');
-			App.store.dataSource.getNestedDataSource().invokeLater('downloadEarlyMessages', 2000);
-			return;
-		}
-		
-		// we got the time cursor. load X number of messages starting from the cursor
-		// going back in time
-		var r = SC.Request.getUrl('/api/1.0/messages/?limit=%@&modified_before=%@'.fmt(10, earliestMessageDate.date))
-			.header({'Accept': 'application/json'})
-			.json()
-			.notify(this, '_didGetEarlyMessages', App.store, App.store.dataSource )
-			.send();
-	},
+//	downloadEarlyMessages: function() {
+//		// pull the date cursor from in-memory store -- if we have it in DB it should
+//		// now be in memory because of the find() call in startDownloadMessages has pulled it in
+//		var earliestMessageDate = App.store.dataHashes[App.store.storeKeyFor(App.model.SyncTracker, '1')];
+//		
+//		if( !earliestMessageDate ) {
+//			// no earliestMessageDate means we're dealing with the cold start
+//			// and the DB is empty
+//			// add a record with the current time -- meaning we'll be
+//			// loading messages from the current time going back
+//			// and call this function again in 2s
+//
+//			App.store.createRecord(App.model.SyncTracker, {date: String(new Date().format("y-M-d H:mm:ss"))}, '1');
+//			App.store.dataSource.getNestedDataSource().invokeLater('downloadEarlyMessages', 2000);
+//			return;
+//		}
+//		
+//		// we got the time cursor. load X number of messages starting from the cursor
+//		// going back in time
+//		var r = SC.Request.getUrl('/api/1.0/messages/?limit=%@&modified_before=%@'.fmt(10, earliestMessageDate.date))
+//			.header({'Accept': 'application/json'})
+//			.json()
+//			.notify(this, '_didGetEarlyMessages', App.store, App.store.dataSource )
+//			.send();
+//	},
 	
 	_processGetMessagesResponse: function(response, store, db) {
-		var messageDate = null;
+		var lastModifiedTimestamp = null;
 		var tags = [];
 		response.get('body').tags.forEach(function(tagHash){
 			var tag = App.store.dataHashes[App.model.Flow.storeKeyFor(tagHash.guid)];
@@ -165,50 +173,58 @@ App.ServerDataSource = SC.DataSource.extend({
 			// this means the last message we process will carry the timestamp
 			// we need to start the next request from
 			// remember it here and use it after the forEach loop
-			messageDate = message.modified_date;
+			lastModifiedTimestamp = message.modified_date;
 		});
 		
-		return messageDate;
-	},
-	
-	_didGetEarlyMessages: function(response, store, db) {
-		
-		// state got cleared while we were getting messages? stop it.
-		if( !App.store.dataHashes[App.store.storeKeyFor(App.model.User, '1')] )
-			return;
-			
-		if( SC.ok(response) ) {
-			var messageDate = this._processGetMessagesResponse(response, store, db);
-			
-			// stop trying to download early messages after we get 100 of them
-			// TODO: when using the DB, continue the download, but offload earlier
-			// messages from memory
-			if( App.store.find(App.model.Message) > 50 )
-				return;
-			
-			if( messageDate ) {
-				// non-empty messageDate means we got some messages i.e. we're
-				// not at the end of the mail archive.
-				// let's continue loading then
-				var earliestMessageDate = App.store.find(App.model.SyncTracker, '1');
-				earliestMessageDate.set('date', messageDate);
-				this.invokeLater('downloadEarlyMessages', 1000); 
-			} else if( App.store.find(App.model.Message).length() === 0) {
-				// We did not get any messages AND app's store is empty.
-				//
-				// During the initial boot this API call may come
-				// before the server has the available data.
-				// Assume that if the app has 0 messages, this means we're in that state
-				// This means the app should continue trying to downloadMessages
-				this.invokeLater('downloadEarlyMessages', 1000*5); 
+		// Create or update SyncTracker record
+		if( lastModifiedTimestamp ) {
+			if( App.syncTrackerController.content.objectAt(0) ) {
+				App.syncTrackerController.content.objectAt(0).set('date', lastModifiedTimestamp);
 			} else {
-				// We did not get anything from the server, but we have something in the local store
-				//
-				// run a routine check for past messages then, every 1 min
-				this.invokeLater('downloadEarlyMessages', 1000*10); 
-			} 
+				var storeKey = store.loadRecord(App.model.SyncTracker, {'date' : lastModifiedTimestamp});
+				db.didRetrieveRecordFromNestedStore(store, storeKey);			
+			}
 		}
 	},
+	
+//	_didGetEarlyMessages: function(response, store, db) {
+//		
+//		// state got cleared while we were getting messages? stop it.
+//		if( !App.store.dataHashes[App.store.storeKeyFor(App.model.User, '1')] )
+//			return;
+//			
+//		if( SC.ok(response) ) {
+//			var messageDate = this._processGetMessagesResponse(response, store, db);
+//			
+//			// stop trying to download early messages after we get 100 of them
+//			// TODO: when using the DB, continue the download, but offload earlier
+//			// messages from memory
+//			if( App.store.find(App.model.Message) > 50 )
+//				return;
+//			
+//			if( messageDate ) {
+//				// non-empty messageDate means we got some messages i.e. we're
+//				// not at the end of the mail archive.
+//				// let's continue loading then
+//				var earliestMessageDate = App.store.find(App.model.SyncTracker, '1');
+//				earliestMessageDate.set('date', messageDate);
+//				this.invokeLater('downloadEarlyMessages', 1000); 
+//			} else if( App.store.find(App.model.Message).length() === 0) {
+//				// We did not get any messages AND app's store is empty.
+//				//
+//				// During the initial boot this API call may come
+//				// before the server has the available data.
+//				// Assume that if the app has 0 messages, this means we're in that state
+//				// This means the app should continue trying to downloadMessages
+//				this.invokeLater('downloadEarlyMessages', 1000*5); 
+//			} else {
+//				// We did not get anything from the server, but we have something in the local store
+//				//
+//				// run a routine check for past messages then, every 1 min
+//				this.invokeLater('downloadEarlyMessages', 1000*10); 
+//			} 
+//		}
+//	},
 	
 	_loadTags: function(hashes, convIDs, store, db){
 		hashes.forEach(function(h) {

@@ -83,8 +83,8 @@ App.model.Contact = SC.Record.extend({
 		return this.flows.get('length') ? YES : NO; 
 	}.property('flows').cacheable()
 });
-App.model.Contact.PERSON = '2';
 App.model.Contact.BUSINESS = '1';
+App.model.Contact.PERSON = '2';
 
 
 /** @class
