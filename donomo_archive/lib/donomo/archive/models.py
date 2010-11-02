@@ -347,8 +347,8 @@ class Contact(models.Model):
         related_name = 'contacts',
         blank        = True,
         symmetrical  = True )
-    __str__ = lambda self : '%s (%s)' % (self.name, self.pk)
-    __unicode__ = __str__
+    __str__ = lambda self : str(unicode(self).encode('ascii','replace'))
+    __unicode__ = lambda self : unicode('%s (%s)' % (self.name, self.pk))
 
 ###############################################################################
 
@@ -362,8 +362,8 @@ class Address(models.Model):
         User,
         related_name = 'addresses')
 
-    __str__ = lambda self : str('%s <%s>' % (self.contact.name, self.email))
-    __unicode__ = __str__
+    __str__ = lambda self : str(unicode(self).encode('ascii','replace'))
+    __unicode__ = lambda self : unicode('%s <%s>' % (self.contact.name, self.email))
 
 
     
