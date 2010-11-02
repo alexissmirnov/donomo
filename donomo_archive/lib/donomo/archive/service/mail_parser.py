@@ -359,17 +359,25 @@ def handle_work_item( processor, work_item ):
         message.summary = generate_conversation_summary(payload, mime_type)
         message.save()
 
-        asset_list.append(
-            operations.create_asset_from_stream(
-                data_stream  = StringIO(part.get_payload(decode=True)),
-                owner        = parent_asset.owner,
-                producer     = processor,
-                asset_class  = message_part_class,
-                file_name    = file_name,
-                parent       = parent_asset,
-                child_number = counter,
-                mime_type    = mime_type,
-                related_message = message ))
+        # We could already have an asset for this message. This happens when the same
+        # message shows up in multiple IMAP folders eg. like Gmail does with labels
+        try:
+            asset = Asset.objects.get(owner = parent_asset.owner, 
+                                      child_number = counter, 
+                                      parent = parent_asset,
+                                      asset_class = message_part_class)
+        except Asset.DoesNotExist, e:
+            asset_list.append(
+                operations.create_asset_from_stream(
+                    data_stream  = StringIO(part.get_payload(decode=True)),
+                    owner        = parent_asset.owner,
+                    producer     = processor,
+                    asset_class  = message_part_class,
+                    file_name    = file_name,
+                    parent       = parent_asset,
+                    child_number = counter,
+                    mime_type    = mime_type,
+                    related_message = message ))
         
         
     return asset_list
