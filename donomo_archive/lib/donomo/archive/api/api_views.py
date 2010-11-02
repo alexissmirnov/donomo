@@ -13,6 +13,8 @@ from django.contrib.auth.decorators  import login_required
 from donomo.archive.utils.http       import http_method_dispatcher
 from donomo.archive.api.api_impl     import *
 from donomo.archive.utils.basic_auth import logged_in_or_basicauth
+from donomo.archive.utils.middleware import api_login_required
+
 __all__ = (
     'document_list',
     'document_info',
@@ -61,7 +63,7 @@ def document_list():
 
 ###############################################################################
 
-@login_required
+@api_login_required
 @http_method_dispatcher
 def document_info():
     """
@@ -76,7 +78,7 @@ def document_info():
 
 ###############################################################################
 
-@login_required
+@api_login_required
 @http_method_dispatcher
 def document_zip():
     """
@@ -89,7 +91,7 @@ def document_zip():
 
 ###############################################################################
 
-@login_required
+@api_login_required
 @http_method_dispatcher
 def document_as_pdf():
     """
@@ -101,7 +103,7 @@ def document_as_pdf():
 
 ###############################################################################
 
-@login_required
+@api_login_required
 @http_method_dispatcher
 def page_info():
     """
@@ -115,7 +117,7 @@ def page_info():
 
 ###############################################################################
 
-@login_required
+@api_login_required
 @http_method_dispatcher
 def page_view():
     """
@@ -128,7 +130,7 @@ def page_view():
 
 ###############################################################################
 
-@login_required
+@api_login_required
 @http_method_dispatcher
 def page_as_pdf():
     """
@@ -140,7 +142,7 @@ def page_as_pdf():
 
 ###############################################################################
 
-@login_required
+@api_login_required
 @http_method_dispatcher
 def tag_list():
     """
@@ -153,7 +155,7 @@ def tag_list():
 
 ###############################################################################
 
-@login_required
+@api_login_required
 @http_method_dispatcher
 def tag_info():
     """
@@ -168,7 +170,7 @@ def tag_info():
 
 ###############################################################################
 
-@login_required
+@api_login_required
 @http_method_dispatcher
 def search():
     """
@@ -181,7 +183,7 @@ def search():
 
 ###############################################################################
 
-@login_required
+@api_login_required
 @http_method_dispatcher
 def sync_event_list():
     """
@@ -194,7 +196,7 @@ def sync_event_list():
 
 ###############################################################################
 
-@login_required
+@api_login_required
 @http_method_dispatcher
 def aggregate_list():
     """
@@ -205,7 +207,7 @@ def aggregate_list():
 
 ###############################################################################
 
-@login_required
+@api_login_required
 @http_method_dispatcher
 def aggregate_info():
     """
@@ -218,7 +220,7 @@ def aggregate_info():
 
 ###############################################################################
 
-@login_required
+@api_login_required
 @http_method_dispatcher
 def message_info():
     """
@@ -231,7 +233,7 @@ def message_info():
         }
 
 ###############################################################################
-@login_required
+@api_login_required
 @http_method_dispatcher
 def message_list():
     """
@@ -243,7 +245,7 @@ def message_list():
         }
 ###############################################################################
 
-@login_required
+@api_login_required
 @http_method_dispatcher
 def contact_list():
     """
@@ -253,7 +255,7 @@ def contact_list():
     }
 ###############################################################################
 
-@login_required
+@api_login_required
 @http_method_dispatcher
 def contact_info():
     """

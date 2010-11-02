@@ -3,20 +3,26 @@ Handy middleware (Django compatible) and decorators.
 
 """
 
-from django.core.exceptions import ObjectDoesNotExist
-from django.db              import IntegrityError
-from django.http            import HttpResponse, Http404
-from donomo.archive.utils.http import HttpRequestValidationError
+
+from django.conf                    import settings
+from django.contrib.auth            import REDIRECT_FIELD_NAME
+from django.contrib.auth.decorators import user_passes_test
+from django.core.exceptions         import ObjectDoesNotExist
+from django.db                      import IntegrityError
+from django.http                    import HttpResponse, Http404, HttpResponseForbidden, HttpResponseRedirect
+from django.utils.http              import urlquote
+from donomo.archive.utils.http      import HttpRequestValidationError
+from functools import update_wrapper
+import httplib
+import logging
+import pprint
+import sys
+import time
+import traceback
 try:
     import json
 except:
     import simplejson as json
-import httplib
-import traceback
-import logging
-import sys
-import pprint
-import time
 
 
 #
@@ -34,6 +40,28 @@ SC_CONTENT_TYPE  = 'text/html'
 SC_POST_CONTENT_TYPE  = 'text/html; charset=utf-8'
 XML_CONTENT_TYPE   = 'application/xml'
 AJAX_CONTENT_TYPES = ( JSON_CONTENT_TYPE, XML_CONTENT_TYPE, SC_CONTENT_TYPE, SC_POST_CONTENT_TYPE)
+
+def api_login_required( view_func ):
+    """
+    Alternative to django's login_required decorator
+    This one will return 403 (Forbidden) in response to an AJAX request, instead of
+    redirecting the caller to a UI page
+    """
+    def wrapper( request, *args, **kwargs ):
+        login_url = settings.LOGIN_URL
+        redirect_field_name = REDIRECT_FIELD_NAME
+        if request.user.is_authenticated():
+            return view_func( request, *args, **kwargs )
+        else:
+            path = urlquote(request.get_full_path())
+            if request.is_ajax():
+                response = HttpResponseForbidden()
+                response['Location'] = '%s?%s=%s' % (login_url, redirect_field_name, path)
+            else:
+                response = HttpResponseRedirect('%s?%s=%s' % tup)
+        
+            return response
+    return wrapper
 
 
 def long_poll( view_func ):
