@@ -58,7 +58,7 @@ def api_login_required( view_func ):
                 response = HttpResponseForbidden()
                 response['Location'] = '%s?%s=%s' % (login_url, redirect_field_name, path)
             else:
-                response = HttpResponseRedirect('%s?%s=%s' % tup)
+                response = HttpResponseRedirect('%s?%s=%s' % (login_url, redirect_field_name, path))
         
             return response
     return wrapper
