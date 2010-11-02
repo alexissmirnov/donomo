@@ -71,10 +71,17 @@ App.ServerDataSource = SC.DataSource.extend({
 		if( !App.store.dataHashes[App.store.storeKeyFor(App.model.User, '1')] )
 			return;
 			
-		if( SC.ok(response) ) {
+		if( response.status === 200 ) {
 			var messageDate = this._processGetMessagesResponse(response, store, db);
 		
 			this.invokeLater('downloadNewMessages', 5000);
+		} else if( response.status === 403 ) {
+			var user = App.store.find(App.model.User, '1');
+			
+			SC.Request.postUrl(response.header('Location'))
+				.header({'Accept': 'application/json', 'Content-Type' :'application/x-www-form-urlencoded'})
+				.notify(this, 'downloadNewMessages')
+				.send('username=%@&password=%@'.fmt(user.get('username'), user.get('username')));	
 		}
 	},
 	
