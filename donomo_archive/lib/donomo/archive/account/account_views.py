@@ -65,17 +65,21 @@ def account_delete(request, username):
         return HttpResponse('forbidden')
 
 def signin(request):
-    username = request.POST['username']
-    password = request.POST['password']
-    user = auth.authenticate(username=username, password=password)
-    if user is not None:
-        if user.is_active:
-            auth.login(request, user)
-            return HttpResponseRedirect('/')
+    if request.method == 'GET':
+        return auth.views.login(request)
+    elif request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = auth.authenticate(username=username, password=password)
+        if user is not None:
+            if user.is_active:
+                auth.login(request, user)
+                return request.is_ajax() and HttpResponse() or HttpResponseRedirect('/')
+            else:
+                return request.is_ajax() and HttpResponseForbidden('{"error": "account %s is disabled"}' % user.username ) or render_to_response('account/account_disabled.html')
         else:
-            return render_to_response('account/account_disabled.html')
-    else:
-        return render_to_response('account/invalid_login.html', locals())
+            return request.is_ajax() and HttpResponseForbidden('{"error": "invalid login for %s"}' % username ) or render_to_response('account/invalid_login.html', locals())
+
 
 @login_required()
 def logout(request):
