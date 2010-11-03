@@ -68,11 +68,11 @@ def must_restart():
 
 
 def terminate(child):
-    while child.poll is None:
-        os.kill(child.pid, signal.SIGINT)
-        time.sleep(1)
     global MUST_RESTART
     MUST_RESTART = False
+    while child.poll() is None:
+        os.kill(child.pid, signal.SIGTERM)
+        time.sleep(1)
 
 # ----------------------------------------------------------------------------
 
@@ -89,8 +89,8 @@ def generate_config_file( out_stream ):
         config.set(section_name, 'localrepository', '%s.local' % account_name)
         config.set(section_name, 'remoterepository', '%s.remote' % account_name)
         config.set(section_name, 'username', account.owner.username)
-        config.set(section_name, 'maxconnections', '3')
         config.set(section_name, 'autorefresh', '5')
+        config.set(section_name, 'maxage', '30')
 
         section_name = 'Repository %s.local' % account_name
         config.add_section(section_name)
@@ -102,6 +102,8 @@ def generate_config_file( out_stream ):
         config.set(section_name, 'type', 'Gmail')
         config.set(section_name, 'remoteuser', account.name)
         config.set(section_name, 'remotepass', account.password)
+        config.set(section_name, 'maxconnections', '2')
+        config.set(section_name, 'holdconnectionopen', 'no')
 
     section_name = 'general'
     config.add_section(section_name)
@@ -110,6 +112,7 @@ def generate_config_file( out_stream ):
     config.set(section_name, 'metadata', '%s/metadata' % settings.OFFLINEIMAP_DATA_DIR)
     config.set(section_name, 'ui', 'Noninteractive.Basic,Noninteractive.Quiet')
 
+    out_stream.write('# This file is AUTO-GENERATED.  Do not edit.\n')
     config.write(out_stream)
     out_stream.flush()
 
@@ -143,7 +146,10 @@ def main():
     parser.add_option('--umask', type='int')
     parser.add_option('--pidfile')
     parser.add_option('--frequency', type='int')
-    parser.add_option('--config', dest='config_file')
+    parser.add_option(
+        '--config',
+        dest='config_file',
+        default='/vol/offlineimap/offlineimap.conf')
     parser.add_option(
         '--quiet',
         dest = 'verbosity',
@@ -170,31 +176,34 @@ def main():
             pidfile.write('%d\n' % os.getpid())
 
     while not must_shut_down():
-        with get_config_file(options.config_file) as config_file:
-            try:
+        try:
+            os.remove(options.config_file)
+
+            with get_config_file(options.config_file) as config_file:
                 generate_config_file(config_file)
-                params = [
-                    'offlineimap', # will show up as the process name
-                    '-c', "from offlineimap import init; init.startup(\'6.2.0\')",
-                    '-c', config_file.name,
-                    '-o',
-                    ]
 
-                logging.info('Starting offlineimapd')
-                child = subprocess.Popen(params, executable='/usr/bin/python')
+            params = [
+                'offlineimap', # will show up as the process name
+                '-c', "from offlineimap import init; init.startup(\'6.2.0\')",
+                '-c', options.config_file,
+                ]
 
-                while not must_shut_down() and not must_restart():
-                    if child.poll() is not None:
-                        break
-                    time.sleep(2)
+            logging.info('Starting offlineimapd')
+            child = subprocess.Popen(params, executable='/usr/bin/python')
 
-                terminate(child)
+            while not ( must_shut_down() or must_restart() ):
+                if child.poll() is not None:
+                    break
+                time.sleep(2)
 
-            except Exception:
-                logging.exception('An exception occurred!')
+            logging.info('Terminating offlineimapd')
+            terminate(child)
+
+        except Exception:
+            logging.exception('An exception occurred!')
 
     if options.pidfile:
-        os.path.remove(options.pidfile)
+        os.remove(options.pidfile)
 
     logging.info("Stopped")
 

@@ -9,7 +9,7 @@ source /etc/rc.d/init.d/functions
 workdir=/var/lib/donomo
 pidfile=/var/run/donomo/offlineimap.pid
 logfile=/var/log/donomo/offlineimap.log
-conffile=/tmp/offlineimap.conf.new
+conffile=/vol/offlineimap/offlineimap.conf
 prog="Donomo-OfflineIMAP"
 
 
@@ -26,6 +26,12 @@ function setup_env
     export DONOMO_HOME=$HOME
 
     source $DONOMO_HOME/bin/env.sh
+}
+
+function is_running {
+    local svc=$1
+    local name=${2:-$1}
+    service ${svc:?} status | grep -c -E "$name \\(pid *( [0-9]+)+\\) is running..."
 }
 
 function start
@@ -47,6 +53,19 @@ function start
 function stop
 {
     killproc -p $pidfile "$prog" "$1"
+
+    if [[ "$1" != "-TERM" ]]
+    then
+        return 0
+    fi
+
+    while [[ $(is_running "$(basename $0)" "$prog") -gt 0 ]]
+    do
+        echo -n "."
+        killproc -p $pidfile "$prog" "$1"
+        sleep 5
+    done
+
 }
 
 

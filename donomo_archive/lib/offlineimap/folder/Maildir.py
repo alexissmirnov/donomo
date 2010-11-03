@@ -21,6 +21,8 @@ from Base import BaseFolder
 from offlineimap import imaputil
 from offlineimap.ui import UIBase
 from threading import Lock
+from donomo.archive           import operations
+from donomo.archive.models    import *
 
 try:
     from hashlib import md5
@@ -38,8 +40,6 @@ timelock = Lock()
 def on_savemessage(accountname, username, message_file, flags, label):
     print 'ON_SAVEMESSAGE: account=%s message file=%s flags=%s' % (username, message_file, flags)
 
-    from donomo.archive           import operations
-    from donomo.archive.models    import *
     MODULE_NAME     = 'mail_parser' # os.path.splitext(os.path.basename(__file__))[0]
     DEFAULT_INPUTS  = [ AssetClass.UPLOAD ]
     DEFAULT_OUTPUTS = [ AssetClass.MESSAGE_PART ]
@@ -66,7 +66,7 @@ def on_savemessage(accountname, username, message_file, flags, label):
         new_item.orig_file_name += ',' + f
     new_item.save()
     operations.publish_work_item(new_item)
-	
+
     return
 
 def gettimeseq():
@@ -166,7 +166,7 @@ class MaildirFolder(BaseFolder):
                 filesize = os.path.getsize(file)
                 if(filesize > maxsize):
                     continue
-            
+
 
             foldermatch = messagename.find(folderstr) != -1
             if not foldermatch:
@@ -208,7 +208,7 @@ class MaildirFolder(BaseFolder):
     def cachemessagelist(self):
         if self.messagelist is None:
             self.messagelist = self._scanfolder()
-            
+
     def getmessagelist(self):
         return self.messagelist
 
@@ -295,7 +295,7 @@ class MaildirFolder(BaseFolder):
 
         self.savemessageflags(uid, flags)
         ui.debug('maildir', 'savemessage: returning uid %d' % uid)
-        
+
         return uid
 
 
@@ -321,7 +321,7 @@ class MaildirFolder(BaseFolder):
         flags.sort()
         infostr += '2,' + ''.join(flags)
         newname += infostr
-        
+
         newfilename = os.path.join(newpath, newname)
         if (newfilename != oldfilename):
             os.rename(oldfilename, newfilename)
@@ -345,4 +345,4 @@ class MaildirFolder(BaseFolder):
                 os.unlink(newmsglist[uid]['filename'])
             # Yep -- return.
         del(self.messagelist[uid])
-        
+

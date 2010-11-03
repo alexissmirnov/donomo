@@ -19,7 +19,15 @@ prog="Donomo-Processors"
 
 function run_shell
 {
-    exec /bin/su -c "python -m donomo.manage ${1:?}" $USER
+    command="python -m donomo.manage '$1'"
+    echo $#
+    while [[ $# -gt 1 ]]
+    do
+        shift
+        command="$command '$1'"
+    done
+    echo $command
+    exec su -c "$command" $USER
 }
 
 
@@ -131,6 +139,10 @@ function spawn_if_overloaded
 setup_env
 
 case ${1:?} in
+    manage)
+        shift
+        run_shell "$@"
+        ;;
     syncdb|dbshell|shell)
         run_shell $1
         ;;
@@ -160,7 +172,7 @@ case ${1:?} in
         spawn_if_overloaded "$2"
         ;;
     *)
-        echo "Usage: $(basename $0) start|status|stop|restart|pending|prune"
+        echo "Usage: $(basename $0) start|status|stop|restart|pending|prune|manage"
         exit 1
         ;;
 esac
