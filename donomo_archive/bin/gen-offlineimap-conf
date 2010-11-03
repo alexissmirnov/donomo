@@ -1,0 +1,60 @@
+#!/usr/bin/env python
+
+from __future__ import with_statement
+from donomo.archive.models import *
+from django.conf import settings
+from ConfigParser import RawConfigParser
+from logging import getLogger
+import sys
+
+logging = getLogger('gen-offlineimap-conf')
+
+# ----------------------------------------------------------------------------
+
+def generate_config_file( out_file ):
+    logging.info('Generating Config file: %s', out_file)
+    config = RawConfigParser()
+
+    all_account_names = []
+    for account in Account.objects.filter(owner__is_active = True):
+        account_name = '%s.%s' % (account.owner.username, account.name)
+        all_account_names.append(account_name)
+
+        section_name = 'Account %s' % account_name
+        config.add_section(section_name)
+        config.set(section_name, 'localrepository', '%s.local' % account_name)
+        config.set(section_name, 'remoterepository', '%s.remote' % account_name)
+        config.set(section_name, 'username', account.owner.username)
+        config.set(section_name, 'autorefresh', '5')
+        config.set(section_name, 'maxage', '30')
+
+        section_name = 'Repository %s.local' % account_name
+        config.add_section(section_name)
+        config.set(section_name, 'type', 'Maildir')
+        config.set(section_name, 'localfolders', '%s/%s' % (settings.OFFLINEIMAP_DATA_DIR, account_name))
+
+        section_name = 'Repository %s.remote' % account_name
+        config.add_section(section_name)
+        config.set(section_name, 'type', 'Gmail')
+        config.set(section_name, 'remoteuser', account.name)
+        config.set(section_name, 'remotepass', account.password)
+        config.set(section_name, 'maxconnections', '2')
+        config.set(section_name, 'holdconnectionopen', 'no')
+
+    section_name = 'general'
+    config.add_section(section_name)
+    config.set(section_name, 'maxsyncaccounts', '50')
+    config.set(section_name, 'accounts', ','.join(all_account_names))
+    config.set(section_name, 'metadata', '%s/metadata' % settings.OFFLINEIMAP_DATA_DIR)
+    config.set(section_name, 'ui', 'Noninteractive.Basic,Noninteractive.Quiet')
+
+    with open(out_file, 'wb') as out_stream:
+        out_stream.write('# This file is AUTO-GENERATED.  Do not edit.\n')
+        config.write(out_stream)
+
+    logging.info('Config file generated: %s', out_file)
+
+# ----------------------------------------------------------------------------
+
+if __name__ == '__main__':
+    generate_config_file(sys.argv[1])

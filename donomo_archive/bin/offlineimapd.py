@@ -5,17 +5,13 @@
 
 from __future__ import with_statement
 
-from donomo.archive.models import *
-from django.conf import settings
 from logging import getLogger
 
-import ConfigParser
 import time
 import signal
 import logging
 import optparse
 import os
-import tempfile
 import subprocess
 
 #
@@ -38,7 +34,7 @@ def on_stop_signal(*args):
     # pylint: disable-msg=W0603,W0613
     #   W0603 - use of global keyword
     #   W0613 - unused argument
-    logging.info('Shutting down')
+    logging.info('Received termination signal')
     global MUST_SHUT_DOWN
     MUST_SHUT_DOWN = True
     # pylint: enable-msg=W0603,W0613
@@ -49,7 +45,7 @@ def on_restart_signal(*args):
     # pylint: disable-msg=W0603,W0613
     #   W0603 - use of global keyword
     #   W0613 - unused argument
-    logging.info('Restarting offlineimap')
+    logging.info('Received reload signal')
     global MUST_RESTART
     MUST_RESTART=True
     # pylint: enable-msg=W0603,W0613
@@ -71,58 +67,9 @@ def terminate(child):
     global MUST_RESTART
     MUST_RESTART = False
     while child.poll() is None:
+        logging.info('Sending shutdown signal to offlineimap worker')
         os.kill(child.pid, signal.SIGTERM)
         time.sleep(1)
-
-# ----------------------------------------------------------------------------
-
-def generate_config_file( out_stream ):
-    config = ConfigParser.RawConfigParser()
-
-    all_account_names = []
-    for account in Account.objects.filter(owner__is_active = True):
-        account_name = '%s.%s' % (account.owner.username, account.name)
-        all_account_names.append(account_name)
-
-        section_name = 'Account %s' % account_name
-        config.add_section(section_name)
-        config.set(section_name, 'localrepository', '%s.local' % account_name)
-        config.set(section_name, 'remoterepository', '%s.remote' % account_name)
-        config.set(section_name, 'username', account.owner.username)
-        config.set(section_name, 'autorefresh', '5')
-        config.set(section_name, 'maxage', '30')
-
-        section_name = 'Repository %s.local' % account_name
-        config.add_section(section_name)
-        config.set(section_name, 'type', 'Maildir')
-        config.set(section_name, 'localfolders', '%s/%s' % (settings.OFFLINEIMAP_DATA_DIR, account_name))
-
-        section_name = 'Repository %s.remote' % account_name
-        config.add_section(section_name)
-        config.set(section_name, 'type', 'Gmail')
-        config.set(section_name, 'remoteuser', account.name)
-        config.set(section_name, 'remotepass', account.password)
-        config.set(section_name, 'maxconnections', '2')
-        config.set(section_name, 'holdconnectionopen', 'no')
-
-    section_name = 'general'
-    config.add_section(section_name)
-    config.set(section_name, 'maxsyncaccounts', '50')
-    config.set(section_name, 'accounts', ','.join(all_account_names))
-    config.set(section_name, 'metadata', '%s/metadata' % settings.OFFLINEIMAP_DATA_DIR)
-    config.set(section_name, 'ui', 'Noninteractive.Basic,Noninteractive.Quiet')
-
-    out_stream.write('# This file is AUTO-GENERATED.  Do not edit.\n')
-    config.write(out_stream)
-    out_stream.flush()
-
-# ----------------------------------------------------------------------------
-
-def get_config_file( name ):
-    """ If a specific named file file is to be used, open it and return
-        it; othewise, open and return a named temporary file.
-    """
-    return name and open(name, 'wb') or tempfile.NamedTemporaryFile()
 
 # ----------------------------------------------------------------------------
 
@@ -157,7 +104,7 @@ def main():
         const = 'Quiet',
         default = 'Basic' )
 
-    options, process_names = parser.parse_args()
+    options, _extras = parser.parse_args()
 
     if options.daemonize:
         from django.utils.daemonize import become_daemon
@@ -175,12 +122,19 @@ def main():
         with open(options.pidfile, 'wb') as pidfile:
             pidfile.write('%d\n' % os.getpid())
 
+    options.config_file = os.path.abspath(options.config_file)
+
+    logging.info('Starting offlineimapd')
+
     while not must_shut_down():
         try:
-            os.remove(options.config_file)
-
-            with get_config_file(options.config_file) as config_file:
-                generate_config_file(config_file)
+            os.system(
+                "'%s' '%s'" % (
+                    os.path.abspath(
+                        os.path.join(
+                            os.path.dirname(__file__),
+                            'gen-offlineimap-conf')),
+                    options.config_file ))
 
             params = [
                 'offlineimap', # will show up as the process name
@@ -188,15 +142,14 @@ def main():
                 '-c', options.config_file,
                 ]
 
-            logging.info('Starting offlineimapd')
+
             child = subprocess.Popen(params, executable='/usr/bin/python')
 
             while not ( must_shut_down() or must_restart() ):
                 if child.poll() is not None:
                     break
-                time.sleep(2)
+                time.sleep(1)
 
-            logging.info('Terminating offlineimapd')
             terminate(child)
 
         except Exception:
