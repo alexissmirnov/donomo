@@ -40,6 +40,7 @@ def generate_config_file( out_file ):
         config.set(section_name, 'remotepass', account.password)
         config.set(section_name, 'maxconnections', '2')
         config.set(section_name, 'holdconnectionopen', 'no')
+        config.set(section_name, 'folderfilter', "lambda foldername: not re.search('(^Drafts$|^Deleted Messages$|^\[Gmail\]/Drafts$|^\[Gmail\]/Trash$|^\[Gmail\]/Spam$|^\[Gmail\]/All Mail$)', foldername)")
 
     section_name = 'general'
     config.add_section(section_name)
