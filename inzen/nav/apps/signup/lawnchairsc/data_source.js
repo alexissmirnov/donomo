@@ -351,9 +351,10 @@ LawnchairSC.DataSource = SC.DataSource.extend({
 	 * @returns {Boolean} YES if handled
 	 */
 	destroyRecord : function(store, storeKey, params) {
-		var name = this._getStoreTableNamesFromStoreKey(storeKey);
-		var id = store.idFor(storeKey);
-		var table = this._getTable(name.store, name.table);
+		var name = this._getStoreTableNamesFromStoreKey(storeKey),
+			id = store.idFor(storeKey),
+			table = this._getTable(name.store, name.table),
+			that = this;
 	
 		table.remove(
 			id,
@@ -361,7 +362,16 @@ LawnchairSC.DataSource = SC.DataSource.extend({
 				SC.Logger
 					.log('DatabaseDataSource.destroyRecord: Deleted %@:%@ to db'
 								.fmt(name.table, id));
+				
+				var nestedDataSource = that._getNestedDataSource();
+				if( nestedDataSource ) {
+					nestedDataSource.destroyRecord(store, storeKey, params);
+				}
 
+				store.unloadRecord(undefined, undefined, storeKey);
+				// See thread "SC.Store leaking memory"
+				// http://sproutcore.markmail.org/thread/ob2acolksydfoe2o
+				delete store.statuses[storeKey];
 			});
 	
 		return YES;

@@ -15,7 +15,7 @@ App.userController = SC.ObjectController.create({
 			App.documentsController.set('content', App.store.find(SC.Query.local(App.model.Document)));
 			App.flowsController.set('content', App.store.find(SC.Query.local(App.model.Flow)));
 			App.addressesController.set('content', App.store.find(SC.Query.local(App.model.Address)));
-			App.syncTrackerController.set('content', App.store.find(SC.Query.local(App.model.SyncTracker)));
+			App.syncTrackerController.set('content', App.store.find(SC.Query.local(App.model.SyncTracker,'1')));
 
 			App.state.transitionTo('FLOWS');
 		}

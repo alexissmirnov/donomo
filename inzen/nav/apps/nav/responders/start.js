@@ -11,6 +11,7 @@ App.state.CLEAR = SC.Responder.create({
 	didBecomeFirstResponder : function() {
 		console.log('deleting all local data');
 		App.store.dataSource._dropAllTables();
+		App.store.reset();
 		window.localStorage.clear();
 		document.cookie = "sessionid=;expires=%@;;".fmt((new Date()).toGMTString());
 
@@ -22,8 +23,8 @@ App.state.REDOWNLOAD = SC.Responder.create({
 	name: 'REDOWNLOAD',
 	didBecomeFirstResponder : function() {
 		
-		App.store.destroyRecord(App.model.SyncTracker, '1');
-		this.invokeLater(function() { App.state.transitionTo('START');}, 200);
+		App.store.destroyRecord(App.model.SyncTracker, App.model.SyncTracker.prototype.ID);
+		this.invokeLast(function() { App.state.transitionTo('START');});
 	}
 });
 

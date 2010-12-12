@@ -3,11 +3,13 @@
 // Copyright: ©2009 Apple Inc.
 // ==========================================================================
 /*globals Signup */
+App = Signup;
+
 Signup.userController = SC.ObjectController.create({
 	  allowsMultipleContent: NO,
 	  username: function() {
 		  if( this.content && this.content.objectAt(0) )
-			  return this.content.objectAt(0).get('username')
+			  return this.content.objectAt(0).get('username');
 	  }.property()
 });
 

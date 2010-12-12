@@ -10,33 +10,40 @@ App.schemaVersionController = SC.ObjectController.create({
 			if( codeVersion > schemaVersion ) {
 				this.get('content').objectAt(0).set('version', App.VERSION);
 
-				App.contactsController.set('content', App.store.find(SC.Query.local(App.model.Contact)));
-				App.messagesController.set('content', App.store.find(SC.Query.local(App.model.Message)));
-				App.conversationsController.set('content', App.store.find(SC.Query.local(App.model.Conversation)));
-				App.documentsController.set('content', App.store.find(SC.Query.local(App.model.Document)));
-				App.flowsController.set('content', App.store.find(SC.Query.local(App.model.Flow)));
-				App.addressesController.set('content', App.store.find(SC.Query.local(App.model.Address)));
-				App.syncTrackerController.set('content', App.store.find(SC.Query.local(App.model.SyncTracker)));
-
-				this.invokeLater(function() {
-					var obj = App.store.recordsFor(App.model.SyncTracker);
-					obj.forEach(function(o) {App.store.destroyRecord(App.model.SyncTracker, o.get('guid'));});
-
-					var obj = App.store.recordsFor(App.model.Message);
-					obj.forEach(function(o) {App.store.destroyRecord(App.model.Message, o.get('guid'));});
-
-					var obj = App.store.recordsFor(App.model.Address);
-					obj.forEach(function(o) {App.store.destroyRecord(App.model.Address, o.get('guid'));});
-
-					var obj = App.store.recordsFor(App.model.Contact);
-					obj.forEach(function(o) {App.store.destroyRecord(App.model.Contact, o.get('guid'));});
-
-					var obj = App.store.recordsFor(App.model.Conversation);
-					obj.forEach(function(o) {App.store.destroyRecord(App.model.Conversation, o.get('guid'));});
-
-					var obj = App.store.recordsFor(App.model.Flow);
-					obj.forEach(function(o) {App.store.destroyRecord(App.model.Flow, o.get('guid'));});
-				}, 500);
+				App.model.Contact.objects().all().del();
+				App.model.Message.objects().all().del();
+				App.model.Conversation.objects().all().del();
+				App.model.Flow.objects().all().del();
+				App.model.Address.objects().all().del();
+				App.model.SyncTracker.objects().all().del();
+//				
+//				App.contactsController.set('content', App.store.find(SC.Query.local(App.model.Contact)));
+//				App.messagesController.set('content', App.store.find(SC.Query.local(App.model.Message)));
+//				App.conversationsController.set('content', App.store.find(SC.Query.local(App.model.Conversation)));
+//				App.documentsController.set('content', App.store.find(SC.Query.local(App.model.Document)));
+//				App.flowsController.set('content', App.store.find(SC.Query.local(App.model.Flow)));
+//				App.addressesController.set('content', App.store.find(SC.Query.local(App.model.Address)));
+//				App.syncTrackerController.set('content', App.store.find(SC.Query.local(App.model.SyncTracker)));
+//
+//				this.invokeLater(function() {
+//					var obj = App.store.recordsFor(App.model.SyncTracker);
+//					obj.forEach(function(o) {App.store.destroyRecord(App.model.SyncTracker, o.get('guid'));});
+//
+//					var obj = App.store.recordsFor(App.model.Message);
+//					obj.forEach(function(o) {App.store.destroyRecord(App.model.Message, o.get('guid'));});
+//
+//					var obj = App.store.recordsFor(App.model.Address);
+//					obj.forEach(function(o) {App.store.destroyRecord(App.model.Address, o.get('guid'));});
+//
+//					var obj = App.store.recordsFor(App.model.Contact);
+//					obj.forEach(function(o) {App.store.destroyRecord(App.model.Contact, o.get('guid'));});
+//
+//					var obj = App.store.recordsFor(App.model.Conversation);
+//					obj.forEach(function(o) {App.store.destroyRecord(App.model.Conversation, o.get('guid'));});
+//
+//					var obj = App.store.recordsFor(App.model.Flow);
+//					obj.forEach(function(o) {App.store.destroyRecord(App.model.Flow, o.get('guid'));});
+//				}, 500);
 
 				this.invokeLater(function() { App.state.transitionTo('START');}, 800);			
 			} else {
@@ -53,7 +60,14 @@ App.contactsController = SC.ArrayController.create();
 App.conversationsController = SC.ArrayController.create();
 App.messagesController = SC.ArrayController.create();
 App.documentsController = SC.ArrayController.create();
-App.syncTrackerController = SC.ArrayController.create();
+App.syncTrackerController = SC.ObjectController.create({
+	timestamp: function() {
+		if( this.content.objectAt(0) )
+			return this.content.objectAt(0).get('date');
+		else
+			return undefined;
+	}
+});
 App.addressesController = SC.ArrayController.create();
 
 App.senderClassificationController = SC.ArrayController.create({

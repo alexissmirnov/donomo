@@ -18,99 +18,63 @@ App.query.GET_TOP_UNCLASSIFIED_CONTACTS = App.query.GET_CONTACTS; // TODO: add q
 
 
 App.ServerDataSource = SC.DataSource.extend({
-	/**
-	 * Called by didBecomeFirstResponder of FLOWS state
-	 * @returns
-	 */
-	startDownloadMessages: function() {
-		// Launch the query and pull the date of the last message from the DB (if it is there)
-		//TODO: DEBUG RESET 
-		//App.store.find(App.model.SyncTracker, '1');
-		//App.store.createRecord(App.model.SyncTracker, {date: String(new Date())}, '1');
-		
-		// Give it 2 seconds to pull it from DB
-		// this.invokeLater('downloadEarlyMessages', 10);
-		
-		// start in 5 sec
-		//this.invokeLater('downloadNewMessages', 5000);
-		this.downloadNewMessages();
-	},
-	
 	downloadNewMessages: function() {
-		// find the most recent message in the db
-		//var messages = App.store.find(App.model.Message);
-
 		var requestUrl = '/api/1.0/sync/events/';
 		
 		// Add modified_since if we already have it
 		// If not, request all messages.
 		// Messages come in order of modified date and are limited in number
-		if( App.syncTrackerController.content && App.syncTrackerController.content.length() ) {
+		if( App.syncTrackerController.content ) {
 			requestUrl = '%@?modified_since=%@'.fmt(
 					requestUrl, 
-					App.syncTrackerController.content.objectAt(0).get('date'));
+					App.syncTrackerController.timestamp());
 		}
 		SC.Request.getUrl(requestUrl)
 			.header({'Accept': 'application/json'})
 			.json()
 			.notify(this, '_didGetNewMessages', App.store, App.store.dataSource )
 			.send();
-//		
-//		
-//		// minimal date Dec 31 1969 - i wasn't born yet, so there surely cannot be any email earlier that this
-//		var latestMessageDate = new Date(0);
-//		messages.forEach(function(message) {
-//			var currentMessageDate = getDateFromFormat(message.get('modified_date'), "y-M-d H:mm:ss");
-//			if(  currentMessageDate > latestMessageDate )
-//				latestMessageDate = currentMessageDate;
-//		});
 	},
 	
 	_didGetNewMessages: function(response, store, db) {
-		// state got cleared while we were getting messages? stop it.
-		if( !App.store.dataHashes[App.store.storeKeyFor(App.model.User, '1')] )
+		// Only run this if the User object still exists
+		// state got cleared while we were getting messages? stop calling downloadNewMessages
+		if( !App.userController.user() )
 			return;
-			
-		if( response.status === 200 ) {
+		
+		if( response.status >= 500 ) {
+			// retry on server error
+			this.invokeLater('downloadNewMessages', 10000);
+		} else if( response.status === 200 ) {
+			// process successful response
 			var messageDate = this._processGetMessagesResponse(response, store, db);
 		
 			this.invokeLater('downloadNewMessages', 5000);
 		} else if( response.status === 403 ) {
-			var user = App.store.find(App.model.User, '1');
-			
+			var username = App.userController.user();
+			// try logging in if forbidden
+			// 403 response should come with the login URL in Locaiton header
 			SC.Request.postUrl(response.header('Location'))
 				.header({'Accept': 'application/json', 'Content-Type' :'application/x-www-form-urlencoded'})
-				.notify(this, 'downloadNewMessages')
-				.send('username=%@&password=%@'.fmt(user.get('username'), user.get('username')));	
+				.notify(this, 'handleLoginResponse')
+				.send('username=%@&password=%@'.fmt(username, username));	
 		}
 	},
 	
-//	downloadEarlyMessages: function() {
-//		// pull the date cursor from in-memory store -- if we have it in DB it should
-//		// now be in memory because of the find() call in startDownloadMessages has pulled it in
-//		var earliestMessageDate = App.store.dataHashes[App.store.storeKeyFor(App.model.SyncTracker, '1')];
-//		
-//		if( !earliestMessageDate ) {
-//			// no earliestMessageDate means we're dealing with the cold start
-//			// and the DB is empty
-//			// add a record with the current time -- meaning we'll be
-//			// loading messages from the current time going back
-//			// and call this function again in 2s
-//
-//			App.store.createRecord(App.model.SyncTracker, {date: String(new Date().format("y-M-d H:mm:ss"))}, '1');
-//			App.store.dataSource.getNestedDataSource().invokeLater('downloadEarlyMessages', 2000);
-//			return;
-//		}
-//		
-//		// we got the time cursor. load X number of messages starting from the cursor
-//		// going back in time
-//		var r = SC.Request.getUrl('/api/1.0/messages/?limit=%@&modified_before=%@'.fmt(10, earliestMessageDate.date))
-//			.header({'Accept': 'application/json'})
-//			.json()
-//			.notify(this, '_didGetEarlyMessages', App.store, App.store.dataSource )
-//			.send();
-//	},
-	
+	handleLoginResponse: function(response, store, db) {
+		if( response.status === 403 ) {
+			// Can't login with the credentials we already have?
+			// delete user and account and start from scratch
+			// TODO: handle this case more gracefully
+			App.store.destroyRecord(App.model.User, App.model.User.prototype.ID);
+			App.accountController.get('content').forEach(function(a) {
+				App.store.destroyRecord(App.model.Account, a.get('guid'));});
+			App.state.transitionTo(App.state.START);
+		} else if ( response.status === 200 ) {
+			this.downloadNewMessages();
+		}
+	},
+		
 	_processGetMessagesResponse: function(response, store, db) {
 		var lastModifiedTimestamp = null;
 		var tags = [];
@@ -125,23 +89,34 @@ App.ServerDataSource = SC.DataSource.extend({
 		});
 		
 		//TODO: rename conversation to aggregate
-		response.get('body').conversations = response.get('body').aggregates;
-		response.get('body').conversations.forEach(function(conversation){
-			conversation.tags.forEach(function(tagGuid){
-				if( tags[tagGuid] ) {
-					if (!tags[tagGuid].conversations)
-						tags[tagGuid].conversations = [];
-					
-					if( !tags[tagGuid].conversations.contains(conversation.guid) )
-						tags[tagGuid].conversations.pushObject(conversation.guid);
-				}
-				else {
-					console.log( 'Malformed /messages/ response? got %@ tags, but no tag %@ in the list'.fmt(tags.length(), tagGuid));
-				}
-			});
-			conversation.key_participant = conversation.latest_sender;
-			var storeKey = store.loadRecord(App.model.Conversation, conversation);
-			db.didRetrieveRecordFromNestedStore(store, storeKey);
+		//TODO: define status constants
+		response.get('body').aggregates.forEach(function(conversation){
+			if( conversation.status === '-1' &&
+					App.model.Conversation.storeKeysById()[conversation.guid]) {
+				/**
+				 * destroyRecord if it exists and it's status is -1 (deleted)
+				 * 
+				 * Using storeKeysById() here to prevent calling destroyRecord
+				 * in case the record for this id doesn't exist
+				 */
+				store.destroyRecord(App.model.Conversation, conversation.guid);
+			} else if( conversation.status === '1' ) {
+				conversation.tags.forEach(function(tagGuid){
+					if( tags[tagGuid] ) {
+						if (!tags[tagGuid].conversations)
+							tags[tagGuid].conversations = [];
+						
+						if( !tags[tagGuid].conversations.contains(conversation.guid) )
+							tags[tagGuid].conversations.pushObject(conversation.guid);
+					}
+					else {
+						console.log( 'Malformed /messages/ response? got %@ tags, but no tag %@ in the list'.fmt(tags.length(), tagGuid));
+					}
+				});
+				conversation.key_participant = conversation.latest_sender;
+				var storeKey = store.loadRecord(App.model.Conversation, conversation);
+				db.didRetrieveRecordFromNestedStore(store, storeKey);
+			}
 		});
 		
 		tags.forEach(function(tag){
@@ -185,92 +160,24 @@ App.ServerDataSource = SC.DataSource.extend({
 		
 		// Create or update SyncTracker record
 		if( lastModifiedTimestamp ) {
-			if( App.syncTrackerController.content.objectAt(0) ) {
+//			App.model.SyncTracker.objects().getOrCreate(
+//					{guid: App.model.SyncTracker.prototype.ID}, 
+//					{date: lastModifiedTimestamp},
+//					function(record, created) {
+//						if( !created )
+//							record.set('date', lastModifiedTimestamp);
+//					});
+			
+			if( App.syncTrackerController.content && App.syncTrackerController.content.objectAt(0)) {
 				App.syncTrackerController.content.objectAt(0).set('date', lastModifiedTimestamp);
 			} else {
-				var storeKey = store.loadRecord(App.model.SyncTracker, {'date' : lastModifiedTimestamp});
-				db.didRetrieveRecordFromNestedStore(store, storeKey);			
+				store.createRecord(App.model.SyncTracker, 
+									{'date' : lastModifiedTimestamp}, 
+									App.model.SyncTracker.prototype.ID);
 			}
 		}
 	},
 	
-//	_didGetEarlyMessages: function(response, store, db) {
-//		
-//		// state got cleared while we were getting messages? stop it.
-//		if( !App.store.dataHashes[App.store.storeKeyFor(App.model.User, '1')] )
-//			return;
-//			
-//		if( SC.ok(response) ) {
-//			var messageDate = this._processGetMessagesResponse(response, store, db);
-//			
-//			// stop trying to download early messages after we get 100 of them
-//			// TODO: when using the DB, continue the download, but offload earlier
-//			// messages from memory
-//			if( App.store.find(App.model.Message) > 50 )
-//				return;
-//			
-//			if( messageDate ) {
-//				// non-empty messageDate means we got some messages i.e. we're
-//				// not at the end of the mail archive.
-//				// let's continue loading then
-//				var earliestMessageDate = App.store.find(App.model.SyncTracker, '1');
-//				earliestMessageDate.set('date', messageDate);
-//				this.invokeLater('downloadEarlyMessages', 1000); 
-//			} else if( App.store.find(App.model.Message).length() === 0) {
-//				// We did not get any messages AND app's store is empty.
-//				//
-//				// During the initial boot this API call may come
-//				// before the server has the available data.
-//				// Assume that if the app has 0 messages, this means we're in that state
-//				// This means the app should continue trying to downloadMessages
-//				this.invokeLater('downloadEarlyMessages', 1000*5); 
-//			} else {
-//				// We did not get anything from the server, but we have something in the local store
-//				//
-//				// run a routine check for past messages then, every 1 min
-//				this.invokeLater('downloadEarlyMessages', 1000*10); 
-//			} 
-//		}
-//	},
-	
-	_loadTags: function(hashes, convIDs, store, db){
-		hashes.forEach(function(h) {
-			if(h.name === 'INBOX') {
-				h.name = 'Unlabaled';
-			}
-			// Load the contact
-			var convIDs = [];
-			h.conversations.forEach(function(c) {
-				convIDs.pushObject(c.guid);
-				
-				// We're assuming that the contact and email 
-				// were already loaded,
-				
-				// substitute the payload data
-				// with the ID to the address (which is email)
-				c.key_participant = c.key_participant.email;
-			});
-			
-			
-			// 1. create conversation objects
-			store.loadRecords(App.model.Conversation, h.conversations);
-			
-			// 2. no that conversation records are created
-			// we no longer need the data so we overwrite it with its IDs.
-			h.conversations = convIDs;
-		});
-		
-		// 4. create Flows with references to conversations (loaded at step 1) 
-		var records = store.loadRecords(App.model.Flow, hashes);
-		
-		// notify the db so that it can load it
-		if( db ) {
-			records.forEach(function(record) {
-				db.didRetrieveRecordFromNestedStore(store, record.storeKey);
-			});
-			//TODO unload record from memory?
-		}
-	},	
 	/**
 	 * Look for an actual Query object to see what is being requested
 	 * and map it to the API call
@@ -278,222 +185,6 @@ App.ServerDataSource = SC.DataSource.extend({
 	fetch: function (store, query, params) {
 		return NO;
 	},	
-//		if( query === App.query.GET_CONVERSATIONS ) {
-//			SC.Request.getUrl('/api/1.0/conversations/')
-//				.header({'Accept': 'application/json'})
-//				.json()
-//				.notify(this, '_didGetConversations', App.model.Conversation, store, query, params )
-//				.send();
-//			return YES;
-//		} else if ( query === App.query.GET_FLOWS ) {
-//			// skip gmail's own folders
-//			SC.Request.getUrl('/api/1.0/tags/?notstartswith=[Gmail]&conversations=1')
-//				.header({'Accept': 'application/json'})
-//				.json()
-//				.notify(this, '_didGetFlows', store, query, params )
-//				.send();
-//			
-//			
-//			return YES;
-//		} else if ( query === App.query.GET_CONTACTS ) {
-//			SC.Request.getUrl('/api/1.0/contacts/')
-//				.header({'Accept': 'application/json'})
-//				.json()
-//				.notify(this, '_didGetContacts', store, query, params )
-//				.send();
-//		} else if ( query.recordType === App.model.Conversation 
-//					&& query.conditions 
-//					&& query.conditions.search('{conversationGuid}') != -1) {
-//			
-//			SC.Request.getUrl('/api/1.0/conversations/' 
-//											+ query.conversationGuid 
-//											+ '/?message_body=1')
-//				.header({'Accept': 'application/json'})
-//				.json()
-//				.notify(this, '_didGetConversationFromQuery', store, query, params )
-//				.send();
-//			return YES;			
-//		}
-//	},
-	
-//	_didGetConversations: function (response, model, store, query, params) {
-//		if (SC.ok(response)) {
-//			store.loadRecords(model, response.get('body').content);
-//			store.dataSourceDidFetchQuery(query);
-//			if( params && params.outerDataSource ) 
-//				params.outerDataSource.didRetrieveQueryFromNestedStore(store, query);
-//		}
-//		else {
-//			store.dataSourceDidErrorQuery(query, response);
-//		}
-//	},
-//	
-	
-	/**
-	 * The conversation JSON includes the message body. We'll use it
-	 * to load the Message records.
-	 * 
-	 * For brevity, this handler is called by both fetch() and retrieveRecord(). In case of fetch()
-	 * the query is specified by a 'query' object. In case of retrieveRecord() it is a storeKey.
-	 */
-//	_didGetConversationFromQuery: function (response, store, query, params) {
-//		if (SC.ok(response)) {
-//			// for some reason response.get('body') doesn't
-//			// have KVO features, so wrapping it into SC.Object
-//			var hashes = SC.Object.create(response.get('body'));
-//		
-//			var messageIDs = [];
-//			hashes.messages.forEach(function(m) {
-//				messageIDs.pushObject(m.guid);
-//				
-//				// get HTML or, if not available,
-//				// text message body
-//				if( m.body_type === 'text/html' ) {
-//					m.body = m.body;
-//				}
-//				else {
-//					m.body = m.body.replace(/\r\n/g, '<br>');
-//				}
-//			});
-//			var storeKeys = store.loadRecords(App.model.Message, hashes.messages);
-//			if( params && params.outerDataSource )
-//				storeKeys.forEach(function(storeKey) {
-//					params.outerDataSource.didRetrieveRecordFromNestedStore(store, storeKey);
-//				});
-//			
-//			hashes.messages = messageIDs;
-//
-//			// now that the messages are loaded and 'messages'
-//			// array is patched to include the IDs we can load
-//			// the conversation into the store
-//			store.loadRecord(App.model.Conversation, hashes);
-//			
-//			store.dataSourceDidFetchQuery(query);
-//			
-//			if( params && params.outerDataSource ) 
-//				params.outerDataSource.didRetrieveQueryFromNestedStore(store, query);
-//		}
-//		else {
-//			store.dataSourceDidErrorQuery(queryOrKey, response);
-//		}
-//	},
-	/**
-	 * The conversation JSON includes the message body. We'll use it
-	 * to load the Message records.
-	 * 
-	 * For brevity, this handler is called by both fetch() and retrieveRecord(). In case of fetch()
-	 * the query is specified by a 'query' object. In case of retrieveRecord() it is a storeKey.
-	 */
-//	_didGetConversation: function (response, store, storeKey, id, params) {
-//		if (SC.ok(response)) {
-//			// for some reason response.get('body') doesn't
-//			// have KVO features, so wrapping it into SC.Object
-//			var hashes = SC.Object.create(response.get('body'));
-//		
-//			var messageIDs = [];
-//			hashes.messages.forEach(function(m) {
-//				messageIDs.pushObject(m.guid);
-//				
-//				// get HTML or, if not available,
-//				// text message body
-//				if( m.body_type === 'text/html' ) {
-//					m.body = m.body;
-//				}
-//				else {
-//					m.body = m.body.replace(/\r\n/g, '<br>');
-//				}
-//			});
-//			store.loadRecords(App.model.Message, hashes.messages);
-//			hashes.messages = messageIDs;
-//
-//			// now that the messages are loaded and 'messages'
-//			// array is patched to include the IDs we can load
-//			// the conversation into the store
-//			store.loadRecord(App.model.Conversation, hashes);
-//			
-//			if( params && params.outerDataSource ) 
-//				params.outerDataSource.didRetrieveRecordFromNestedStore(store, storeKey, id);
-//		}
-//		else {
-//			store.dataSourceDidErrorQuery(queryOrKey, response);
-//		}
-//	},
-	/**
-	 * The flow JSON includes flows (tags) and conversations as nested objects
-	 * loadRecords() isn't smart enough to figure out how to create store records
-	 * for nested objects.
-	 * This function does the following:
-	 * First, it scans all nested conversations and loads them in the store as records
-	 * Second, it replaces the nested conversations objects with their IDs
-	 * Third, now that all "conversations" property no longer includes the
-	 * conversation data (just the guids to conversations), we create the Flow objects.
-	 */
-	_didGetFlows: function (response, store, query, params) {
-		if (SC.ok(response)) {
-			var hashes = response.get('body').content;
-			hashes.forEach(function(h) {
-				if(h.name === 'INBOX') {
-					h.name = 'Unlabaled';
-				}
-				// Load the contact
-				var convIDs = [];
-				h.conversations.forEach(function(c) {
-					convIDs.pushObject(c.guid);
-					
-					// We're assuming that the contact and email 
-					// were already loaded,
-					
-					// substitute the payload data
-					// with the ID to the address (which is email)
-					c.key_participant = c.key_participant.email;
-				});
-				
-				
-				// 1. create conversation objects
-				store.loadRecords(App.model.Conversation, h.conversations);
-				
-				// 2. no that conversation records are created
-				// we no longer need the data so we overwrite it with its IDs.
-				h.conversations = convIDs;
-			});
-			
-			// 4. create Flows with references to conversations (loaded at step 1) 
-			var records = store.loadRecords(App.model.Flow, hashes);
-			
-			
-			store.dataSourceDidFetchQuery(query);
-			if( params && params.outerDataSource ) 
-				params.outerDataSource.didRetrieveQueryFromNestedStore(store, query);
-		}
-		else {
-			store.dataSourceDidErrorQuery(query, response);
-		}
-	},
-
-	/**
-	 * Same logic as above but for contacts and addresses
-	 */
-	_didGetContacts: function (response, store, query, params ) {
-		if (SC.ok(response)) {
-			var contacts = response.get('body').content;
-			contacts.forEach(function(contact){
-				var addressIDs = [];
-				contact.addresses.forEach(function(address) {
-					address.contact = contact.guid;
-					addressIDs.pushObject(address.email);
-				});
-				store.loadRecords(App.model.Address, contact.addresses);
-				
-				contact.addresses = addressIDs;
-			});
-			store.loadRecords(App.model.Contact, contacts);
-			if( params && params.outerDataSource ) 
-				params.outerDataSource.didRetrieveQueryFromNestedStore(store, query);
-		}
-		else {
-			store.dataSourceDidErrorQuery(query, response);
-		}
-	},
 	
 	retrieveRecord: function(store, storeKey, id, params) {
 		if( SC.kindOf(SC.Store.recordTypeFor(storeKey), App.model.Conversation) ) {
@@ -522,38 +213,30 @@ App.ServerDataSource = SC.DataSource.extend({
 	 * @returns YES in case we were asked to create an Account, NO in any other
 	 *          case
 	 */
-	createRecord : function(store, storeKey, params) {
+	createRecord: function(store, storeKey, params) {
 		if (SC.kindOf(store.recordTypeFor(storeKey), App.model.Account)) {
-			// check to see if we already have a user object.
-			// This is a synchronous call to the store that will not attempt
-			// to call the DataSource in case the object isn't found.
-			// The id of '1' is well-known because the User record is a
-			// singleton.
-			//TODO: refactor to user User.ID
-			user = store.dataHashes[store.storeKeyFor(App.model.User, '1')];
-			var id = store.idFor(storeKey);
-			var url = '/api/1.0/accounts/'+id+'/';
-			if( user ) {
-				url = url + '?username=' + user.get('username');
-			}
-			
-			// send a PUT request with the JSON of the storeKey and call
-			// _didCreateRecordAccount to process the response
-			SC.Request.putUrl(url)
-				.header({
-	                'Accept': 'application/json'
-	            })
-	            .json()
-				.notify(this, '_didCreateRecordAccount', store, storeKey, params )
-				.send(store.readDataHash(storeKey));
-				
-			return YES;
+			this.createAccountRecord(store, storeKey, params);
 		}
+	},
+	createAccountRecord: function(store, storeKey, params) {
+		var id = store.idFor(storeKey);
+		var url = '/api/1.0/accounts/'+id+'/';
+//				if( store.dataHashes[store.storeKeyFor(App.model.User, '1')] ) {
+		if(  App.userController.user() ) {
+			url = url + '?username=' + App.userController.user().get('username');
+		}
+		SC.Request.putUrl(url)
+			.header({
+	            'Accept': 'application/json'
+	        })
+	        .json()
+			.notify(this, '_didCreateRecordAccount', store, storeKey, params )
+			.send(store.readDataHash(storeKey));
+		return YES;
 		
 		// Don't handle the creation of any other type of record.
 		return NO;
 	},
-	
 	updateRecord: function(store, storeKey, params) {
 		console.log('Will update store key %@ params=%@'.fmt(storeKey, params));
 		if( App.store.recordTypeFor(storeKey).toString().split('.')[1] === 'Contact' ) {
@@ -568,6 +251,7 @@ App.ServerDataSource = SC.DataSource.extend({
 		}
 		return NO;
 	},
+	
 	_didUpdateContactRecord: function(response, store, storeKey, params) {
 		if (SC.ok(response)) {
 			console.log('responce to PUT /contacts/: %@'.fmt(response.get('body')));
@@ -590,9 +274,13 @@ App.ServerDataSource = SC.DataSource.extend({
 		if (SC.ok(response)) {
 			console.log('responce to PUT /account/: %@'.fmt(response.get('body')));
 					
+//			App.User.objects().getOrCreate({guid: App.model.User.prototype.ID}, response.get('body'), 
+//					function(record, created){
+//						console.log('getOrCreate returned %@ Created? %@'.fmt(record, created));
+//					});
 			// create a User object if it doesn't yet exist
 			if( !store.dataHashes[store.storeKeyFor(App.model.User, '1')] ) {
-				store.createRecord(App.model.User, response.get('body'), '1');
+				store.createRecord(App.model.User, response.get('body'), App.model.User.prototype.ID);
 			} else {
 				console.log('NOT creating user object');
 			}
@@ -602,11 +290,3 @@ App.ServerDataSource = SC.DataSource.extend({
 		}
 	}
 });
-//App.ServerDataSource.EARLIEST_MESSAGE_DATE_RECORD_ID = 'earliestMessageDate';
-//App.ServerDataSource.earliestMessageDate = SC.ObjectController.create({
-//	contentPropertyDidChange: function(target, key) {
-//		sc_super();
-//		App.store.dataSource.getNestedDataSource().downloadMessages();
-//	}
-//});
-

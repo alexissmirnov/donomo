@@ -1,5 +1,8 @@
 /* globals Signup */
 
+App = Signup;
+
+
 /*---------------------------------------------------------------------------*/
 Signup.START = SC.Responder.create( {
 	didBecomeFirstResponder : function() {
@@ -10,15 +13,9 @@ Signup.START = SC.Responder.create( {
 			}));
 		Signup.set('store', store);
 
-		this.invokeLater(function() {
-				Signup.accountsController.set('content', Signup.store.find(SC.Query.local(Signup.Account)));
-			}, 2000);
-		this.invokeLater(function() {
-				Signup.userController.set('content', Signup.store.find(SC.Query.local(Signup.User)));
-			}, 4000);
-		this.invokeLater(function() {
-				Signup.messagesController.set('content', Signup.store.find(SC.Query.local(Signup.Message)));
-			}, 6000);
+		Signup.accountsController.set('content', App.Account.objects().all().get('content'));
+		Signup.userController.set('content', App.User.objects().all().get('content'));
+		Signup.messagesController.set('content', App.Message.objects().all().get('content'));
 	}
 });
 /*---------------------------------------------------------------------------*/
@@ -40,11 +37,9 @@ Signup.READY = SC.Responder.create( {
 
 	/** called when the user clicks on the logout button. */
 	removeAllAccounts : function() {
-		ids = [];
-		Signup.accountsController.arrangedObjects().forEach(function(o) {
-			ids.pushObject(o.get('id'));
-		});
-		Signup.store.destroyRecords(Signup.Account, ids);
+		App.User.objects().all().del();
+		App.Account.objects().all().del();
+		App.Message.objects().all().del();
 	},
 
 	hasAccounts : function() {

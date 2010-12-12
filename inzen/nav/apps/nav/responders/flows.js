@@ -29,7 +29,7 @@ App.state.FLOWS = SC.Responder.create({
 		App.flowsController.invokeLast(function(){
 				this.set('content', App.store.find(App.query.GET_FLOWS));});
 		
-		App.store.dataSource.getNestedDataSource().startDownloadMessages();
+		App.store.dataSource.getNestedDataSource().downloadNewMessages();
 		
 		// show the page
 		App.getPath('flowsPage.mainPane').append();
